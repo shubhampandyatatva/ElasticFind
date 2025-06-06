@@ -1,0 +1,14 @@
+D:\Tatva\ElasticFind\ElasticFind.Repository\bin\Debug\net7.0\ElasticFind.Repository.deps.json
+D:\Tatva\ElasticFind\ElasticFind.Repository\bin\Debug\net7.0\ElasticFind.Repository.runtimeconfig.json
+D:\Tatva\ElasticFind\ElasticFind.Repository\bin\Debug\net7.0\ElasticFind.Repository.dll
+D:\Tatva\ElasticFind\ElasticFind.Repository\bin\Debug\net7.0\ElasticFind.Repository.pdb
+D:\Tatva\ElasticFind\ElasticFind.Repository\obj\Debug\net7.0\ElasticFind.Repository.csproj.AssemblyReference.cache
+D:\Tatva\ElasticFind\ElasticFind.Repository\obj\Debug\net7.0\ElasticFind.Repository.GeneratedMSBuildEditorConfig.editorconfig
+D:\Tatva\ElasticFind\ElasticFind.Repository\obj\Debug\net7.0\ElasticFind.Repository.AssemblyInfoInputs.cache
+D:\Tatva\ElasticFind\ElasticFind.Repository\obj\Debug\net7.0\ElasticFind.Repository.AssemblyInfo.cs
+D:\Tatva\ElasticFind\ElasticFind.Repository\obj\Debug\net7.0\ElasticFind.Repository.csproj.CoreCompileInputs.cache
+D:\Tatva\ElasticFind\ElasticFind.Repository\obj\Debug\net7.0\ElasticFind.Repository.dll
+D:\Tatva\ElasticFind\ElasticFind.Repository\obj\Debug\net7.0\refint\ElasticFind.Repository.dll
+D:\Tatva\ElasticFind\ElasticFind.Repository\obj\Debug\net7.0\ElasticFind.Repository.pdb
+D:\Tatva\ElasticFind\ElasticFind.Repository\obj\Debug\net7.0\ElasticFind.Repository.genruntimeconfig.cache
+D:\Tatva\ElasticFind\ElasticFind.Repository\obj\Debug\net7.0\ref\ElasticFind.Repository.dll

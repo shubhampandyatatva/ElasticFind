@@ -1,0 +1,63 @@
+## Build output
+bin/
+obj/
+out/
+
+## Rider and VS Code
+.idea/
+.vscode/
+
+## Visual Studio specific
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.vsp
+
+## IIS/ASP.NET stuff
+.vs/
+*.dbmdl
+*.pdb
+*.cache
+*.log
+*.jfm
+
+## NuGet Packages
+*.nupkg
+*.snupkg
+packages/
+project.lock.json
+project.fragment.lock.json
+
+## Configuration files
+appsettings.Development.json
+appsettings.Local.json
+appsettings.*.json.user
+.env
+
+## Entity Framework
+Migrations/
+*.sqlite
+
+## Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+
+## Logs
+*.log
+logs/
+
+## Test results
+TestResults/
+*.trx
+
+## Temporary files
+*.tmp
+*.temp
+~$*
+
+## OS-generated files
+.DS_Store
+Thumbs.db
+ehthumbs.db
