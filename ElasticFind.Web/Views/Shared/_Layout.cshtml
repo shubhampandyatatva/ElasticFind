@@ -1,49 +1,135 @@
-﻿<!DOCTYPE html>
+﻿@using System.Security.Claims
+@using ElasticFind.Service.Interfaces
+<!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - ElasticFind.Web</title>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/ElasticFind.Web.styles.css" asp-append-version="true" />
-</head>
-<body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">ElasticFind.Web</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - ElasticFind.Web - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-        </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"]</title>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <link rel="stylesheet" href="~/css/site.css">
+</head>
+
+@inject IJwtService jwtService
+
+@{
+    string? jwtToken = Context.Request.Cookies["JwtToken"];
+    string? roleId = jwtToken != null ? jwtService.GetClaimValue(jwtToken, ClaimTypes.Role) : null;
+}
+
+<body>
+    <div class="d-flex" style="height: 100vh;">
+        <!-- Sidebar -->
+        <div class="sidebar p-3">
+            <div class="ms-3 mb-4 pointer" onclick="window.location.href='@Url.Action("Index", "Home")'">
+                <i class="fas fa-cubes fa-2x me-2" style="color: #4983e2;"></i>
+                <span class="h4 fw-bold">ElasticFind</span>
+            </div>
+            <a asp-controller="Dashboard" asp-action="Index" class="tab-link" style="display: @(roleId == "1" ? "" : "none");">Manage Files</a>
+            <a asp-controller="Dashboard" asp-action="Search" class="tab-link">Search for Keywords</a>
+            <a asp-controller="Dashboard" asp-action="Analytics" class="tab-link">Analytics</a>
+            <a asp-controller="Dashboard" asp-action="Users" class="tab-link" style="display: @(roleId == "1" ? "" : "none");">Users</a>
+        </div>
+
+        <!-- Main content -->
+        <div class="flex-grow-1 d-flex flex-column">
+            <!-- Header -->
+            <div class="header d-flex justify-content-end">
+                <div class="dropdown">
+                    <img src="~/images/admin-icon.png" alt="Profile Icon"
+                        class="profile-photo-icon me-2 pointer dropdown-toggle" id="profileDropdown"
+                        data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="profileDropdown">
+                        <div class="dropdown-item">
+                            <i class="fa fa-user me-1"></i>
+                            <span>Username</span>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                        <a href='/Profile/MyProfile' class="dropdown-item">
+                            <i class="fa fa-user me-1"></i>
+                            <span>My Profile</span>
+                        </a>
+                        <a class="dropdown-item" href='/Profile/ChangePassword'>
+                            <i class="fa fa-key me-1"></i>
+                            <span>Change Password</span>
+                        </a>
+                        <a class="dropdown-item pointer" data-bs-toggle="modal" data-bs-target="#logout_modal">
+                            <i class="fa fa-sign-out me-1"></i>
+                            <span>Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic content -->
+            <div class="tab-content p-4">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
 </body>
+
+<!-- Logout Modal -->
+
+<div class="modal fade" id="logout_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Logout</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body d-flex flex-column align-items-center">
+                <img src="~/images/warning-icon.svg" alt="Warning icon">
+                Are you sure you want to Logout?
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-primary" id="LogoutYesButton">Yes</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var successMessage = "@TempData["SuccessMessage"]";
+    var errorMessage = "@TempData["ErrorMessage"]";
+    if (successMessage) {
+        toastr.success(successMessage, "Success", {
+            timeOut: 4000,
+            closeButton: true,
+            progressBar: true
+        });
+    }
+    if (errorMessage) {
+        toastr.error(errorMessage, "Error", {
+            timeOut: 4000,
+            closeButton: true,
+            progressBar: true
+        });
+    }
+
+    $('#LogoutYesButton').click(function () {
+        $.ajax({
+            url: "/Authentication/Logout",
+            type: 'GET',
+            success: function () {
+                window.location.href = '@Url.Action("Login", "Authentication")';
+            },
+            error: function (err) {
+                alert("Error logging out!");
+            }
+        });
+    });
+</script>
+
 </html>

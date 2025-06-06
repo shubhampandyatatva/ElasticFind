@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using ElasticFind.Web.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace ElasticFind.Web.Controllers;
 
@@ -13,12 +14,8 @@ public class HomeController : Controller
         _logger = logger;
     }
 
+    [Authorize(Roles = "1")]
     public IActionResult Index()
-    {
-        return View();
-    }
-
-    public IActionResult Privacy()
     {
         return View();
     }

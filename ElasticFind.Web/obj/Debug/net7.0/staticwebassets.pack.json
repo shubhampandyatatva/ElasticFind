@@ -17,12 +17,20 @@
       "PackagePath": "staticwebassets\\favicon.ico"
     },
     {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\images\\admin-icon.png",
+      "PackagePath": "staticwebassets\\images\\admin-icon.png"
+    },
+    {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\images\\elasticsearch-illustration.png",
       "PackagePath": "staticwebassets\\images\\elasticsearch-illustration.png"
     },
     {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\images\\elasticsearch-logo.png",
       "PackagePath": "staticwebassets\\images\\elasticsearch-logo.png"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\images\\warning-icon.svg",
+      "PackagePath": "staticwebassets\\images\\warning-icon.svg"
     },
     {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\js\\site.js",

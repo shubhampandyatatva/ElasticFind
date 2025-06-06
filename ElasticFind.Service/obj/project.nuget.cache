@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "z4w/TM2dx6FvUIZe84+lDXy9XUe6eLlSXEEf2vCZP8x1v5vDq5ATigOz5Vt+aqpheDxPK1IL7xAP1NMExwNgAg==",
+  "dgSpecHash": "38WAN+wrAxtLelQFg7BJUEAOPNGlxq+e987cVjUYDK/ydO2m7spbdw4jrW90MAjxMK3C1S1W2rKp5x0KElukOQ==",
   "success": true,
   "projectFilePath": "D:\\Tatva\\ElasticFind\\ElasticFind.Service\\ElasticFind.Service.csproj",
   "expectedPackageFiles": [
@@ -30,6 +30,10 @@
     "C:\\Users\\pcs90\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\7.0.0\\microsoft.extensions.logging.abstractions.7.0.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\microsoft.extensions.options\\7.0.0\\microsoft.extensions.options.7.0.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\microsoft.extensions.primitives\\7.0.0\\microsoft.extensions.primitives.7.0.0.nupkg.sha512",
+    "C:\\Users\\pcs90\\.nuget\\packages\\microsoft.identitymodel.abstractions\\7.0.0\\microsoft.identitymodel.abstractions.7.0.0.nupkg.sha512",
+    "C:\\Users\\pcs90\\.nuget\\packages\\microsoft.identitymodel.jsonwebtokens\\7.0.0\\microsoft.identitymodel.jsonwebtokens.7.0.0.nupkg.sha512",
+    "C:\\Users\\pcs90\\.nuget\\packages\\microsoft.identitymodel.logging\\7.0.0\\microsoft.identitymodel.logging.7.0.0.nupkg.sha512",
+    "C:\\Users\\pcs90\\.nuget\\packages\\microsoft.identitymodel.tokens\\7.0.0\\microsoft.identitymodel.tokens.7.0.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\microsoft.netcore.platforms\\1.1.0\\microsoft.netcore.platforms.1.1.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\microsoft.netcore.targets\\1.1.0\\microsoft.netcore.targets.1.1.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\microsoft.win32.primitives\\4.3.0\\microsoft.win32.primitives.4.3.0.nupkg.sha512",
@@ -67,6 +71,7 @@
     "C:\\Users\\pcs90\\.nuget\\packages\\system.globalization\\4.3.0\\system.globalization.4.3.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\system.globalization.calendars\\4.3.0\\system.globalization.calendars.4.3.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\system.globalization.extensions\\4.3.0\\system.globalization.extensions.4.3.0.nupkg.sha512",
+    "C:\\Users\\pcs90\\.nuget\\packages\\system.identitymodel.tokens.jwt\\7.0.0\\system.identitymodel.tokens.jwt.7.0.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\system.io\\4.3.0\\system.io.4.3.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\system.io.compression\\4.3.0\\system.io.compression.4.3.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\system.io.compression.zipfile\\4.3.0\\system.io.compression.zipfile.4.3.0.nupkg.sha512",

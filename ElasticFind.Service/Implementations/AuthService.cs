@@ -92,4 +92,10 @@ public class AuthService : IAuthService
 
         return isPasswordUpdated;
     }
+
+    public async Task<User?> GetUserByEmail(string email)
+    {
+        return await _authRepository.GetUserByEmail(email);
+    }
+
 }

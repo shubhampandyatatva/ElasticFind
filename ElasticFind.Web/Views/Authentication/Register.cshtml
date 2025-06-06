@@ -21,8 +21,8 @@
 </head>
 
 <body>
-    <section class="h-100" style="background-color: #305796;">
-        <div class="container py-5 h-100">
+    <section class="vh-100" style="background-color: #305796;">
+        <div class="container py-5 vh-100">
             <div class="row d-flex justify-content-center align-items-center h-100">
                 <div class="col col-xl-10">
                     <div class="card" style="border-radius: 1rem;">
@@ -42,7 +42,7 @@
 
                                         <h5 class="fw-normal mb-3 pb-3" style="letter-spacing: 1px;">Register here</h5>
 
-                                        <div class="mb-2">
+                                        <div class="d-flex flex-column mb-2">
                                             <div class="form-floating d-flex align-items-center">
                                                 <input asp-for="FirstName" type="text" class="form-control w-100"
                                                     id="firstName" placeholder="First Name">
@@ -51,7 +51,7 @@
                                             <span class="ms-2 mt-1 text-danger" asp-validation-for="FirstName"></span>
                                         </div>
 
-                                        <div class="mb-2">
+                                        <div class="d-flex flex-column mb-2">
                                             <div class="form-floating d-flex align-items-center">
                                                 <input asp-for="LastName" type="text" class="form-control w-100"
                                                     id="lastName" placeholder="Last Name">
@@ -60,7 +60,7 @@
                                             <span class="ms-2 mt-1 text-danger" asp-validation-for="LastName"></span>
                                         </div>
 
-                                        <div class="mb-2">
+                                        <div class="d-flex flex-column mb-2">
                                             <div class="form-floating d-flex align-items-center">
                                                 <input asp-for="Email" type="text" class="form-control" id="email"
                                                     placeholder="Email">
@@ -70,7 +70,7 @@
                                                 asp-validation-for="Email"></span>
                                         </div>
 
-                                        <div class="mb-2">
+                                        <div class="d-flex flex-column mb-2">
                                             <div class="form-floating d-flex align-items-center input-icon-wrapper">
                                                 <input asp-for="Password" type="password" class="form-control"
                                                     id="password" placeholder="Password">
@@ -81,7 +81,7 @@
                                                 asp-validation-for="Password"></span>
                                         </div>
 
-                                        <div class="mb-2">
+                                        <div class="d-flex flex-column mb-2">
                                             <div class="form-floating d-flex align-items-center">
                                                 <input asp-for="Username" type="text" class="form-control w-100"
                                                     id="username" placeholder="Username">
@@ -90,7 +90,7 @@
                                             <span class="ms-2 mt-1 text-danger" asp-validation-for="Username"></span>
                                         </div>
 
-                                        <div class="mb-2">
+                                        <div class="d-flex flex-column mb-2">
                                             <div class="form-floating d-flex align-items-center">
                                                 <input asp-for="Phone" type="number" class="form-control w-100"
                                                     id="phoneNumber" placeholder="Phone Number">

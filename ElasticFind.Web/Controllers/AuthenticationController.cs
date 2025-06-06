@@ -1,4 +1,6 @@
+using System.Security.Claims;
 using System.Threading.Tasks;
+using ElasticFind.Repository.Data;
 using ElasticFind.Repository.ViewModels;
 using ElasticFind.Service.Interfaces;
 using Microsoft.AspNetCore.Mvc;
@@ -10,17 +12,45 @@ public class AuthenticationController : Controller
     private readonly IAuthService _authService;
     private readonly IResetPasswordService _resetPasswordService;
     private readonly IEmailService _emailService;
-    public AuthenticationController(IAuthService authService, IResetPasswordService resetPasswordService, IEmailService emailService)
+    private readonly IJwtService _jwtService;
+    public AuthenticationController(IAuthService authService, IResetPasswordService resetPasswordService, IEmailService emailService, IJwtService jwtService)
     {
         _authService = authService;
         _resetPasswordService = resetPasswordService;
         _emailService = emailService;
+        _jwtService = jwtService;
     }
 
     [HttpGet]
-    public IActionResult Login()
+    public async Task<IActionResult> Login()
     {
-        return View();
+        string? jwtToken = Request.Cookies["JwtToken"];
+        if (jwtToken == null)
+        {
+            return View();
+        }
+
+        string? email = _jwtService.GetClaimValue(jwtToken, ClaimTypes.Email);
+        if (email == null)
+        {
+            Console.WriteLine("Error: Cannot read email from JWTToken!");
+            return View();
+        }
+        Console.WriteLine("Email from GetClaimValue: " + email);
+        User? existingUser = await _authService.GetUserByEmail(email);
+        if (existingUser == null)
+        {
+            return View();
+        }
+
+        string? roleId = _jwtService.GetClaimValue(jwtToken, ClaimTypes.Role);
+        if (roleId == null)
+        {
+            Console.WriteLine("Error: Cannot read roleId from JWTToken!");
+            return View();
+        }
+
+        return roleId == "1" ? RedirectToAction("Index", "Home") : RedirectToAction("Index", "UserDashboard");
     }
 
     [HttpPost]
@@ -31,9 +61,41 @@ public class AuthenticationController : Controller
             JsonResponse response = await _authService.ValidateUser(loginViewModel.Email, loginViewModel.Password);
             if (response.Success)
             {
+                // create JWT Token for that user and save it in cookies
+
+                User? user = await _authService.GetUserByEmail(loginViewModel.Email);
+                if (user == null)
+                {
+                    Console.WriteLine("Error: User not found by this ID!");
+                    TempData["ErrorMessage"] = "Some error occured!";
+                    return View(loginViewModel);
+                }
+                string token = _jwtService.GenerateJwtToken(user);
+
+                if (!loginViewModel.RememberMe)
+                {
+                    CookieOptions cookieOptions = new()
+                    {
+                        HttpOnly = true, // Prevent JavaScript access
+                        Secure = true, // Ensure cookie is only sent over HTTPS
+                        Expires = DateTime.UtcNow.AddHours(24)
+                    };
+                    Response.Cookies.Append("JwtToken", token, cookieOptions);
+                }
+                else
+                {
+                    CookieOptions cookieOptions = new()
+                    {
+                        HttpOnly = true,
+                        Secure = true,
+                        Expires = DateTime.UtcNow.AddDays(7)
+                    };
+                    Response.Cookies.Append("JwtToken", token, cookieOptions);
+                }
+
                 TempData["SuccessMessage"] = response.Message;
-                // return RedirectToAction("Index", "Home");
-                return View(loginViewModel);
+
+                return user.RoleId == 1 ? RedirectToAction("Index", "Home") : RedirectToAction("Index", "UserDashboard");
             }
             else
             {
@@ -62,9 +124,27 @@ public class AuthenticationController : Controller
             JsonResponse response = await _authService.RegisterUser(registerViewModel);
             if (response.Success)
             {
+                // create JWT Token for that user and save it in cookies
+
+                User? user = await _authService.GetUserByEmail(registerViewModel.Email);
+                if (user == null)
+                {
+                    Console.WriteLine("Error: User not found by this ID!");
+                    TempData["ErrorMessage"] = "Some error occured!";
+                    return View(registerViewModel);
+                }
+                string token = _jwtService.GenerateJwtToken(user);
+
+                CookieOptions cookieOptions = new()
+                {
+                    HttpOnly = true, // Prevent JavaScript access
+                    Secure = true, // Ensure cookie is only sent over HTTPS
+                    Expires = DateTime.UtcNow.AddHours(24)
+                };
+                Response.Cookies.Append("JwtToken", token, cookieOptions);
+
                 TempData["SuccessMessage"] = response.Message;
-                // return RedirectToAction("Index", "Home");
-                return RedirectToAction("Register", "Authentication");
+                return RedirectToAction("Index", "UserDashboard");
             }
             else
             {
@@ -153,12 +233,27 @@ public class AuthenticationController : Controller
                 return RedirectToAction("Login");
             }
             TempData["ErrorMessage"] = "Some error occured in resetting your password!";
-            return View(new {token = resetPasswordViewModel.Token});
+            return View(new { token = resetPasswordViewModel.Token });
         }
         else
         {
             TempData["ErrorMessage"] = "Some error occured in passing data to the server.";
             return View(resetPasswordViewModel);
         }
+    }
+
+    public IActionResult Logout()
+    {
+        if (Request.Cookies["JwtToken"] != null)
+        {
+            Response.Cookies.Delete("JwtToken");
+        }
+
+        if (Request.Cookies["ProfileImagePath"] != null)
+        {
+            Response.Cookies.Delete("ProfileImagePath");
+        }
+
+        return RedirectToAction("Login");
     }
 }

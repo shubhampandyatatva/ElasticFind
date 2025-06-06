@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "LLdseIrpSmnr6Qqj1Q1J1KPgGzYjMrayqqB3wXdh0Z8=",
+  "Hash": "El7GhBGmNNCsY+xmcgJ36F2c0lX+Ktzl6UQFtqu+5DI=",
   "Source": "ElasticFind.Web",
   "BasePath": "_content/ElasticFind.Web",
   "Mode": "Default",
@@ -102,6 +102,23 @@
       "OriginalItemSpec": "wwwroot\\favicon.ico"
     },
     {
+      "Identity": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\images\\admin-icon.png",
+      "SourceId": "ElasticFind.Web",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\",
+      "BasePath": "_content/ElasticFind.Web",
+      "RelativePath": "images/admin-icon.png",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\admin-icon.png"
+    },
+    {
       "Identity": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\images\\elasticsearch-illustration.png",
       "SourceId": "ElasticFind.Web",
       "SourceType": "Discovered",
@@ -134,6 +151,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\images\\elasticsearch-logo.png"
+    },
+    {
+      "Identity": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\images\\warning-icon.svg",
+      "SourceId": "ElasticFind.Web",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\",
+      "BasePath": "_content/ElasticFind.Web",
+      "RelativePath": "images/warning-icon.svg",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\images\\warning-icon.svg"
     },
     {
       "Identity": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\js\\site.js",

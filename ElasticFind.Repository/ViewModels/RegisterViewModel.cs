@@ -17,5 +17,7 @@ public class RegisterViewModel
     [RegularExpression(@"^[a-zA-Z0-9._-]{3,}$", ErrorMessage = "Username must be at least 3 characters long and can only contain letters, numbers, underscores, and hyphens.")]
     public required string Username { get; set; }
     [Required(ErrorMessage = "Phone number is required.")]
+    [StringLength(15, ErrorMessage = "Phone number cannot be greater than 15 digits")]
+    [RegularExpression(@"^\d{8,15}$", ErrorMessage = "Phone number must be between 8 to 15 digits.")]
     public required string Phone { get; set; }
 }

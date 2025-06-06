@@ -110,15 +110,7 @@
             $(this).toggleClass("fa-eye fa-eye-slash");
         });
 
-        var successMessage = "@TempData["SuccessMessage"]";
         var errorMessage = "@TempData["ErrorMessage"]";
-        if (successMessage) {
-            toastr.success(successMessage, "Success", {
-                timeOut: 4000,
-                closeButton: true,
-                progressBar: true
-            });
-        }
         if (errorMessage) {
             toastr.error(errorMessage, "Error", {
                 timeOut: 4000,
