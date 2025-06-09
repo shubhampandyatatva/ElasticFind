@@ -10,7 +10,7 @@ public class ResetPasswordViewModel
     [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$", ErrorMessage = "Password should be at least 8 characters long and contain an uppercase letter, a lowercase letter, a number, and a special character.")]
     public required string NewPassword { get; set; }
 
-    [Required(ErrorMessage = "Confirm Password is required.")]
-    [Compare("NewPassword", ErrorMessage = "New Password and Cofirm Password do not match.")]
+    [Required(ErrorMessage = "Please confirm your password.")]
+    [Compare("NewPassword", ErrorMessage = "New Password and Confirm Password do not match.")]
     public required string ConfirmPassword { get; set; }
 }

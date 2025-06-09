@@ -265,6 +265,38 @@
       "PackagePath": "staticwebassets\\lib\\jquery\\dist\\jquery.min.map"
     },
     {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\2025 Trainees Allocation PM-20250609112953451.pdf",
+      "PackagePath": "staticwebassets\\uploads\\2025 Trainees Allocation PM-20250609112953451.pdf"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\Assignment 1-EMS (3)-20250609113053802.pdf",
+      "PackagePath": "staticwebassets\\uploads\\Assignment 1-EMS (3)-20250609113053802.pdf"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\OrderDetailsReport (38)-20250609113027429.pdf",
+      "PackagePath": "staticwebassets\\uploads\\OrderDetailsReport (38)-20250609113027429.pdf"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\OrderDetailsReport (39)-20250609113027429.pdf",
+      "PackagePath": "staticwebassets\\uploads\\OrderDetailsReport (39)-20250609113027429.pdf"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\OrderDetailsReport (40)-20250609113027430.pdf",
+      "PackagePath": "staticwebassets\\uploads\\OrderDetailsReport (40)-20250609113027430.pdf"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\OrderDetailsReport (41)-20250609113027429.pdf",
+      "PackagePath": "staticwebassets\\uploads\\OrderDetailsReport (41)-20250609113027429.pdf"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\OrderDetailsReport (42)-20250609113027427.pdf",
+      "PackagePath": "staticwebassets\\uploads\\OrderDetailsReport (42)-20250609113027427.pdf"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\OrderDetailsReport (42)-20250609113423005.pdf",
+      "PackagePath": "staticwebassets\\uploads\\OrderDetailsReport (42)-20250609113423005.pdf"
+    },
+    {
       "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.ElasticFind.Web.Microsoft.AspNetCore.StaticWebAssets.props",
       "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
     },

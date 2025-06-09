@@ -57,3 +57,9 @@ D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\System.IdentityModel.Token
 D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\Microsoft.AspNetCore.Authentication.JwtBearer.dll
 D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\Microsoft.IdentityModel.Protocols.dll
 D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
+D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
+D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\Microsoft.Extensions.ObjectPool.dll
+D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\Microsoft.Extensions.Options.dll
+D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\Microsoft.Extensions.Primitives.dll
+D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\System.Text.Encodings.Web.dll
+D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\runtimes\browser\lib\net7.0\System.Text.Encodings.Web.dll

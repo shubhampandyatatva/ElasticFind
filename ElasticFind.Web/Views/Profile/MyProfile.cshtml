@@ -1,0 +1,89 @@
+@{
+    ViewData["Title"] = "My Profile";
+}
+@model ElasticFind.Repository.ViewModels.MyProfileViewModel
+
+<h2 class="mb-4">My Profile</h2>
+
+<form method="post" asp-controller="Profile" asp-action="UpdateProfile" class="shadow" enctype="multipart/form-data">
+    <input type="hidden" value="@ViewBag.Id" asp-for="Id">
+    <div class="profile-image-header bg-image mb-3"></div>
+    <div class="d-flex ps-4 pe-4">
+        <div class="profile-image me-3 img-fluid">
+            <img id="profileImage"
+                src="@(Model.ProfileImagePath == null ? Url.Content("~/images/admin-icon.png") : Url.Content($"~/{Model.ProfileImagePath}"))"
+                alt="Profile Image">
+            <i class="fa-solid fa-camera camera-icon"
+                onclick="document.getElementById('profileImageInput').click()"></i>
+            <input type="file" id="profileImageInput" asp-for="ProfileImage" class="d-none">
+        </div>
+        <div class="name-role flex-grow-1 d-flex flex-column">
+            <div class="name">
+                <h4>@Model.FirstName @Model.LastName</h4>
+            </div>
+            <div class="role">@Model.Role</div>
+        </div>
+        <div class="email">@Model.Email</div>
+    </div>
+    <input type="hidden" value="@TempData["Email"]" asp-for="Email">
+    <div class="row ps-3 pe-3">
+        <div class="col-md-6 mb-3">
+            <div class="form-floating">
+                <input type="text" class="form-control" id="floatingInput1" placeholder="John" asp-for="FirstName">
+                <label for="floatingInput1">First Name</label>
+            </div>
+            <span class="text-danger ms-2 mt-2" asp-validation-for="FirstName"></span>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="form-floating">
+                <input type="text" class="form-control" id="floatingInput2" placeholder="Doe" asp-for="LastName">
+                <label for="floatingInput2">Last Name</label>
+            </div>
+            <span class="text-danger ms-2 mt-2" asp-validation-for="LastName"></span>
+        </div>
+    </div>
+
+    <div class="row ps-3 pe-3">
+        <div class="col-md-6 mb-3">
+            <div class="form-floating">
+                <input type="text" class="form-control" id="floatingInput3" placeholder="johndoe" asp-for="Username">
+                <label for="floatingInput3">Username</label>
+            </div>
+            <span class="text-danger ms-2 mt-2" asp-validation-for="Username"></span>
+        </div>
+        <div class="col-md-6 mb-3">
+            <div class="form-floating">
+                <input type="text" class="form-control" id="floatingInput4" placeholder="9999999999" asp-for="Phone">
+                <label for="floatingInput4">Phone</label>
+            </div>
+            <span class="text-danger ms-2 mt-2" asp-validation-for="Phone"></span>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-12 d-flex justify-content-end mb-3">
+            <button type="submit" class="update btn btn-primary me-2">Update</button>
+            <button type="reset" class="cancel btn btn-outline-primary me-3">Cancel</button>
+        </div>
+    </div>
+</form>
+
+<script>
+    $('#profileImageInput').on('change', function (e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                console.log("Selected file location: " + e.target.result);
+                $('#profileImage').attr('src', e.target.result);
+            };
+            reader.onerror = function (e) {
+                console.error('Error reading file!', e);
+            };
+            reader.readAsDataURL(file);
+        }
+        else {
+            console.log('No files selected.');
+        }
+    });
+</script>

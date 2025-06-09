@@ -1,5 +1,6 @@
 using ElasticFind.Repository.Data;
 using ElasticFind.Repository.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace ElasticFind.Repository.Implementations;
 
@@ -42,4 +43,28 @@ public class UserRepository : IUserRepository
             return false;
         }
     }
+
+    public Task<User?> GetUserByEmail(string email)
+    {
+        return _dbcontext.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Email == email);
+    }
+
+    public async Task<string?> GetUserByUsername(string username, string phone)
+    {
+        User? user = await _dbcontext.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower() || u.Phone == phone);
+        if (user == null)
+        {
+            return string.Empty;
+        }
+        if (user.Username.ToLower() == username)
+        {
+            return "username";
+        }
+        if (user.Phone == phone)
+        {
+            return "phone number";
+        }
+        
+    }
+
 }
