@@ -81,6 +81,7 @@ public class ProfileController : Controller
 
         MyProfileViewModel myProfile = await _profileService.GetProfileByEmail(email);
         ViewBag.Id = myProfile.Id;
+        ViewBag.Email = myProfile.Email;
         Console.WriteLine("Id in viewbag in profile service: " + @ViewBag.Id);
         ViewBag.FirstName = myProfile.FirstName;
         ViewBag.LastName = myProfile.LastName;
@@ -108,6 +109,14 @@ public class ProfileController : Controller
         }
         else
         {
+            Console.WriteLine("Errorrrrrrr");
+            foreach (var state in ModelState)
+            {
+                foreach (var error in state.Value.Errors)
+                {
+                    Console.WriteLine($"Model Error for {state.Key}: {error.ErrorMessage}");
+                }
+            }
             ViewBag.Id = myProfileViewModel.Id;
             TempData["ErrorMessage"] = "Model State is not valid!";
             return RedirectToAction("MyProfile", "Profile");

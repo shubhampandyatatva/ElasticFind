@@ -25,19 +25,19 @@
         </div>
         <div class="email">@Model.Email</div>
     </div>
-    <input type="hidden" value="@TempData["Email"]" asp-for="Email">
+    <input type="hidden" value="@ViewBag.Email" asp-for="Email">
     <div class="row ps-3 pe-3">
         <div class="col-md-6 mb-3">
             <div class="form-floating">
-                <input type="text" class="form-control" id="floatingInput1" placeholder="John" asp-for="FirstName">
-                <label for="floatingInput1">First Name</label>
+                <input type="text" class="form-control" id="firstName" placeholder="John" asp-for="FirstName">
+                <label for="firstName">First Name</label>
             </div>
             <span class="text-danger ms-2 mt-2" asp-validation-for="FirstName"></span>
         </div>
         <div class="col-md-6 mb-3">
             <div class="form-floating">
-                <input type="text" class="form-control" id="floatingInput2" placeholder="Doe" asp-for="LastName">
-                <label for="floatingInput2">Last Name</label>
+                <input type="text" class="form-control" id="lastName" placeholder="Doe" asp-for="LastName">
+                <label for="lastName">Last Name</label>
             </div>
             <span class="text-danger ms-2 mt-2" asp-validation-for="LastName"></span>
         </div>
@@ -46,15 +46,15 @@
     <div class="row ps-3 pe-3">
         <div class="col-md-6 mb-3">
             <div class="form-floating">
-                <input type="text" class="form-control" id="floatingInput3" placeholder="johndoe" asp-for="Username">
-                <label for="floatingInput3">Username</label>
+                <input type="text" class="form-control" id="username" placeholder="johndoe" asp-for="Username">
+                <label for="username">Username</label>
             </div>
             <span class="text-danger ms-2 mt-2" asp-validation-for="Username"></span>
         </div>
         <div class="col-md-6 mb-3">
             <div class="form-floating">
-                <input type="text" class="form-control" id="floatingInput4" placeholder="9999999999" asp-for="Phone">
-                <label for="floatingInput4">Phone</label>
+                <input type="text" class="form-control" id="phoneNumber" placeholder="9999999999" asp-for="Phone">
+                <label for="phoneNumber">Phone</label>
             </div>
             <span class="text-danger ms-2 mt-2" asp-validation-for="Phone"></span>
         </div>
@@ -62,8 +62,8 @@
 
     <div class="row">
         <div class="col-md-12 d-flex justify-content-end mb-3">
-            <button type="submit" class="update btn btn-primary me-2">Update</button>
-            <button type="reset" class="cancel btn btn-outline-primary me-3">Cancel</button>
+            <button type="submit" class="btn btn-primary me-2">Update</button>
+            <button type="reset" class="btn btn-outline-primary me-3">Cancel</button>
         </div>
     </div>
 </form>
@@ -85,5 +85,32 @@
         else {
             console.log('No files selected.');
         }
+    });
+
+    $(document).ready(function () {
+        const updateButton = $('button[type="submit"]');
+        const originalValues = {};
+
+        // Store the original values of all input fields
+        $('form :input').each(function () {
+            const input = $(this);
+            originalValues[input.attr('id')] = input.val();
+        });
+
+        updateButton.prop('disabled', true);
+
+        $('form :input').on('input change', function () {
+            let isChanged = false;
+
+            // Check if any input field value is different from its original value
+            $('form :input').each(function () {
+                const input = $(this);
+                if (originalValues[input.attr('id')] !== input.val()) {
+                    isChanged = true;
+                }
+            });
+
+            updateButton.prop('disabled', !isChanged);
+        });
     });
 </script>

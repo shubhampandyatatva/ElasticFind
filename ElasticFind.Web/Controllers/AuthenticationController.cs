@@ -36,7 +36,6 @@ public class AuthenticationController : Controller
             Console.WriteLine("Error: Cannot read email from JWTToken!");
             return View();
         }
-        Console.WriteLine("Email from GetClaimValue: " + email);
         User? existingUser = await _authService.GetUserByEmail(email);
         if (existingUser == null)
         {
@@ -212,6 +211,13 @@ public class AuthenticationController : Controller
         if (resetPasswordResult.Success)
         {
             TempData["Token"] = token;
+            string? email = _jwtService.GetClaimValue(token, ClaimTypes.Email);
+            if (email == null)
+            {
+                Console.WriteLine("Error: Couldn't retreive email from JWT Token! Please login again to continue!");
+                return RedirectToAction("Login");
+            }
+            TempData["Email"] = email;
             return View();
         }
         else

@@ -176,3 +176,14 @@ html {
   cursor: pointer;
   z-index: 100;
 }
+
+.search {
+  position: relative;
+}
+
+.search-icon {
+  width: 18px;
+  height: 18px;
+  position: absolute;
+  right: 5px;
+}

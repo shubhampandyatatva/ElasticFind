@@ -1,0 +1,121 @@
+<div class="d-flex mb-3">
+    <div class="form-group me-3">
+        <label for="txtjobTitle">Job Title</label>
+        <input type="email" class="form-control" id="txtjobTitle" aria-describedby="emailHelp"
+            placeholder="Enter email">
+    </div>
+    <div class="form-group">
+        <label for="txtnationalIDNumber">National ID Number</label>
+        <input type="password" class="form-control" id="txtnationalIDNumber" placeholder="Password">
+    </div>
+</div>
+
+<div class="d-flex align-items-center mb-3">
+    <div class="buttons me-3">
+        <button type="button" class="btn btn-primary me-2" id="btnsubmit">Search</button>
+        <button type="button" class="btn btn-outline-secondary">Clear</button>
+    </div>
+    <div class="time-div">
+        Time Taken - <span class="total-title">0 milliseconds</span>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">Output</div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-lg-12">
+                <div id="gridContainer"></div>
+            </div>
+        </div>
+    </div>
+</div>  
+
+<script>
+    $(document).ready(function () {
+
+        $("#btnsubmit").on("click", function () {
+
+            if ($("#txtjobTitle").val() === "" && $("#txtnationalIDNumber").val() === "") {
+                alert("Provide Details to Search !");
+            }
+            else {
+
+                var obj = {};
+                obj.jobTitle = $.trim($("#txtjobTitle").val());
+                obj.nationalIDNumber = $.trim($("#txtnationalIDNumber").val());
+
+                var apiUrl = "@Url.Action("DataSearch", "ElasticSearch")";
+
+                $.ajax({
+                    type: "POST",
+                    contentType: 'application/json',
+                    url: apiUrl,
+                    dataType: "json",
+                    data: JSON.stringify(obj),
+                    crossDomain: true,
+                    success: function (data) {
+                        var response = data;
+
+                        if (data.datasend.length <= 0) {
+                            alert("No Data Found!!");
+                        } else {
+
+                            var timetook = data.Took;
+                            $('span.total-title').text(timetook + " milliseconds");
+
+                            $("#gridContainer").dxDataGrid({
+                                dataSource: data.datasend,
+                                showColumnLines: false,
+                                showRowLines: true,
+                                rowAlternationEnabled: true,
+                                showBorders: true,
+                                paging: {
+                                    pageSize: 50
+                                },
+                                scrolling: {
+                                    mode: "infinite" // or "virtual" | "infinite"  
+                                },
+                                pager: {
+                                    showPageSizeSelector: false,
+                                    allowedPageSizes: [5, 10, 20],
+                                    showInfo: true
+                                },
+                                columns: [
+                                    {
+                                        caption: "JobTitle",
+                                        width: 350,
+                                        fixed: true,
+                                        dataField: "jobtitle"
+                                    },
+                                    {
+                                        caption: "NationalIDNumber",
+                                        width: 300,
+                                        fixed: true,
+                                        dataField: "nationalidnumber"
+                                    },
+                                    "MaritalStatus",
+                                    "Gender",
+                                    "SalariedFlag",
+                                    "VacationHours",
+                                    "SickLeaveHours",
+                                    "CurrentFlag"
+                                ]
+                            });
+
+                        }
+                    },
+                    error: function (xhr, err) {
+                        alert("readyState: " + xhr.readyState + "\nstatus: " + xhr.status);
+                        alert("responseText: " + xhr.responseText);
+                    }
+
+                });
+
+            }
+
+        });
+
+    });
+
+</script>

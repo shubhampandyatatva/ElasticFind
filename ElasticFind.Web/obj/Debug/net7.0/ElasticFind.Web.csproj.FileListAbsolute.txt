@@ -63,3 +63,9 @@ D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\Microsoft.Extensions.Optio
 D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\Microsoft.Extensions.Primitives.dll
 D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\System.Text.Encodings.Web.dll
 D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\runtimes\browser\lib\net7.0\System.Text.Encodings.Web.dll
+D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\Elasticsearch.Net.dll
+D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\Nest.dll
+D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\Elastic.Clients.Elasticsearch.dll
+D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\Elastic.Transport.dll
+D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\System.Diagnostics.DiagnosticSource.dll
+D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\System.Text.Json.dll

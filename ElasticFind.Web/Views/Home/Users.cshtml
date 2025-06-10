@@ -1,0 +1,18 @@
+@{
+    ViewData["Title"] = "Users";
+}
+@model ElasticFind.Repository.ViewModels.DisplayUsersViewModel
+
+<div class="headbar d-flex justify-content-between align-items-center p-1 mb-4">
+    <h2>Manage Users</h2>
+
+    <div class="search d-flex align-items-center">
+        <input type="text" id="searchInput" value="@Model.PaginationViewModel.SearchString" placeholder="Search" class="form-control"
+            style="max-width: 500px;">
+        <img src="~/images/search-icon.svg" alt="Search Icon" class="search-icon">
+    </div>
+</div>
+
+<div id="displayUsersContainer">
+    @await Html.PartialAsync("_UsersPartial", Model)
+</div>

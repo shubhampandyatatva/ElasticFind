@@ -1,5 +1,6 @@
 using ElasticFind.Repository.Data;
 using ElasticFind.Repository.Interfaces;
+using ElasticFind.Repository.ViewModels;
 using Microsoft.EntityFrameworkCore;
 
 namespace ElasticFind.Repository.Implementations;
@@ -49,9 +50,9 @@ public class UserRepository : IUserRepository
         return _dbcontext.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Email == email);
     }
 
-    public async Task<string?> GetUserByUsername(string username, string phone)
+    public async Task<string?> GetOccupiedField(string username, string phone, int id)
     {
-        User? user = await _dbcontext.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == username.ToLower() || u.Phone == phone);
+        User? user = await _dbcontext.Users.FirstOrDefaultAsync(u => (u.Username.ToLower() == username.ToLower() || u.Phone == phone) && u.Id != id);
         if (user == null)
         {
             return string.Empty;
@@ -64,7 +65,41 @@ public class UserRepository : IUserRepository
         {
             return "phone number";
         }
-        
+        return string.Empty;
+    }
+
+    public async Task<int> GetTotalUsers()
+    {
+        return await _dbcontext.Users.CountAsync();
+    }
+
+    public async Task<int> GetTotalSearchedUsers(string searchString)
+    {
+        return await _dbcontext.Users.Where(u => u.FirstName.ToLower().Contains(searchString.ToLower()) || u.LastName.ToLower().Contains(searchString.ToLower()) || u.Email.ToLower().Contains(searchString.ToLower()) || u.Phone.ToLower().Contains(searchString.ToLower())).CountAsync();
+    }
+
+    public List<UserViewModel> GetUserList(PaginationViewModel paginationViewModel)
+    {
+        var query = _dbcontext.Users.OrderBy(u => u.Id);
+        if (!string.IsNullOrEmpty(paginationViewModel.SearchString))
+        {
+            query = query.Where(u => u.FirstName.ToLower().Contains(paginationViewModel.SearchString.ToLower()) || u.LastName.ToLower().Contains(paginationViewModel.SearchString.ToLower()) || u.Email.ToLower().Contains(paginationViewModel.SearchString.ToLower()) || u.Phone.ToLower().Contains(paginationViewModel.SearchString.ToLower())).OrderBy(u => u.Id);
+        }
+
+        query = paginationViewModel.SortOrder == "Asc" ? query.OrderBy(u => u.FirstName) : query.OrderByDescending(u => u.FirstName);
+
+        List<UserViewModel> users = query.Skip((paginationViewModel.Page - 1) * paginationViewModel.PageSize).Take(paginationViewModel.PageSize).Select(u => new UserViewModel
+        {
+            Id = u.Id,
+            Profileimage = u.ProfileImage,
+            Firstname = u.FirstName,
+            Lastname = u.LastName,
+            Email = u.Email,
+            Phone = u.Phone
+            // IsActive = u.Isactive
+        }).ToList();
+
+        return users;
     }
 
 }

@@ -2,16 +2,22 @@
 using Microsoft.AspNetCore.Mvc;
 using ElasticFind.Web.Models;
 using Microsoft.AspNetCore.Authorization;
+using Nest;
+using ElasticFind.Repository.ViewModels;
+using ElasticFind.Repository.Interfaces;
+using ElasticFind.Service.Interfaces;
 
 namespace ElasticFind.Web.Controllers;
 
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
+    private readonly IUserService _userService;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(ILogger<HomeController> logger, IUserService userService)
     {
         _logger = logger;
+        _userService = userService;
     }
 
     [Authorize(Roles = "1")]
@@ -58,6 +64,17 @@ public class HomeController : Controller
         return RedirectToAction("Index");
     }
 
+    public async Task<IActionResult> Users(int page = 1, int pageSize = 5, string? searchString = null, string sortOrder = "Asc")
+    {
+        DisplayUsersViewModel listOfUsers = await _userService.GetUserList(page, pageSize, searchString, sortOrder);
+
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+        {
+            return PartialView("_UsersPartial", listOfUsers);
+        }
+
+        return View(listOfUsers);
+    }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()

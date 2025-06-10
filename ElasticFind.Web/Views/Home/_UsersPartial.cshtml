@@ -1,0 +1,70 @@
+@model ElasticFind.Repository.ViewModels.DisplayUsersViewModel
+
+<div class="table-responsive">
+    <table class="table shadow">
+        <thead>
+            <tr>
+                <th scope="col" class="text-start">
+                    <span class="d-flex align-items-center ms-1">
+                        Name
+                        <i class="fa-solid fa-arrow-up NameSortUp ms-1" data-column="Name" data-direction="Asc" onclick="sortTable('Name', 'Asc')"></i>
+                        <i class="fa-solid fa-arrow-down NameSortDown ms-1" data-column="Name" data-direction="Desc" onclick="sortTable('Name', 'Desc')"></i>
+                    </span>
+                </th>
+                <th scope="col">Email</th>
+                <th scope="col">Phone</th>
+                <th scope="col">Status</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var user in Model.UserList)
+            {
+                <tr>
+                    <td class="text-start d-flex align-items-center">
+                        <img src="@(user.Profileimage == null ? Url.Content("~/images/Default_pfp.svg.png") : Url.Content($"~/{user.Profileimage}"))" alt="User profile image" class="user-profile-image me-2">
+                        @($"{user.Firstname} {user.Lastname}")
+                    </td>
+                    <td>@user.Email</td>
+                    <td>@user.Phone</td>
+                    <td><span class="UserStatus status">@user.IsActive</span></td>
+
+                    <td>
+                        <span class="d-flex justify-content-center align-items-center"><i class="fa fa-pencil me-2 edit-user-icon"
+                            onclick="window.location.href = '/Users/EditUser/@user.Id'"></i> 
+                        <i class="fa fa-trash" data-bs-toggle="modal" data-bs-target="#delete_user_modal"
+                            data-user-id="@user.Id" onclick="setDeleteUserId('@user.Id')"></i></span> 
+                    </td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="6">
+                    <div class="d-flex justify-content-end align-items-center">
+                        <span class="me-2">Items per page:</span>
+                        <select class="pointer" id="itemsPerPage" onchange="changePageSize()">
+                            <option value="3" selected=@(ViewBag.PageSize == 3 ? "selected" : null)>3</option>
+                            <option value="5" selected=@(ViewBag.PageSize == 5 ? "selected" : null)>5</option>
+                            <option value="10" selected=@(ViewBag.PageSize == 10 ? "selected" : null)>10</option>
+                        </select>
+                        <span class="ms-2">Showing @(ViewBag.PageSize * (ViewBag.Page - 1) + 1) -
+                            @((ViewBag.PageSize * ViewBag.Page) > ViewBag.TotalUsers ? ViewBag.TotalUsers :
+                                                        (ViewBag.PageSize * ViewBag.Page)) of @ViewBag.TotalUsers</span>
+
+                        <button class="btn btn-outline-secondary ms-2 @(ViewBag.Page > 1 ? "" : "disabled")"
+                            onclick="loadPrevPage()">
+                            &lt;
+                        </button>
+
+                        <button
+                            class="btn btn-outline-secondary ms-2 @(ViewBag.Page* ViewBag.PageSize < ViewBag.TotalUsers ? "" : "disabled")"
+                            onclick="loadNextPage()">
+                            &gt;
+                        </button>
+                    </div>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</div>

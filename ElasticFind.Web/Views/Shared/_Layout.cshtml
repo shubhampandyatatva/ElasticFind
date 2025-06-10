@@ -33,15 +33,15 @@
     <div class="d-flex" style="height: 100vh;">
         <!-- Sidebar -->
         <div class="sidebar p-3">
-            <div class="ms-3 mb-4 pointer" onclick="window.location.href='@Url.Action("Index", "Home")'">
+            <div class="ms-3 mb-4 pointer header-tab" onclick="window.location.href='@Url.Action("Index", "Home")'">
                 <i class="fas fa-cubes fa-2x me-2" style="color: #4983e2;"></i>
                 <span class="h4 fw-bold">ElasticFind</span>
             </div>
-            <a asp-controller="Home" asp-action="Index" class="tab-link active"
+            <a asp-controller="Home" asp-action="Index" class="tab-link @(action == "Index" ? "active" : "")"
                 style="display: @(roleId == "1" ? "" : "none");">Manage Files</a>
-            <a asp-controller="Home" asp-action="Index" class="tab-link">Search for Keywords</a>
-            <a asp-controller="Home" asp-action="Index" class="tab-link">Analytics</a>
-            <a asp-controller="Home" asp-action="Index" class="tab-link"
+            <a asp-controller="Home" asp-action="Index" class="tab-link @(action == "Search" ? "active" : "")">Search for Keywords</a>
+            <a asp-controller="Home" asp-action="Index" class="tab-link @(action == "Analytics" ? "active" : "")">Analytics</a>
+            <a asp-controller="Home" asp-action="Users" class="tab-link @(action == "Users" ? "active" : "")"
                 style="display: @(roleId == "1" ? "" : "none");">Users</a>
         </div>
 
