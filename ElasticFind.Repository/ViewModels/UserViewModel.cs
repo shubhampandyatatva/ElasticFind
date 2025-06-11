@@ -16,5 +16,5 @@ public class UserViewModel
 
     public string Phone { get; set; } = null!;
 
-    public bool IsActive { get; set; }
+    public string? IsActive { get; set; }
 }

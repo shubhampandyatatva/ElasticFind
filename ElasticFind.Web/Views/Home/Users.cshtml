@@ -7,12 +7,147 @@
     <h2>Manage Users</h2>
 
     <div class="search d-flex align-items-center">
-        <input type="text" id="searchInput" value="@Model.PaginationViewModel.SearchString" placeholder="Search" class="form-control"
-            style="max-width: 500px;">
+        <input type="text" id="searchInput" value="@Model.PaginationViewModel.SearchString" placeholder="Search"
+            class="form-control" style="max-width: 500px;">
         <img src="~/images/search-icon.svg" alt="Search Icon" class="search-icon">
     </div>
 </div>
 
-<div id="displayUsersContainer">
+<div id="displayUsersList">
     @await Html.PartialAsync("_UsersPartial", Model)
 </div>
+
+<!-- Delete Modal -->
+
+<div class="modal fade" id="delete_user_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Delete User</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body d-flex flex-column align-items-center">
+                <img src="~/images/warning-icon.svg" alt="Warning icon">
+                Are you sure you want to delete this user?
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-primary" id="deleteModalYesButton">Yes</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toggle Modal -->
+
+<div class="modal fade" id="toggle_user_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
+    aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="exampleModalLongTitle">Toggle User Status</h5>
+                <button type="button" class="close" data-bs-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body d-flex flex-column align-items-center">
+                <img src="~/images/toggle-black-white.svg" alt="Warning icon">
+                <span class="mt-2">Are you sure you want to change the status of this user?</span>
+            </div>
+            <div class="modal-footer justify-content-center">
+                <button type="button" class="btn btn-primary" id="toggleModalYesButton">Yes</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var SortOrder = "Asc";
+    function loadPage(page, pageSize, searchString, sortOrder) {
+        console.log(page, pageSize, searchString, SortOrder);
+        $.ajax({
+            url: "/Home/Users",
+            type: "GET",
+            data: { page: page, pageSize: pageSize, searchString: searchString, sortOrder: SortOrder },
+            success: function (data) {
+                $("#displayUsersList").html(data);
+            },
+            error: function (err) {
+                console.error("Error loading page: ", err);
+            }
+        });
+    }
+
+    function changePageSize() {
+        var pageSize = $("#itemsPerPage").val();
+        var searchString = $("#searchInput").val();
+        loadPage(1, pageSize, searchString, SortOrder);
+    }
+
+    $("#searchInput").on("input", function () {
+        var searchString = $(this).val();
+        var pageSize = $("#itemsPerPage").val();
+        loadPage(1, pageSize, searchString, SortOrder);
+    });
+
+    var userId;
+    function setUserId(userid) {
+        userId = userid;
+    }
+
+    $(document).on("click", "#deleteModalYesButton", function () {
+        var searchString = $(this).val();
+        var pageSize = $("#itemsPerPage").val();
+
+        $.ajax({
+            url: "/Home/DeleteUser",
+            type: 'POST',
+            data: { id: userId },
+            success: function (response) {
+                if (response.success) {
+                    $('#delete_user_modal').modal('hide');
+                    loadPage(1, pageSize, searchString, SortOrder);
+                    toastr.success("User deleted successfully!");
+                }
+                else {
+                    $('#delete_user_modal').modal('hide');
+                    alert('Error deleting user');
+                }
+            },
+            error: function () {
+                $('#delete_user_modal').modal('hide');
+                alert('An error occurred while deleting user!');
+            }
+        });
+    });
+
+    $(document).on("click", "#toggleModalYesButton", function () {
+        var searchString = $(this).val();
+        var pageSize = $("#itemsPerPage").val();
+
+        $.ajax({
+            url: "/Home/ToggleUserStatus",
+            type: 'POST',
+            data: { id: userId },
+            success: function (response) {
+                if (response.success) {
+                    $('#toggle_user_modal').modal('hide');
+                    loadPage(1, pageSize, searchString, SortOrder);
+                    toastr.success(response.message, "Success");
+                }
+                else {
+                    $('#toggle_user_modal').modal('hide');
+                    alert('Error toggling user status');
+                }
+            },
+            error: function () {
+                $('#toggle_user_modal').modal('hide');
+                alert('An error occurred while toggling user status!');
+            }
+        });
+    });
+</script>

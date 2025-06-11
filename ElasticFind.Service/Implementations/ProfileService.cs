@@ -93,7 +93,7 @@ public class ProfileService : IProfileService
         bool isProfileUpdated = await _userRepository.UpdateUser(user);
         if (isProfileUpdated)
         {
-            return new JsonResponse { Success = true, Message = "Your profile has been updated successfully!" };
+            return new JsonResponse { Success = true, Message = "Your profile has been updated successfully!", Anonymous = imagePath };
         }
         else
         {

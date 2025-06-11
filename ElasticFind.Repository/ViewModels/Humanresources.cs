@@ -2,6 +2,7 @@ namespace ElasticFind.Repository.ViewModels;
 
 public class Humanresources
 {
+    public int Id { get; set; }
     public string? Nationalidnumber { get; set; }
     public string? LoginID { get; set; }
     public string? OrganizationNode { get; set; }

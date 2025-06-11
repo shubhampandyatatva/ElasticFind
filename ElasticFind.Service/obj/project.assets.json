@@ -15,6 +15,24 @@
           }
         }
       },
+      "Elasticsearch.Net/7.17.5": {
+        "type": "package",
+        "dependencies": {
+          "Microsoft.CSharp": "4.6.0",
+          "System.Buffers": "4.5.1",
+          "System.Diagnostics.DiagnosticSource": "5.0.0"
+        },
+        "compile": {
+          "lib/netstandard2.1/Elasticsearch.Net.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.1/Elasticsearch.Net.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
       "MailKit/4.12.1": {
         "type": "package",
         "dependencies": {
@@ -148,6 +166,15 @@
           "lib/netstandard2.0/Microsoft.AspNetCore.WebUtilities.dll": {
             "related": ".xml"
           }
+        }
+      },
+      "Microsoft.CSharp/4.6.0": {
+        "type": "package",
+        "compile": {
+          "ref/netcoreapp2.0/_._": {}
+        },
+        "runtime": {
+          "lib/netcoreapp2.0/_._": {}
         }
       },
       "Microsoft.EntityFrameworkCore/7.0.0": {
@@ -682,6 +709,22 @@
           }
         }
       },
+      "NEST/7.17.5": {
+        "type": "package",
+        "dependencies": {
+          "Elasticsearch.Net": "7.17.5"
+        },
+        "compile": {
+          "lib/netstandard2.0/Nest.dll": {
+            "related": ".pdb;.xml"
+          }
+        },
+        "runtime": {
+          "lib/netstandard2.0/Nest.dll": {
+            "related": ".pdb;.xml"
+          }
+        }
+      },
       "NETStandard.Library/1.6.1": {
         "type": "package",
         "dependencies": {
@@ -1043,22 +1086,15 @@
           }
         }
       },
-      "System.Diagnostics.DiagnosticSource/4.3.0": {
+      "System.Diagnostics.DiagnosticSource/5.0.0": {
         "type": "package",
-        "dependencies": {
-          "System.Collections": "4.3.0",
-          "System.Diagnostics.Tracing": "4.3.0",
-          "System.Reflection": "4.3.0",
-          "System.Runtime": "4.3.0",
-          "System.Threading": "4.3.0"
-        },
         "compile": {
-          "lib/netstandard1.3/_._": {
+          "lib/net5.0/System.Diagnostics.DiagnosticSource.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/netstandard1.3/System.Diagnostics.DiagnosticSource.dll": {
+          "lib/net5.0/System.Diagnostics.DiagnosticSource.dll": {
             "related": ".xml"
           }
         }
@@ -2178,6 +2214,28 @@
         "packageIcon.png"
       ]
     },
+    "Elasticsearch.Net/7.17.5": {
+      "sha512": "orChsQi1Ceho/NyIylNOn6y4vuGcsbCfMZnCueNN0fzqYEGQmQdPfcVmsR5+3fwpXTgxCdjTUVmqOwvHpCSB+Q==",
+      "type": "package",
+      "path": "elasticsearch.net/7.17.5",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "elasticsearch.net.7.17.5.nupkg.sha512",
+        "elasticsearch.net.nuspec",
+        "lib/net461/Elasticsearch.Net.dll",
+        "lib/net461/Elasticsearch.Net.pdb",
+        "lib/net461/Elasticsearch.Net.xml",
+        "lib/netstandard2.0/Elasticsearch.Net.dll",
+        "lib/netstandard2.0/Elasticsearch.Net.pdb",
+        "lib/netstandard2.0/Elasticsearch.Net.xml",
+        "lib/netstandard2.1/Elasticsearch.Net.dll",
+        "lib/netstandard2.1/Elasticsearch.Net.pdb",
+        "lib/netstandard2.1/Elasticsearch.Net.xml",
+        "license.txt",
+        "nuget-icon.png"
+      ]
+    },
     "MailKit/4.12.1": {
       "sha512": "rIqJm92qtHvk1hDchsJ95Hy7n46A7imE24ol++ikXBsjf3Bi1qDBu4H91FfY6LrYXJaxRlc2gIIpC8AOJrCbqg==",
       "type": "package",
@@ -2325,6 +2383,75 @@
         "lib/netstandard2.0/Microsoft.AspNetCore.WebUtilities.xml",
         "microsoft.aspnetcore.webutilities.2.3.0.nupkg.sha512",
         "microsoft.aspnetcore.webutilities.nuspec"
+      ]
+    },
+    "Microsoft.CSharp/4.6.0": {
+      "sha512": "kxn3M2rnAGy5N5DgcIwcE8QTePWU/XiYcQVzn9HqTls2NKluVzVSmVWRjK7OUPWbljCXuZxHyhEz9kPRIQeXow==",
+      "type": "package",
+      "path": "microsoft.csharp/4.6.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/MonoAndroid10/_._",
+        "lib/MonoTouch10/_._",
+        "lib/net45/_._",
+        "lib/netcore50/Microsoft.CSharp.dll",
+        "lib/netcoreapp2.0/_._",
+        "lib/netstandard1.3/Microsoft.CSharp.dll",
+        "lib/netstandard2.0/Microsoft.CSharp.dll",
+        "lib/netstandard2.0/Microsoft.CSharp.xml",
+        "lib/portable-net45+win8+wp8+wpa81/_._",
+        "lib/uap10.0.16299/_._",
+        "lib/win8/_._",
+        "lib/wp80/_._",
+        "lib/wpa81/_._",
+        "lib/xamarinios10/_._",
+        "lib/xamarinmac20/_._",
+        "lib/xamarintvos10/_._",
+        "lib/xamarinwatchos10/_._",
+        "microsoft.csharp.4.6.0.nupkg.sha512",
+        "microsoft.csharp.nuspec",
+        "ref/MonoAndroid10/_._",
+        "ref/MonoTouch10/_._",
+        "ref/net45/_._",
+        "ref/netcore50/Microsoft.CSharp.dll",
+        "ref/netcore50/Microsoft.CSharp.xml",
+        "ref/netcore50/de/Microsoft.CSharp.xml",
+        "ref/netcore50/es/Microsoft.CSharp.xml",
+        "ref/netcore50/fr/Microsoft.CSharp.xml",
+        "ref/netcore50/it/Microsoft.CSharp.xml",
+        "ref/netcore50/ja/Microsoft.CSharp.xml",
+        "ref/netcore50/ko/Microsoft.CSharp.xml",
+        "ref/netcore50/ru/Microsoft.CSharp.xml",
+        "ref/netcore50/zh-hans/Microsoft.CSharp.xml",
+        "ref/netcore50/zh-hant/Microsoft.CSharp.xml",
+        "ref/netcoreapp2.0/_._",
+        "ref/netstandard1.0/Microsoft.CSharp.dll",
+        "ref/netstandard1.0/Microsoft.CSharp.xml",
+        "ref/netstandard1.0/de/Microsoft.CSharp.xml",
+        "ref/netstandard1.0/es/Microsoft.CSharp.xml",
+        "ref/netstandard1.0/fr/Microsoft.CSharp.xml",
+        "ref/netstandard1.0/it/Microsoft.CSharp.xml",
+        "ref/netstandard1.0/ja/Microsoft.CSharp.xml",
+        "ref/netstandard1.0/ko/Microsoft.CSharp.xml",
+        "ref/netstandard1.0/ru/Microsoft.CSharp.xml",
+        "ref/netstandard1.0/zh-hans/Microsoft.CSharp.xml",
+        "ref/netstandard1.0/zh-hant/Microsoft.CSharp.xml",
+        "ref/netstandard2.0/Microsoft.CSharp.dll",
+        "ref/netstandard2.0/Microsoft.CSharp.xml",
+        "ref/portable-net45+win8+wp8+wpa81/_._",
+        "ref/uap10.0.16299/_._",
+        "ref/win8/_._",
+        "ref/wp80/_._",
+        "ref/wpa81/_._",
+        "ref/xamarinios10/_._",
+        "ref/xamarinmac20/_._",
+        "ref/xamarintvos10/_._",
+        "ref/xamarinwatchos10/_._",
+        "useSharedDesignerContext.txt",
+        "version.txt"
       ]
     },
     "Microsoft.EntityFrameworkCore/7.0.0": {
@@ -3137,6 +3264,25 @@
         "mimekit.nuspec"
       ]
     },
+    "NEST/7.17.5": {
+      "sha512": "bo9UyuIoVRx4IUQiuC8ZrlZuvAXKIccernC7UUKukQCEmRq2eVIk+gubHlnMQljrP51q0mN4cjgy9vv5uZPkoA==",
+      "type": "package",
+      "path": "nest/7.17.5",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net461/Nest.dll",
+        "lib/net461/Nest.pdb",
+        "lib/net461/Nest.xml",
+        "lib/netstandard2.0/Nest.dll",
+        "lib/netstandard2.0/Nest.pdb",
+        "lib/netstandard2.0/Nest.xml",
+        "license.txt",
+        "nest.7.17.5.nupkg.sha512",
+        "nest.nuspec",
+        "nuget-icon.png"
+      ]
+    },
     "NETStandard.Library/1.6.1": {
       "sha512": "WcSp3+vP+yHNgS8EV5J7pZ9IRpeDuARBPN28by8zqff1wJQXm26PVU8L3/fYLBJVU7BtDyqNVWq2KlCVvSSR4A==",
       "type": "package",
@@ -3746,25 +3892,32 @@
         "system.diagnostics.debug.nuspec"
       ]
     },
-    "System.Diagnostics.DiagnosticSource/4.3.0": {
-      "sha512": "tD6kosZnTAGdrEa0tZSuFyunMbt/5KYDnHdndJYGqZoNy00XVXyACd5d6KnE1YgYv3ne2CjtAfNXo/fwEhnKUA==",
+    "System.Diagnostics.DiagnosticSource/5.0.0": {
+      "sha512": "tCQTzPsGZh/A9LhhA6zrqCRV4hOHsK90/G7q3Khxmn6tnB1PuNU0cRaKANP2AWcF9bn0zsuOoZOSrHuJk6oNBA==",
       "type": "package",
-      "path": "system.diagnostics.diagnosticsource/4.3.0",
+      "path": "system.diagnostics.diagnosticsource/5.0.0",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "ThirdPartyNotices.txt",
-        "dotnet_library_license.txt",
+        "Icon.png",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "lib/net45/System.Diagnostics.DiagnosticSource.dll",
+        "lib/net45/System.Diagnostics.DiagnosticSource.xml",
         "lib/net46/System.Diagnostics.DiagnosticSource.dll",
         "lib/net46/System.Diagnostics.DiagnosticSource.xml",
+        "lib/net5.0/System.Diagnostics.DiagnosticSource.dll",
+        "lib/net5.0/System.Diagnostics.DiagnosticSource.xml",
         "lib/netstandard1.1/System.Diagnostics.DiagnosticSource.dll",
         "lib/netstandard1.1/System.Diagnostics.DiagnosticSource.xml",
         "lib/netstandard1.3/System.Diagnostics.DiagnosticSource.dll",
         "lib/netstandard1.3/System.Diagnostics.DiagnosticSource.xml",
         "lib/portable-net45+win8+wpa81/System.Diagnostics.DiagnosticSource.dll",
         "lib/portable-net45+win8+wpa81/System.Diagnostics.DiagnosticSource.xml",
-        "system.diagnostics.diagnosticsource.4.3.0.nupkg.sha512",
-        "system.diagnostics.diagnosticsource.nuspec"
+        "system.diagnostics.diagnosticsource.5.0.0.nupkg.sha512",
+        "system.diagnostics.diagnosticsource.nuspec",
+        "useSharedDesignerContext.txt",
+        "version.txt"
       ]
     },
     "System.Diagnostics.Tools/4.3.0": {
@@ -6696,9 +6849,11 @@
   "projectFileDependencyGroups": {
     "net7.0": [
       "ElasticFind.Repository >= 1.0.0",
+      "Elasticsearch.Net >= 7.17.5",
       "MailKit >= 4.12.1",
       "Microsoft.AspNetCore.DataProtection >= 7.0.0",
       "Microsoft.IdentityModel.Tokens >= 7.0.0",
+      "NEST >= 7.17.5",
       "System.IdentityModel.Tokens.Jwt >= 7.0.0"
     ]
   },
@@ -6743,6 +6898,10 @@
       "net7.0": {
         "targetAlias": "net7.0",
         "dependencies": {
+          "Elasticsearch.Net": {
+            "target": "Package",
+            "version": "[7.17.5, )"
+          },
           "MailKit": {
             "target": "Package",
             "version": "[4.12.1, )"
@@ -6754,6 +6913,10 @@
           "Microsoft.IdentityModel.Tokens": {
             "target": "Package",
             "version": "[7.0.0, )"
+          },
+          "NEST": {
+            "target": "Package",
+            "version": "[7.17.5, )"
           },
           "System.IdentityModel.Tokens.Jwt": {
             "target": "Package",

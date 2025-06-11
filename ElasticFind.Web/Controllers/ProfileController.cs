@@ -96,6 +96,16 @@ public class ProfileController : Controller
             JsonResponse response = await _profileService.UpdateProfile(myProfileViewModel);
             if (response.Success)
             {
+                Console.WriteLine("Profile Image Path: " + response.Anonymous);
+                //upload profile image path in cookies
+                if (!string.IsNullOrEmpty(response.Anonymous))
+                {
+                    HttpContext.Response.Cookies.Append("ProfileImagePath", response.Anonymous, new CookieOptions
+                    {
+                        HttpOnly = true,
+                        Secure = true
+                    });
+                }
                 ViewBag.Id = myProfileViewModel.Id;
                 TempData["SuccessMessage"] = "Your profile has been updated successfully!";
                 return RedirectToAction("MyProfile", "Profile");

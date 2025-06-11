@@ -137,6 +137,10 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "dependencies": {
+            "Elasticsearch.Net": {
+              "target": "Package",
+              "version": "[7.17.5, )"
+            },
             "MailKit": {
               "target": "Package",
               "version": "[4.12.1, )"
@@ -148,6 +152,10 @@
             "Microsoft.IdentityModel.Tokens": {
               "target": "Package",
               "version": "[7.0.0, )"
+            },
+            "NEST": {
+              "target": "Package",
+              "version": "[7.17.5, )"
             },
             "System.IdentityModel.Tokens.Jwt": {
               "target": "Package",

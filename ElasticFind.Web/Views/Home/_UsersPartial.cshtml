@@ -7,14 +7,14 @@
                 <th scope="col" class="text-start">
                     <span class="d-flex align-items-center ms-1">
                         Name
-                        <i class="fa-solid fa-arrow-up NameSortUp ms-1" data-column="Name" data-direction="Asc" onclick="sortTable('Name', 'Asc')"></i>
-                        <i class="fa-solid fa-arrow-down NameSortDown ms-1" data-column="Name" data-direction="Desc" onclick="sortTable('Name', 'Desc')"></i>
+                        <i class="fa-solid fa-arrow-up NameSortUp ms-2 pointer" data-order="Asc" onclick="sortTable('Asc')"></i>
+                        <i class="fa-solid fa-arrow-down NameSortDown ms-2 pointer" data-order="Desc" onclick="sortTable('Desc')"></i>
                     </span>
                 </th>
                 <th scope="col">Email</th>
                 <th scope="col">Phone</th>
-                <th scope="col">Status</th>
-                <th scope="col">Action</th>
+                <th scope="col" class="ms-3"><span>Status</span></th>
+                <th scope="col" class="text-center">Action</th>
             </tr>
         </thead>
         <tbody>
@@ -22,18 +22,18 @@
             {
                 <tr>
                     <td class="text-start d-flex align-items-center">
-                        <img src="@(user.Profileimage == null ? Url.Content("~/images/Default_pfp.svg.png") : Url.Content($"~/{user.Profileimage}"))" alt="User profile image" class="user-profile-image me-2">
+                        <img src="@(user.Profileimage == null ? Url.Content("~/images/admin-icon.png") : Url.Content($"~/{user.Profileimage}"))" alt="User profile image" class="user-profile-image me-2">
                         @($"{user.Firstname} {user.Lastname}")
                     </td>
-                    <td>@user.Email</td>
-                    <td>@user.Phone</td>
-                    <td><span class="UserStatus status">@user.IsActive</span></td>
+                    <td class="align-middle">@user.Email</td>
+                    <td class="align-middle">@user.Phone</td>
+                    <td class="align-middle"><span class="status status-active">@user.IsActive</span></td>
 
-                    <td>
-                        <span class="d-flex justify-content-center align-items-center"><i class="fa fa-pencil me-2 edit-user-icon"
-                            onclick="window.location.href = '/Users/EditUser/@user.Id'"></i> 
-                        <i class="fa fa-trash" data-bs-toggle="modal" data-bs-target="#delete_user_modal"
-                            data-user-id="@user.Id" onclick="setDeleteUserId('@user.Id')"></i></span> 
+                    <td class="align-middle">
+                        <span class="d-flex justify-content-center align-items-center">
+                            <img src="~/images/toggle-icon.svg" alt="Toggle Icon" class="me-4 toggle-user-icon pointer" onclick="setUserId('@user.Id')" data-bs-toggle="modal" data-bs-target="#toggle_user_modal" data-toggle="tooltip" data-placement="bottom" title="Toggle User status">
+                            <i class="fa fa-trash pointer" data-bs-toggle="modal" data-bs-target="#delete_user_modal" data-toggle="tooltip" data-placement="bottom" title="Delete User" data-user-id="@user.Id" onclick="setUserId('@user.Id')"></i>
+                        </span> 
                     </td>
                 </tr>
             }
@@ -44,21 +44,21 @@
                     <div class="d-flex justify-content-end align-items-center">
                         <span class="me-2">Items per page:</span>
                         <select class="pointer" id="itemsPerPage" onchange="changePageSize()">
-                            <option value="3" selected=@(ViewBag.PageSize == 3 ? "selected" : null)>3</option>
-                            <option value="5" selected=@(ViewBag.PageSize == 5 ? "selected" : null)>5</option>
-                            <option value="10" selected=@(ViewBag.PageSize == 10 ? "selected" : null)>10</option>
+                            <option value="3" selected=@(Model.PaginationViewModel.PageSize == 3 ? "selected" : null)>3</option>
+                            <option value="5" selected=@(Model.PaginationViewModel.PageSize == 5 ? "selected" : null)>5</option>
+                            <option value="10" selected=@(Model.PaginationViewModel.PageSize == 10 ? "selected" : null)>10</option>
                         </select>
-                        <span class="ms-2">Showing @(ViewBag.PageSize * (ViewBag.Page - 1) + 1) -
-                            @((ViewBag.PageSize * ViewBag.Page) > ViewBag.TotalUsers ? ViewBag.TotalUsers :
-                                                        (ViewBag.PageSize * ViewBag.Page)) of @ViewBag.TotalUsers</span>
+                        <span class="ms-2">Showing @(Model.PaginationViewModel.PageSize * (Model.PaginationViewModel.Page - 1) + 1) -
+                            @((Model.PaginationViewModel.PageSize * Model.PaginationViewModel.Page) > Model.PaginationViewModel.TotalRecords ? Model.PaginationViewModel.TotalRecords :
+                                                        (Model.PaginationViewModel.PageSize * Model.PaginationViewModel.Page)) of @Model.PaginationViewModel.TotalRecords</span>
 
-                        <button class="btn btn-outline-secondary ms-2 @(ViewBag.Page > 1 ? "" : "disabled")"
+                        <button class="btn btn-outline-secondary ms-2 @(Model.PaginationViewModel.Page > 1 ? "" : "disabled")"
                             onclick="loadPrevPage()">
                             &lt;
                         </button>
 
                         <button
-                            class="btn btn-outline-secondary ms-2 @(ViewBag.Page* ViewBag.PageSize < ViewBag.TotalUsers ? "" : "disabled")"
+                            class="btn btn-outline-secondary ms-2 @(Model.PaginationViewModel.Page* Model.PaginationViewModel.PageSize < Model.PaginationViewModel.TotalRecords ? "" : "disabled")"
                             onclick="loadNextPage()">
                             &gt;
                         </button>
@@ -68,3 +68,40 @@
         </tfoot>
     </table>
 </div>
+
+<script>
+    $(document).ready(function () {
+        $('.status').each(function () {
+            if ($(this).text() == "Active") {
+                $(this).addClass("status-active");
+            } else {
+                $(this).addClass("status-inactive");
+            }
+        });
+    });
+
+    function loadPrevPage() {
+        var page = @Model.PaginationViewModel.Page - 1;
+        var pageSize = @Model.PaginationViewModel.PageSize;
+        var searchString = $("#searchInput").val();
+        var sortOrder = $(this).data("order");
+        loadPage(page, pageSize, searchString, sortOrder);
+    }
+
+    function loadNextPage() {
+        var page = @Model.PaginationViewModel.Page + 1;
+        var pageSize = @Model.PaginationViewModel.PageSize;
+        var searchString = $("#searchInput").val();
+        var sortOrder = $(this).data("order");
+        loadPage(page, pageSize, searchString, sortOrder);
+    }
+
+    function sortTable(order) {
+        var page = @Model.PaginationViewModel.Page;
+        var pageSize = @Model.PaginationViewModel.PageSize;
+        var searchString = $("#searchInput").val();
+        SortOrder = order;
+        console.log("Sorting table with order: ", SortOrder);
+        loadPage(page, pageSize, searchString, SortOrder);
+    }
+</script>

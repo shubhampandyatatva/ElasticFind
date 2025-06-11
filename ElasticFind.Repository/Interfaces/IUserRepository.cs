@@ -12,4 +12,6 @@ public interface IUserRepository
     Task<int> GetTotalUsers();
     Task<int> GetTotalSearchedUsers(string searchString);
     List<UserViewModel> GetUserList(PaginationViewModel paginationViewModel);
+    Task<User?> GetUserById(int id);
+
 }

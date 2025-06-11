@@ -47,12 +47,12 @@ public class UserRepository : IUserRepository
 
     public Task<User?> GetUserByEmail(string email)
     {
-        return _dbcontext.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Email == email);
+        return _dbcontext.Users.Include(u => u.Role).Where(u => u.Isdeleted != true).FirstOrDefaultAsync(u => u.Email == email);
     }
 
     public async Task<string?> GetOccupiedField(string username, string phone, int id)
     {
-        User? user = await _dbcontext.Users.FirstOrDefaultAsync(u => (u.Username.ToLower() == username.ToLower() || u.Phone == phone) && u.Id != id);
+        User? user = await _dbcontext.Users.Where(u => u.Isdeleted != true).FirstOrDefaultAsync(u => (u.Username.ToLower() == username.ToLower() || u.Phone == phone) && u.Id != id);
         if (user == null)
         {
             return string.Empty;
@@ -70,17 +70,17 @@ public class UserRepository : IUserRepository
 
     public async Task<int> GetTotalUsers()
     {
-        return await _dbcontext.Users.CountAsync();
+        return await _dbcontext.Users.Where(u => u.Isdeleted != true).CountAsync();
     }
 
     public async Task<int> GetTotalSearchedUsers(string searchString)
     {
-        return await _dbcontext.Users.Where(u => u.FirstName.ToLower().Contains(searchString.ToLower()) || u.LastName.ToLower().Contains(searchString.ToLower()) || u.Email.ToLower().Contains(searchString.ToLower()) || u.Phone.ToLower().Contains(searchString.ToLower())).CountAsync();
+        return await _dbcontext.Users.Where(u => u.Isdeleted != true && (u.FirstName.ToLower().Contains(searchString.ToLower()) || u.LastName.ToLower().Contains(searchString.ToLower()) || u.Email.ToLower().Contains(searchString.ToLower()) || u.Phone.ToLower().Contains(searchString.ToLower()))).CountAsync();
     }
 
     public List<UserViewModel> GetUserList(PaginationViewModel paginationViewModel)
     {
-        var query = _dbcontext.Users.OrderBy(u => u.Id);
+        var query = _dbcontext.Users.Where(u => u.Isdeleted != true).OrderBy(u => u.Id);
         if (!string.IsNullOrEmpty(paginationViewModel.SearchString))
         {
             query = query.Where(u => u.FirstName.ToLower().Contains(paginationViewModel.SearchString.ToLower()) || u.LastName.ToLower().Contains(paginationViewModel.SearchString.ToLower()) || u.Email.ToLower().Contains(paginationViewModel.SearchString.ToLower()) || u.Phone.ToLower().Contains(paginationViewModel.SearchString.ToLower())).OrderBy(u => u.Id);
@@ -95,11 +95,15 @@ public class UserRepository : IUserRepository
             Firstname = u.FirstName,
             Lastname = u.LastName,
             Email = u.Email,
-            Phone = u.Phone
-            // IsActive = u.Isactive
+            Phone = u.Phone,
+            IsActive = u.Isactive == true ? "Active" : "Inactive",
         }).ToList();
 
         return users;
     }
 
+    public Task<User?> GetUserById(int id)
+    {
+        return _dbcontext.Users.Include(u => u.Role).Where(u => u.Isdeleted != true).FirstOrDefaultAsync(u => u.Id == id);
+    }
 }

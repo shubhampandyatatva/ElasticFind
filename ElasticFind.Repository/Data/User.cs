@@ -23,5 +23,9 @@ public partial class User
 
     public string Password { get; set; } = null!;
 
+    public bool? Isdeleted { get; set; }
+
+    public bool? Isactive { get; set; }
+
     public virtual Role? Role { get; set; }
 }

@@ -6,6 +6,7 @@ using Nest;
 using ElasticFind.Repository.ViewModels;
 using ElasticFind.Repository.Interfaces;
 using ElasticFind.Service.Interfaces;
+using ElasticFind.Web.Connector;
 
 namespace ElasticFind.Web.Controllers;
 
@@ -13,11 +14,17 @@ public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
     private readonly IUserService _userService;
+    private readonly ConnectionToEs _connectionToEs;
+    private readonly IElasticSearchService _elasticSearchService;
+    private readonly IElasticClient _elasticClient;
 
-    public HomeController(ILogger<HomeController> logger, IUserService userService)
+    public HomeController(ILogger<HomeController> logger, IUserService userService, IElasticSearchService elasticSearchService, IElasticClient elasticClient)
     {
         _logger = logger;
         _userService = userService;
+        _connectionToEs = new ConnectionToEs();
+        _elasticSearchService = elasticSearchService;
+        _elasticClient = elasticClient;
     }
 
     [Authorize(Roles = "1")]
@@ -75,6 +82,85 @@ public class HomeController : Controller
 
         return View(listOfUsers);
     }
+
+    public async Task<JsonResult> DeleteUser(int id)
+    {
+        bool result = await _userService.DeleteUser(id);
+        if (result)
+        {
+            return Json(new { success = true, message = "User deleted successfully." });
+        }
+        else
+        {
+            return Json(new { success = false, message = "Error deleting user." });
+        }
+    }
+
+    public async Task<JsonResult> ToggleUserStatus(int id)
+    {
+        bool result = await _userService.ToggleUserStatus(id);
+        if (result)
+        {
+            return Json(new { success = true, message = "User status changed successfully!" });
+        }
+        else
+        {
+            return Json(new { success = false, message = "Error in changing status of the user." });
+        }
+    }
+
+    [HttpGet]
+    public ActionResult Search()
+    {
+        return View();
+    }
+
+    public async Task<List<Humanresources>> DataSearch(string keyword, string nationalIDNumber)
+    {
+        // var responsedata = _connectionToEs.EsClient().Search<Humanresources>(s => s
+        //                         .Index("jobs")
+        //                         .Query(q => q
+        //                             .Match(m => m
+        //                                 .Field(f => f.Jobtitle)
+        //                                 .Query(keyword)
+        //                             )
+        //                         )
+        //                     );
+
+        // var datasend = (from hits in responsedata.Hits
+        //                 select hits.Source).ToList();
+
+        // return Json(new { datasend, responsedata.Took });
+
+        var response = await _elasticSearchService.SearchByJobTitleAsync(keyword);
+        return response;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> UploadDocument(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+            return BadRequest("No file selected.");
+
+        using var memoryStream = new MemoryStream();
+        await file.CopyToAsync(memoryStream);
+        var base64data = Convert.ToBase64String(memoryStream.ToArray());
+
+        DocumentViewModel document = new()
+        {
+            Id = file.FileName + "-" + DateTime.Now.ToString("yyyyMMddHHmmssfff"),
+            FileName = file.FileName,
+            Data = base64data
+        };
+
+        var response = await _elasticClient.IndexAsync(document, i => i.Id(document.Id).Pipeline("attachment"));
+
+        if (response.IsValid)
+            return Ok("Document indexed successfully.");
+        else
+            return BadRequest(response.OriginalException.Message);
+    }
+
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()

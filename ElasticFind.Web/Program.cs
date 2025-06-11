@@ -6,9 +6,11 @@ using ElasticFind.Repository.Interfaces;
 using ElasticFind.Repository.ViewModels;
 using ElasticFind.Service.Implementations;
 using ElasticFind.Service.Interfaces;
+using Elasticsearch.Net;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Nest;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +30,7 @@ builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IUploadImageService, UploadImageService>();
+builder.Services.AddScoped<IElasticSearchService, ElasticSearchService>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -77,6 +80,72 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
            }
        };
    });
+
+var pool = new SingleNodeConnectionPool(new Uri("https://localhost:9200"));
+
+var settings = new ConnectionSettings(pool)
+    .ServerCertificateValidationCallback((sender, cert, chain, errors) => true) // Ignore cert errors
+    .BasicAuthentication("elastic", "158xkDDd9Qn1fajXw0K1")
+    .DefaultIndex("jobs");
+
+var client = new ElasticClient(settings);
+
+// Optional: Register for DI so you can inject IElasticClient later
+builder.Services.AddSingleton<IElasticClient>(client);
+
+// Check if index exists and create if not
+// var indexExists = client.Indices.Exists("jobs");
+// if (!indexExists.Exists)
+// {
+//     var createIndexResponse = client.Indices.Create("jobs", c => c
+//         .Map<Humanresources>(m => m.AutoMap())
+//     );
+
+//     if (!createIndexResponse.IsValid)
+//     {
+//         Console.WriteLine("Failed to create index.");
+//         Console.WriteLine($"Debug Info: {createIndexResponse.DebugInformation}");
+//         Console.WriteLine($"Server Error: {createIndexResponse.ServerError}");
+//     }
+//     else
+//     {
+//         Console.WriteLine("'jobs' index created.");
+//     }
+// }
+
+// var hrRecord = new Humanresources
+// {
+//     Nationalidnumber = "IND1234567",
+//     LoginID = "0001",
+//     Jobtitle = "Software Engineer",
+//     Gender = "Male",
+// };
+
+// var indexResponse = client.IndexDocument(hrRecord);
+
+// if (indexResponse.IsValid)
+// {
+//     Console.WriteLine("Document indexed successfully.");
+// }
+// else
+// {
+//     Console.WriteLine("Failed to index document.");
+//     Console.WriteLine($"Debug Info: {indexResponse.DebugInformation}");
+// }
+
+var searchResponse = client.Search<Humanresources>(s => s
+    .Query(q => q
+        .Match(m => m
+            .Field(f => f.Jobtitle)
+            .Query("sss")
+        )
+    )
+);
+
+foreach (var doc in searchResponse.Documents)
+{
+    Console.WriteLine($"Found: {doc.Jobtitle} - {doc.Nationalidnumber}");
+}
 
 var app = builder.Build();
 

@@ -1188,9 +1188,11 @@
       "ElasticFind.Service/1.0.0": {
         "dependencies": {
           "ElasticFind.Repository": "1.0.0",
+          "Elasticsearch.Net": "7.17.5",
           "MailKit": "4.12.1",
           "Microsoft.AspNetCore.DataProtection": "7.0.0",
           "Microsoft.IdentityModel.Tokens": "7.0.0",
+          "NEST": "7.17.5",
           "System.IdentityModel.Tokens.Jwt": "7.0.0"
         },
         "runtime": {

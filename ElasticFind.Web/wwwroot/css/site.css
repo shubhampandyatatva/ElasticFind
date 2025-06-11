@@ -146,7 +146,7 @@ html {
 
 .profile-header {
   background-color: #0f4699;
-  color: white; 
+  color: white;
 }
 
 .profile-image {
@@ -186,4 +186,32 @@ html {
   height: 18px;
   position: absolute;
   right: 5px;
+}
+
+.user-profile-image {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+}
+
+.status {
+  display: inline-block;
+  justify-content: center;
+  align-items: center;
+  width: 80px;
+  border-radius: 20px;
+  text-align: center;
+}
+
+.status-active {
+  background-color: #24d60c;
+}
+
+.status-inactive {
+  background-color: #ff4242; 
+}
+
+.toggle-user-icon {
+  height: 16px;
+  width: 16px;
 }

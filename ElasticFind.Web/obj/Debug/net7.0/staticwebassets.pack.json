@@ -33,6 +33,14 @@
       "PackagePath": "staticwebassets\\images\\search-icon.svg"
     },
     {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\images\\toggle-black-white.svg",
+      "PackagePath": "staticwebassets\\images\\toggle-black-white.svg"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\images\\toggle-icon.svg",
+      "PackagePath": "staticwebassets\\images\\toggle-icon.svg"
+    },
+    {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\images\\warning-icon.svg",
       "PackagePath": "staticwebassets\\images\\warning-icon.svg"
     },
@@ -269,6 +277,14 @@
       "PackagePath": "staticwebassets\\lib\\jquery\\dist\\jquery.min.map"
     },
     {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\062c52d7-cf39-49b0-8197-00e67b7ffbcb.png",
+      "PackagePath": "staticwebassets\\uploads\\062c52d7-cf39-49b0-8197-00e67b7ffbcb.png"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\14d17432-1db4-4d8e-a6b4-c655d43cf8dc.png",
+      "PackagePath": "staticwebassets\\uploads\\14d17432-1db4-4d8e-a6b4-c655d43cf8dc.png"
+    },
+    {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\2025 Trainees Allocation PM-20250609112953451.pdf",
       "PackagePath": "staticwebassets\\uploads\\2025 Trainees Allocation PM-20250609112953451.pdf"
     },
@@ -283,6 +299,30 @@
     {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\4e071f7e-887b-4d17-b8d5-9f19aa751813.png",
       "PackagePath": "staticwebassets\\uploads\\4e071f7e-887b-4d17-b8d5-9f19aa751813.png"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\5e5dace9-0c15-47ba-95f4-5f907cdf72de.png",
+      "PackagePath": "staticwebassets\\uploads\\5e5dace9-0c15-47ba-95f4-5f907cdf72de.png"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\6d68c3b3-60e9-43bf-9cf8-5881fdd4f018.png",
+      "PackagePath": "staticwebassets\\uploads\\6d68c3b3-60e9-43bf-9cf8-5881fdd4f018.png"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\790db4d9-213b-4d6d-a050-d99ceba581ce.png",
+      "PackagePath": "staticwebassets\\uploads\\790db4d9-213b-4d6d-a050-d99ceba581ce.png"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\8440ae2b-69eb-4fb9-8f26-17bb74f6c483.png",
+      "PackagePath": "staticwebassets\\uploads\\8440ae2b-69eb-4fb9-8f26-17bb74f6c483.png"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\8d874bde-08b5-4f8d-9d72-70e677461c84.png",
+      "PackagePath": "staticwebassets\\uploads\\8d874bde-08b5-4f8d-9d72-70e677461c84.png"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\95a00817-261e-458f-a449-13c4741601a5.png",
+      "PackagePath": "staticwebassets\\uploads\\95a00817-261e-458f-a449-13c4741601a5.png"
     },
     {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\Assignment 1-EMS (3)-20250609113053802.pdf",
@@ -329,8 +369,20 @@
       "PackagePath": "staticwebassets\\uploads\\OrderDetailsReport (42)-20250610172545947.pdf"
     },
     {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\e7414912-2330-433a-9774-d672bb373855.png",
+      "PackagePath": "staticwebassets\\uploads\\e7414912-2330-433a-9774-d672bb373855.png"
+    },
+    {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\e8e25f63-755b-4052-b6a2-49fa030db269.png",
       "PackagePath": "staticwebassets\\uploads\\e8e25f63-755b-4052-b6a2-49fa030db269.png"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\fe2acb6f-1f97-42ed-9d61-78fc43aa58dd.png",
+      "PackagePath": "staticwebassets\\uploads\\fe2acb6f-1f97-42ed-9d61-78fc43aa58dd.png"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\fe3da3ce-213d-4044-b2af-84050e485d57.png",
+      "PackagePath": "staticwebassets\\uploads\\fe3da3ce-213d-4044-b2af-84050e485d57.png"
     },
     {
       "Id": "obj\\Debug\\net7.0\\staticwebassets\\msbuild.ElasticFind.Web.Microsoft.AspNetCore.StaticWebAssets.props",

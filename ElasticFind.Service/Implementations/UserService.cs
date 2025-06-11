@@ -1,3 +1,4 @@
+using ElasticFind.Repository.Data;
 using ElasticFind.Repository.Interfaces;
 using ElasticFind.Repository.ViewModels;
 using ElasticFind.Service.Interfaces;
@@ -11,6 +12,7 @@ public class UserService : IUserService
     {
         _userRepository = userRepository;
     }
+
 
     public async Task<DisplayUsersViewModel> GetUserList(int page, int pageSize, string? searchString, string sortOrder)
     {
@@ -32,6 +34,44 @@ public class UserService : IUserService
         };
 
         return viewModel;
+    }
+
+    public async Task<bool> DeleteUser(int id)
+    {
+        User? user = await _userRepository.GetUserById(id);
+        if (user == null)
+        {
+            Console.WriteLine("Error: User not found with ID: " + id);
+            return false;
+        }
+
+        user.Isdeleted = true;
+        bool result = await _userRepository.UpdateUser(user);
+        if (!result)
+        {
+            Console.WriteLine("Error: Failed to delete user with ID: " + id);
+            return false;
+        }
+        return true;
+    }
+
+    public async Task<bool> ToggleUserStatus(int id)
+    {
+        User? user = await _userRepository.GetUserById(id);
+        if (user == null)
+        {
+            Console.WriteLine("Error: User not found with ID: " + id);
+            return false;
+        }
+
+        user.Isactive = !user.Isactive.GetValueOrDefault();
+        bool result = await _userRepository.UpdateUser(user);
+        if (!result)
+        {
+            Console.WriteLine("Error: Failed to delete user with ID: " + id);
+            return false;
+        }
+        return true;
     }
 
 }
