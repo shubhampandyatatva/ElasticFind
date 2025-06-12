@@ -13,6 +13,23 @@ public class ElasticSearchService : IElasticSearchService
         _elasticClient = elasticClient;
     }
 
+    public async Task<bool> CreateDocumentIndexAsync(string indexName)
+    {
+        indexName = indexName.ToLowerInvariant(); // Outputs lowercase index names irrespective of any culture (to maintain similarity of lowercase index names everywhere in our elasticsearch)
+
+        var existsResponse = await _elasticClient.Indices.ExistsAsync(indexName);
+        if (existsResponse.Exists)
+            return true; // Already exists
+
+        var createIndexResponse = await _elasticClient.Indices.CreateAsync(indexName, c => c
+            .Map<DocumentViewModel>(m => m
+                .AutoMap()
+            )
+        );
+
+        return createIndexResponse.IsValid;
+    }
+
     public async Task<bool> IndexAsync(Humanresources hr)
     {
         var response = await _elasticClient.IndexDocumentAsync(hr);
@@ -51,5 +68,40 @@ public class ElasticSearchService : IElasticSearchService
     {
         var response = await _elasticClient.DeleteAsync<Humanresources>(id);
         return response.IsValid;
+    }
+
+    public async Task<List<string>> SearchDocumentsAsync(string keyword)
+    {
+        var response = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
+            .Index("documents")
+            .Query(q => q
+                .Match(m => m
+                    .Field("attachment.content")
+                    .Query(keyword)
+                )
+            )
+            .Highlight(h => h
+                .Fields(f => f
+                    .Field("attachment.content")
+                    .PreTags("<mark>")     // Highlight start
+                    .PostTags("</mark>")   // Highlight end
+                    .FragmentSize(300)           // increase fragment length
+                    .NumberOfFragments(50)       // allow more fragments to be returned
+                    .NoMatchSize(150)           // return snippet even if keyword is not matched
+                )
+            )
+        );
+
+        var snippets = new List<string>();
+
+        foreach (var hit in response.Hits)
+        {
+            if (hit.Highlight.TryGetValue("attachment.content", out var highlights))
+            {
+                snippets.AddRange(highlights); // you could choose only first or all fragments
+            }
+        }
+
+        return snippets;
     }
 }

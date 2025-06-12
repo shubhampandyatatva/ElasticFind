@@ -137,7 +137,7 @@ var searchResponse = client.Search<Humanresources>(s => s
     .Query(q => q
         .Match(m => m
             .Field(f => f.Jobtitle)
-            .Query("sss")
+            .Query("software")
         )
     )
 );

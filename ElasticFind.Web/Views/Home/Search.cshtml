@@ -33,17 +33,28 @@
             </div>
         </div>
     </div>
-</div>  
+</div>
 
 <!-- Upload File to ingest-attachement pipeline -->
 
-<form id="uploadForm" enctype="multipart/form-data">
+<form id="uploadForm" enctype="multipart/form-data" class="mb-3">
     <div class="form-group">
         <label for="file">Choose File</label>
         <input type="file" name="file" id="file" class="form-control" />
     </div>
+    <button type="button" class="btn btn-primary mt-2" id="createIndexBtn">Create Document Index</button>
     <button type="submit" class="btn btn-primary mt-2">Upload</button>
 </form>
+
+<div class="d-flex align-items-center mb-2">
+    <label for="searchKeywordInput" class="me-2 mb-0">Search Keyword:</label>
+    <input type="text" class="form-control" id="searchKeywordInput" placeholder="Enter keyword..." />
+</div>
+<button type="button" class="btn btn-primary" id="searchKeywordBtn">Search</button>
+
+<div id="searchResults" class="mt-4">
+
+</div>
 
 <script>
     $(document).ready(function () {
@@ -83,29 +94,29 @@
                                 rowAlternationEnabled: true,
                                 showBorders: true,
                                 paging: {
-                                    pageSize: 50
-                                },
+                                pageSize: 50
+                            },
                                 height: 400,
                                 scrolling: {
-                                    mode: "infinite" // or "virtual" | "infinite"
-                                },
+                                mode: "infinite" // or "virtual" | "infinite"
+                            },
                                 pager: {
-                                    showPageSizeSelector: false,
-                                    allowedPageSizes: [5, 10, 20],
-                                    showInfo: true
-                                },
+                                showPageSizeSelector: false,
+                                allowedPageSizes: [5, 10, 20],
+                                showInfo: true
+                            },
                                 columns: [
-                                    {
-                                        caption: "JobTitle",
-                                        fixed: true,
-                                        dataField: "jobtitle"
-                                    },
-                                    {
-                                        caption: "NationalIDNumber",
-                                        fixed: true,
-                                        dataField: "nationalidnumber"
-                                    },
-                                    @* "MaritalStatus",
+                                {
+                                    caption: "JobTitle",
+                                    fixed: true,
+                                    dataField: "jobtitle"
+                                },
+                                {
+                                    caption: "NationalIDNumber",
+                                    fixed: true,
+                                    dataField: "nationalidnumber"
+                                },
+                                @* "MaritalStatus",
                                     "Gender",
                                     "SalariedFlag",
                                     "VacationHours",
@@ -113,14 +124,14 @@
                                     "CurrentFlag" *@
                                 ]
                             });
-                        @* } *@
+                @* } *@
                     },
-                    error: function (xhr, err) {
-                        alert("readyState: " + xhr.readyState + "\nstatus: " + xhr.status);
-                        alert("responseText: " + xhr.responseText);
-                    }
-                });
+            error: function (xhr, err) {
+                alert("readyState: " + xhr.readyState + "\nstatus: " + xhr.status);
+                alert("responseText: " + xhr.responseText);
             }
+        });
+    }
         });
 
     });
@@ -152,6 +163,54 @@
                 error: function (xhr, status, error) {
                     alert("Upload failed.");
                     console.error(xhr.responseText);
+                }
+            });
+        });
+
+        $("#createIndexBtn").on("click", function () {
+            var apiUrl = '@Url.Action("CreateDocumentIndex", "Home")';
+
+            $.ajax({
+                url: apiUrl,
+                type: "POST",
+                contentType: "application/json",
+                success: function (data) {
+                    alert("Document index created successfully!");
+                    console.log(data);
+                },
+                error: function (xhr, err) {
+                    alert("Error creating document index: " + xhr.responseText);
+                }
+            });
+        });
+
+        $("#searchKeywordBtn").on("click", function () {
+            var keyword = $("#searchKeywordInput").val();
+
+            $.ajax({
+                url: "/Home/SearchDocumentContent",
+                type: "POST",
+                data: { keyword: keyword },
+                success: function (data) {
+                    var html = "";
+
+                    if (data.length === 0) {
+                        html = "<div class='alert alert-warning'>No results found.</div>";
+                    } else {
+                        html = "<h5>Results:</h5>";
+                        html += "<ul class='list-group'>";
+
+                        data.forEach(function (snippet) {
+                            html += "<li class='list-group-item'>" + snippet + "</li>";
+                        });
+
+                        html += "</ul>";
+                    }
+
+                    $("#searchResults").html(html);
+                },
+                error: function (xhr) {
+                    $("#searchResults").html("<div class='alert alert-danger'>An error occurred while searching.</div>");
                 }
             });
         });

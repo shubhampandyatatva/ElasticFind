@@ -142,18 +142,25 @@ public class HomeController : Controller
         if (file == null || file.Length == 0)
             return BadRequest("No file selected.");
 
-        using var memoryStream = new MemoryStream();
-        await file.CopyToAsync(memoryStream);
-        var base64data = Convert.ToBase64String(memoryStream.ToArray());
+        // Generate ID: FileName (without extension) + Timestamp
+        var fileNameWithoutExt = Path.GetFileNameWithoutExtension(file.FileName);
+        var timestamp = DateTime.UtcNow.Ticks;
+        var customId = $"{fileNameWithoutExt}_{timestamp}";
+
+        // Read and convert file to base64
+        using var ms = new MemoryStream();
+        await file.CopyToAsync(ms);
+        var fileBytes = ms.ToArray();
+        var base64Data = Convert.ToBase64String(fileBytes);
 
         DocumentViewModel document = new()
         {
-            Id = file.FileName + "-" + DateTime.Now.ToString("yyyyMMddHHmmssfff"),
+            Id = customId,
             FileName = file.FileName,
-            Data = base64data
+            Data = base64Data
         };
 
-        var response = await _elasticClient.IndexAsync(document, i => i.Id(document.Id).Pipeline("attachment"));
+        var response = await _elasticClient.IndexAsync(document, i => i.Id(document.Id).Index("documents").Pipeline("attachment"));
 
         if (response.IsValid)
             return Ok("Document indexed successfully.");
@@ -161,6 +168,23 @@ public class HomeController : Controller
             return BadRequest(response.OriginalException.Message);
     }
 
+    [HttpPost]
+    public async Task<IActionResult> CreateDocumentIndex(string indexName = "documents")
+    {
+        var created = await _elasticSearchService.CreateDocumentIndexAsync(indexName); 
+
+        if (created)
+            return Ok("Index created");
+        else
+            return StatusCode(500, "Failed to create index");
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> SearchDocumentContent(string keyword)
+    {
+        var results = await _elasticSearchService.SearchDocumentsAsync(keyword);
+        return Json(results);
+    }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
