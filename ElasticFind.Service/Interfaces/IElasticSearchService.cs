@@ -10,5 +10,5 @@ public interface IElasticSearchService
     Task<bool> UpdateAsync(Humanresources hr);
     Task<bool> UpdateFieldAsync(int id, string newJobTitle);
     Task<bool> DeleteAsync(int id);
-    Task<List<string>> SearchDocumentsAsync(string keyword);
+    Task<List<GroupedSearchResults>> SearchDocumentsAsync(string keyword);
 }

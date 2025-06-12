@@ -70,7 +70,7 @@ public class ElasticSearchService : IElasticSearchService
         return response.IsValid;
     }
 
-    public async Task<List<string>> SearchDocumentsAsync(string keyword)
+    public async Task<List<GroupedSearchResults>> SearchDocumentsAsync(string keyword)
     {
         var response = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
             .Index("documents")
@@ -92,16 +92,21 @@ public class ElasticSearchService : IElasticSearchService
             )
         );
 
-        var snippets = new List<string>();
+        var results = new List<GroupedSearchResults>();
 
         foreach (var hit in response.Hits)
         {
             if (hit.Highlight.TryGetValue("attachment.content", out var highlights))
             {
-                snippets.AddRange(highlights); // you could choose only first or all fragments
+                results.Add(new GroupedSearchResults
+                {
+                    Id = hit.Id,
+                    FileName = hit.Source.FileName,
+                    Snippets = highlights.ToList()
+                });
             }
         }
 
-        return snippets;
+        return results;
     }
 }
