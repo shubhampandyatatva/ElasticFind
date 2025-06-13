@@ -16,20 +16,19 @@ public class AuthRepository : IAuthRepository
 
     public async Task<bool> CheckIfUserByEmailExists(string email)
     {
-        User? user = await _dbcontext.Users.FirstOrDefaultAsync(u => u.Email == email);
+        User? user = await _dbcontext.Users.FirstOrDefaultAsync(u => u.Email == email && u.Isdeleted != true);
         return user != null;
     }
 
     public async Task<bool> CheckUserPassword(string email, string password)
     {
-        User? user = await _dbcontext.Users.FirstOrDefaultAsync(u => u.Email == email);
+        User? user = await _dbcontext.Users.FirstOrDefaultAsync(u => u.Email == email && u.Isdeleted != true);
         return user != null && user.Password == password;
     }
 
     public async Task<string> CheckIfEmailUsernameAndPhoneExists(string email, string username, string phone)
     {
-        // User? user = await _dbcontext.Users.FirstOrDefaultAsync(u => (u.Email.ToLower() == email.ToLower() || u.Username.ToLower() == username.ToLower() || u.Phone.ToLower() == phone.ToLower()) && u.RoleId == 2);
-        User? user = await _dbcontext.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower() || u.Username.ToLower() == username.ToLower() || u.Phone.ToLower() == phone.ToLower());
+        User? user = await _dbcontext.Users.FirstOrDefaultAsync(u => (u.Email.ToLower() == email.ToLower() || u.Username.ToLower() == username.ToLower() || u.Phone == phone) && u.Isdeleted != true);
         if (user == null)
         {
             return string.Empty;
@@ -42,7 +41,7 @@ public class AuthRepository : IAuthRepository
         {
             return "username";
         }
-        if (user.Phone.ToLower() == phone.ToLower())
+        if (user.Phone == phone)
         {
             return "phone number";
         }
@@ -67,6 +66,6 @@ public class AuthRepository : IAuthRepository
 
     public async Task<User?> GetUserByEmail(string email)
     {
-        return await _dbcontext.Users.FirstOrDefaultAsync(u => u.Email == email);
+        return await _dbcontext.Users.FirstOrDefaultAsync(u => u.Email == email && u.Isdeleted != true);
     }
 }

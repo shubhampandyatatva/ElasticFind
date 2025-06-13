@@ -47,12 +47,12 @@ public class UserRepository : IUserRepository
 
     public Task<User?> GetUserByEmail(string email)
     {
-        return _dbcontext.Users.Include(u => u.Role).Where(u => u.Isdeleted != true).FirstOrDefaultAsync(u => u.Email == email);
+        return _dbcontext.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Email == email && u.Isdeleted != true);
     }
 
     public async Task<string?> GetOccupiedField(string username, string phone, int id)
     {
-        User? user = await _dbcontext.Users.Where(u => u.Isdeleted != true).FirstOrDefaultAsync(u => (u.Username.ToLower() == username.ToLower() || u.Phone == phone) && u.Id != id);
+        User? user = await _dbcontext.Users.FirstOrDefaultAsync(u => (u.Username.ToLower() == username.ToLower() || u.Phone == phone) && u.Id != id && u.Isdeleted != true);
         if (user == null)
         {
             return string.Empty;
@@ -102,8 +102,14 @@ public class UserRepository : IUserRepository
         return users;
     }
 
-    public Task<User?> GetUserById(int id)
+    public async Task<User?> GetUserById(int id)
     {
-        return _dbcontext.Users.Include(u => u.Role).Where(u => u.Isdeleted != true).FirstOrDefaultAsync(u => u.Id == id);
+        return await _dbcontext.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Id == id && u.Isdeleted != true);
     }
+
+    public async Task<bool> IsUserActive(string email)
+    {
+        return await _dbcontext.Users.Where(u => u.Email == email && u.Isactive == true && u.Isdeleted != true).AnyAsync();
+    }
+
 }

@@ -138,14 +138,11 @@ namespace ElasticFind.Repository.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.HasIndex(new[] { "Email" }, "users_email_key")
-                        .IsUnique();
+                    b.HasIndex(new[] { "Email" }, "users_email_key");
 
-                    b.HasIndex(new[] { "Phone" }, "users_phone_key")
-                        .IsUnique();
+                    b.HasIndex(new[] { "Phone" }, "users_phone_key");
 
-                    b.HasIndex(new[] { "Username" }, "users_username_key")
-                        .IsUnique();
+                    b.HasIndex(new[] { "Username" }, "users_username_key");
 
                     b.ToTable("users", (string)null);
                 });

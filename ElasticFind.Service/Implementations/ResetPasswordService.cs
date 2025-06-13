@@ -56,7 +56,7 @@ public class ResetPasswordService : IResetPasswordService
         {
             return new JsonResponse { Success = false, Message = "User with this token was not found!" };
         }
-        return new JsonResponse {Success = true};
+        return new JsonResponse {Success = true, Anonymous = email};
     }
 
     public string DecryptResetPasswordToken(string token)

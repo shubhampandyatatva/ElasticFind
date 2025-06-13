@@ -49,6 +49,18 @@ public class AuthenticationController : Controller
             return View();
         }
 
+        // Set the profile image path in cookies if it exists
+        if (existingUser.ProfileImage != null)
+        {
+            CookieOptions cookieOptions = new()
+            {
+                HttpOnly = true, // Prevent JavaScript access
+                Secure = true, // Ensure cookie is only sent over HTTPS
+                Expires = DateTime.UtcNow.AddDays(7)
+            };
+            Response.Cookies.Append("ProfileImagePath", existingUser.ProfileImage, cookieOptions);
+        }
+
         return roleId == "1" ? RedirectToAction("Index", "Home") : RedirectToAction("Index", "UserDashboard");
     }
 
@@ -90,6 +102,18 @@ public class AuthenticationController : Controller
                         Expires = DateTime.UtcNow.AddDays(7)
                     };
                     Response.Cookies.Append("JwtToken", token, cookieOptions);
+                }
+
+                // Set the profile image path in cookies if it exists
+                if (user.ProfileImage != null)
+                {
+                    CookieOptions cookieOptions = new()
+                    {
+                        HttpOnly = true, // Prevent JavaScript access
+                        Secure = true, // Ensure cookie is only sent over HTTPS
+                        Expires = DateTime.UtcNow.AddDays(7)
+                    };
+                    Response.Cookies.Append("ProfileImagePath", user.ProfileImage, cookieOptions);
                 }
 
                 TempData["SuccessMessage"] = response.Message;
@@ -210,11 +234,11 @@ public class AuthenticationController : Controller
 
         if (resetPasswordResult.Success)
         {
-            TempData["Token"] = token;
-            string? email = _jwtService.GetClaimValue(token, ClaimTypes.Email);
-            if (email == null)
+            TempData["Token"] = token;            
+            string? email = resetPasswordResult.Anonymous;
+            if (string.IsNullOrEmpty(email))
             {
-                Console.WriteLine("Error: Couldn't retreive email from JWT Token! Please login again to continue!");
+                TempData["ErrorMessage"] = "Invalid reset password token!";
                 return RedirectToAction("Login");
             }
             TempData["Email"] = email;

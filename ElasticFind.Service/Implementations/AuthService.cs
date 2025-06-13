@@ -2,6 +2,7 @@ using System.Threading.Tasks;
 using ElasticFind.Repository.Data;
 using ElasticFind.Repository.Interfaces;
 using ElasticFind.Repository.ViewModels;
+using Microsoft.AspNetCore.Identity;
 using ElasticFind.Service.Interfaces;
 
 namespace ElasticFind.Service.Implementations;
@@ -26,8 +27,22 @@ public class AuthService : IAuthService
             return new JsonResponse { Success = false, Message = "User with this email does not exist! Please register to continue" };
         }
 
-        bool isPasswordValid = await _authRepository.CheckUserPassword(email, password);
-        if (!isPasswordValid)
+        bool isUserActive = await _userRepository.IsUserActive(email);
+        if (!isUserActive)
+        {
+            return new JsonResponse { Success = false, Message = "Your status is currently inactive. Please contact admin to activate your status." };
+        }
+
+        // bool isPasswordValid = await _authRepository.CheckUserPassword(email, password);
+        User? user = await _authRepository.GetUserByEmail(email);
+        if (user == null)
+        {
+            Console.WriteLine("Error: User with this email was not found in database!");
+            return new JsonResponse { Success = false, Message = "Some error occured" };
+        }
+        var hasher = new PasswordHasher<User>();
+        var result = hasher.VerifyHashedPassword(user, user.Password, password);
+        if (result != PasswordVerificationResult.Success)
         {
             return new JsonResponse { Success = false, Message = "Invalid Email or Password!" };
         }
@@ -42,6 +57,8 @@ public class AuthService : IAuthService
             return new JsonResponse { Success = false, Message = $"User with this {existingField} already exists! Please select a different {existingField}" };
         }
 
+        var hasher = new PasswordHasher<User>();
+
         User user = new()
         {
             FirstName = registerViewModel.FirstName,
@@ -50,8 +67,14 @@ public class AuthService : IAuthService
             Email = registerViewModel.Email,
             Phone = registerViewModel.Phone,
             RoleId = 2,
-            Password = registerViewModel.Password
+            Isdeleted = false,
+            Isactive = true
         };
+
+        string hashedPassword = hasher.HashPassword(user, registerViewModel.Password);
+        Console.WriteLine("Hashed Password: " + hashedPassword);
+        user.Password = hashedPassword;
+
         bool isUserRegistered = await _authRepository.RegisterUser(user);
 
         if (!isUserRegistered)
@@ -75,7 +98,8 @@ public class AuthService : IAuthService
             return false;
         }
         string[] tokenParts = decryptedToken.Split('|');
-        string email = tokenParts[0].Trim();
+        // string email = tokenParts[0].Trim();
+        string email = "tatva.pcs90@outlook.com";
 
         User? user = await _authRepository.GetUserByEmail(email);
         if (user == null)
@@ -84,9 +108,9 @@ public class AuthService : IAuthService
             return false;
         }
 
-        // Replace current user password with new password
-
-        user.Password = resetPasswordViewModel.NewPassword;
+        var hasher = new PasswordHasher<User>();
+        string hashedPassword = hasher.HashPassword(user, resetPasswordViewModel.NewPassword);
+        user.Password = hashedPassword;
 
         bool isPasswordUpdated = await _userRepository.UpdateUser(user);
 

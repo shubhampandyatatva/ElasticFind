@@ -13,5 +13,5 @@ public interface IUserRepository
     Task<int> GetTotalSearchedUsers(string searchString);
     List<UserViewModel> GetUserList(PaginationViewModel paginationViewModel);
     Task<User?> GetUserById(int id);
-
+    Task<bool> IsUserActive(string email);
 }

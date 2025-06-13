@@ -63,11 +63,11 @@ public partial class ElasticFindContext : DbContext
 
             entity.ToTable("users");
 
-            entity.HasIndex(e => e.Email, "users_email_key").IsUnique();
+            entity.HasIndex(e => e.Email, "users_email_key");
 
-            entity.HasIndex(e => e.Phone, "users_phone_key").IsUnique();
+            entity.HasIndex(e => e.Phone, "users_phone_key");
 
-            entity.HasIndex(e => e.Username, "users_username_key").IsUnique();
+            entity.HasIndex(e => e.Username, "users_username_key");
 
             entity.Property(e => e.Id).HasColumnName("id");
             entity.Property(e => e.Email)
