@@ -31,6 +31,7 @@ builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
 builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IUploadImageService, UploadImageService>();
 builder.Services.AddScoped<IElasticSearchService, ElasticSearchService>();
+builder.Services.AddScoped<IPreviewFileService, PreviewFileService>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -133,19 +134,19 @@ builder.Services.AddSingleton<IElasticClient>(client);
 //     Console.WriteLine($"Debug Info: {indexResponse.DebugInformation}");
 // }
 
-var searchResponse = client.Search<Humanresources>(s => s
-    .Query(q => q
-        .Match(m => m
-            .Field(f => f.Jobtitle)
-            .Query("software")
-        )
-    )
-);
+// var searchResponse = client.Search<Humanresources>(s => s
+//     .Query(q => q
+//         .Match(m => m
+//             .Field(f => f.Jobtitle)
+//             .Query("software")
+//         )
+//     )
+// );
 
-foreach (var doc in searchResponse.Documents)
-{
-    Console.WriteLine($"Found: {doc.Jobtitle} - {doc.Nationalidnumber}");
-}
+// foreach (var doc in searchResponse.Documents)
+// {
+//     Console.WriteLine($"Found: {doc.Jobtitle} - {doc.Nationalidnumber}");
+// }
 
 var app = builder.Build();
 

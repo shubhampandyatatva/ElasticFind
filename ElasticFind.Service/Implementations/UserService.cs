@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using ElasticFind.Repository.Data;
 using ElasticFind.Repository.Interfaces;
 using ElasticFind.Repository.ViewModels;
@@ -74,4 +75,18 @@ public class UserService : IUserService
         return true;
     }
 
+    public async Task<DisplayFilesViewModel> GetFiles(PaginationViewModel pagination)
+    {
+        List<FileViewModel> files = await _userRepository.GetFiles(pagination);
+        int totalRecords = pagination.SearchString != null ? await _userRepository.GetTotalFilesBySearchString(pagination.SearchString) : await _userRepository.GetTotalFiles();
+        pagination.TotalRecords = totalRecords;
+
+        DisplayFilesViewModel viewModel = new()
+        {
+            Pagination = pagination,
+            Files = files
+        };
+
+        return viewModel;
+    }
 }

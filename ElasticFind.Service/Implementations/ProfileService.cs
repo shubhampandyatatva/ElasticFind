@@ -2,6 +2,7 @@ using ElasticFind.Repository.Data;
 using ElasticFind.Repository.Interfaces;
 using ElasticFind.Repository.ViewModels;
 using ElasticFind.Service.Interfaces;
+using Microsoft.AspNetCore.Identity;
 
 namespace ElasticFind.Service.Implementations;
 
@@ -29,7 +30,9 @@ public class ProfileService : IProfileService
         }
 
         //Change User Password
-        user.Password = viewModel.NewPassword;
+        var hasher = new PasswordHasher<User>();
+        string hashedPassword = hasher.HashPassword(user, viewModel.NewPassword);
+        user.Password = hashedPassword;
 
         bool isUserUpdated = await _userRepository.UpdateUser(user);
         if (isUserUpdated)

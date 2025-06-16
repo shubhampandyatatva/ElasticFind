@@ -112,4 +112,19 @@ public class UserRepository : IUserRepository
         return await _dbcontext.Users.Where(u => u.Email == email && u.Isactive == true && u.Isdeleted != true).AnyAsync();
     }
 
+    public Task<List<FileViewModel>> GetFiles(PaginationViewModel pagination)
+    {
+    return _dbcontext.Files
+            .Where(f => f.IsDeleted != true).Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize).Select(f => new FileViewModel{Id = f.Id.ToString(),FileName = f.FileName}).ToListAsync();
+    }
+
+    public async Task<int> GetTotalFilesBySearchString(string searchString)
+    {
+        return await _dbcontext.Files.Where(f => f.IsDeleted != true && f.FileName.ToLower().Contains(searchString.ToLower())).CountAsync();
+    }
+
+    public async Task<int> GetTotalFiles()
+    {
+        return await _dbcontext.Files.Where(f => f.IsDeleted != true).CountAsync();
+    }
 }

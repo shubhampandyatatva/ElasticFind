@@ -14,4 +14,8 @@ public interface IUserRepository
     List<UserViewModel> GetUserList(PaginationViewModel paginationViewModel);
     Task<User?> GetUserById(int id);
     Task<bool> IsUserActive(string email);
+    Task<List<FileViewModel>> GetFiles(PaginationViewModel pagination);
+    Task<int> GetTotalFilesBySearchString(string searchString);
+    Task<int> GetTotalFiles();
+
 }

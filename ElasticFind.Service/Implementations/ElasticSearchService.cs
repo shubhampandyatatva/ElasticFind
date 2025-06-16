@@ -64,9 +64,10 @@ public class ElasticSearchService : IElasticSearchService
         return response.IsValid;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteAsync(string id)
     {
-        var response = await _elasticClient.DeleteAsync<Humanresources>(id);
+        var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index("documents"));
+        Console.WriteLine($"Delete response: {response.DebugInformation}");
         return response.IsValid;
     }
 
@@ -108,5 +109,46 @@ public class ElasticSearchService : IElasticSearchService
         }
 
         return results;
+    }
+
+    public async Task<DisplayFilesViewModel> GetFilesAsync(PaginationViewModel paginationViewModel)
+    {
+        var searchResponse = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
+            .Index("documents")
+            .From((paginationViewModel.Page - 1) * paginationViewModel.PageSize)
+            .Size(paginationViewModel.PageSize)
+            .Query(q =>
+            string.IsNullOrEmpty(paginationViewModel.SearchString)
+            ? q.MatchAll()
+            : q.Wildcard(w => w
+                    .Field(f => f.FileName.Suffix("keyword"))
+                    .Value($"*{paginationViewModel.SearchString.ToLower()}*")
+                ))
+            .Sort(st => string.IsNullOrEmpty(paginationViewModel.SortOrder) ? null : st.Field(f => f.FileName, paginationViewModel.SortOrder == "Asc" ? SortOrder.Ascending : SortOrder.Descending))
+        );
+
+        List<FileViewModel> files = searchResponse.Documents.Select(doc => new FileViewModel
+        {
+            Id = doc.Id,
+            FileName = doc.FileName
+        }).ToList();
+
+        paginationViewModel.TotalRecords = paginationViewModel.SearchString == null ?
+                (int)searchResponse.Total :
+                (int)(await _elasticClient.CountAsync<DocumentViewModel>(c => c
+                .Index("documents")
+                .Query(q => q.Wildcard(w => w
+                    .Field(f => f.FileName.Suffix("keyword"))
+                    .Value($"*{paginationViewModel.SearchString}*")
+                ))
+            )).Count;
+
+        DisplayFilesViewModel displayFilesViewModel = new()
+        {
+            Pagination = paginationViewModel,
+            Files = files
+        };
+
+        return displayFilesViewModel;
     }
 }

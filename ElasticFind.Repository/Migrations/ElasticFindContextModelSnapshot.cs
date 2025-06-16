@@ -42,6 +42,9 @@ namespace ElasticFind.Repository.Migrations
                         .HasColumnType("character varying(20)")
                         .HasColumnName("file_type");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
                     b.Property<DateTime?>("UploadDate")
                         .HasColumnType("timestamp without time zone")
                         .HasColumnName("upload_date");

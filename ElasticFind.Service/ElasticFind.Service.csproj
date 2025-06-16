@@ -3,7 +3,9 @@
     <ProjectReference Include="..\ElasticFind.Repository\ElasticFind.Repository.csproj" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="DocumentFormat.OpenXml" Version="3.3.0" />
     <PackageReference Include="Elasticsearch.Net" Version="7.17.5" />
+    <PackageReference Include="EPPlus" Version="7.0.0" />
     <PackageReference Include="MailKit" Version="4.12.1" />
     <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="7.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity" Version="2.3.1" />

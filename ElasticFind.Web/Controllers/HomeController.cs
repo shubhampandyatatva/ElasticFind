@@ -7,6 +7,8 @@ using ElasticFind.Repository.ViewModels;
 using ElasticFind.Repository.Interfaces;
 using ElasticFind.Service.Interfaces;
 using ElasticFind.Web.Connector;
+using System.Threading.Tasks;
+using ElasticFind.Service.Implementations;
 
 namespace ElasticFind.Web.Controllers;
 
@@ -17,20 +19,37 @@ public class HomeController : Controller
     private readonly ConnectionToEs _connectionToEs;
     private readonly IElasticSearchService _elasticSearchService;
     private readonly IElasticClient _elasticClient;
+    private readonly IPreviewFileService _previewFileService;
 
-    public HomeController(ILogger<HomeController> logger, IUserService userService, IElasticSearchService elasticSearchService, IElasticClient elasticClient)
+    public HomeController(ILogger<HomeController> logger, IUserService userService, IElasticSearchService elasticSearchService, IElasticClient elasticClient, IPreviewFileService previewFileService)
     {
         _logger = logger;
         _userService = userService;
         _connectionToEs = new ConnectionToEs();
         _elasticSearchService = elasticSearchService;
         _elasticClient = elasticClient;
+        _previewFileService = previewFileService;
     }
 
     [Authorize(Roles = "1")]
-    public IActionResult Index()
+    public async Task<IActionResult> Index(int page = 1, int pageSize = 5, string? searchString = null, string? sortOrder = null)
     {
-        return View();
+        PaginationViewModel pagination = new()
+        {
+            Page = page,
+            PageSize = pageSize,
+            SearchString = searchString,
+            SortOrder = sortOrder
+        };
+
+        DisplayFilesViewModel displayFilesViewModel = await _elasticSearchService.GetFilesAsync(pagination);
+
+        if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
+        {
+            return PartialView("_FilesPartial", displayFilesViewModel);
+        }
+
+        return View(displayFilesViewModel);
     }
 
     [HttpPost]
@@ -117,21 +136,6 @@ public class HomeController : Controller
 
     public async Task<List<Humanresources>> DataSearch(string keyword, string nationalIDNumber)
     {
-        // var responsedata = _connectionToEs.EsClient().Search<Humanresources>(s => s
-        //                         .Index("jobs")
-        //                         .Query(q => q
-        //                             .Match(m => m
-        //                                 .Field(f => f.Jobtitle)
-        //                                 .Query(keyword)
-        //                             )
-        //                         )
-        //                     );
-
-        // var datasend = (from hits in responsedata.Hits
-        //                 select hits.Source).ToList();
-
-        // return Json(new { datasend, responsedata.Took });
-
         var response = await _elasticSearchService.SearchByJobTitleAsync(keyword);
         return response;
     }
@@ -171,7 +175,7 @@ public class HomeController : Controller
     [HttpPost]
     public async Task<IActionResult> CreateDocumentIndex(string indexName = "documents")
     {
-        var created = await _elasticSearchService.CreateDocumentIndexAsync(indexName); 
+        var created = await _elasticSearchService.CreateDocumentIndexAsync(indexName);
 
         if (created)
             return Ok("Index created");
@@ -184,6 +188,76 @@ public class HomeController : Controller
     {
         var results = await _elasticSearchService.SearchDocumentsAsync(keyword);
         return Json(results);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Download(string id)
+    {
+        var response = await _elasticClient.GetAsync<DocumentViewModel>(id, x => x.Index("documents"));
+
+        if (!response.Found)
+            return NotFound("Document not found.");
+
+        var fileBytes = Convert.FromBase64String(response.Source.Data);
+
+        // Infer content type from extension
+        var ext = Path.GetExtension(response.Source.FileName).ToLower();
+        var contentType = ext switch
+        {
+            ".pdf" => "application/pdf",
+            ".txt" => "text/plain",
+            ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ".doc" => "application/msword",
+            _ => "application/octet-stream"
+        };
+
+        return File(fileBytes, contentType, response.Source.FileName);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Preview(string id)
+    {
+        var response = await _elasticClient.GetAsync<DocumentViewModel>(id, x => x.Index("documents"));
+        if (!response.Found) return NotFound();
+
+        var fileName = response.Source.FileName;
+        var fileBytes = Convert.FromBase64String(response.Source.Data);
+
+        var html = _previewFileService.GetPreviewHtml(fileName, fileBytes);
+        if (!string.IsNullOrEmpty(html))
+        {
+            Console.WriteLine("HTML is not null!");
+            return Content(html, "text/html");  
+        }
+
+        // Fallback for direct rendering (PDF, TXT, etc.)
+        var ext = Path.GetExtension(fileName).ToLowerInvariant();
+        var contentType = ext switch
+        {
+            ".pdf" => "application/pdf",
+            ".txt" => "text/plain",
+            ".html" => "text/html",
+            _ => "application/octet-stream"
+        };
+
+        Response.Headers["Content-Disposition"] = $"inline; filename=\"{fileName}\"";
+        return File(fileBytes, contentType);
+    }
+
+    public async Task<IActionResult> DeleteFile(string id)
+    {
+        bool result = await _elasticSearchService.DeleteAsync(id);
+
+        if (result)
+        {
+            TempData["DeleteSuccess"] = "Document deleted successfully.";
+            return RedirectToAction("Index");
+        }
+        else
+        {
+            TempData["DeleteError"] = "Error deleting document!";
+            return RedirectToAction("Index");
+        }
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

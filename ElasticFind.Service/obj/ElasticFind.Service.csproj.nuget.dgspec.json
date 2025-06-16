@@ -137,6 +137,14 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "dependencies": {
+            "DocumentFormat.OpenXml": {
+              "target": "Package",
+              "version": "[3.3.0, )"
+            },
+            "EPPlus": {
+              "target": "Package",
+              "version": "[7.0.0, )"
+            },
             "Elasticsearch.Net": {
               "target": "Package",
               "version": "[7.17.5, )"
@@ -148,6 +156,10 @@
             "Microsoft.AspNetCore.DataProtection": {
               "target": "Package",
               "version": "[7.0.0, )"
+            },
+            "Microsoft.AspNetCore.Identity": {
+              "target": "Package",
+              "version": "[2.3.1, )"
             },
             "Microsoft.IdentityModel.Tokens": {
               "target": "Package",

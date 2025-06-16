@@ -12,4 +12,5 @@ public partial class File
     public DateTime? UploadDate { get; set; }
 
     public string? FileType { get; set; }
+    public bool IsDeleted { get; set; }
 }

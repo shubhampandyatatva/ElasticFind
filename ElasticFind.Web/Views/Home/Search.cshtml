@@ -5,7 +5,7 @@
 <form id="uploadForm" enctype="multipart/form-data" class="mb-3">
     <div class="form-group">
         <label for="file">Choose File</label>
-        <input type="file" name="file" id="file" class="form-control mt-1" />
+        <input type="file" name="file" id="file" class="form-control mt-1" multiple/>
     </div>
     @* <button type="button" class="btn btn-primary mt-2" id="createIndexBtn">Create Document Index</button> *@
     <button type="submit" class="btn btn-primary mt-2">Upload</button>
@@ -83,16 +83,41 @@
                     if (data.length === 0) {
                         html = "<div class='alert alert-warning'>No results found.</div>";
                     } else {
-                        data.forEach(function (doc) {
-                            html += `<div class="mb-4">
-                        <h5>${doc.fileName}</h5>
-                        <ul class="list-group">`;
+                        data.forEach(function (doc, index) {
+                            let totalHighlights = 0;
+                            doc.snippets.forEach(snippet => {
+                                totalHighlights += (snippet.match(/<mark>/g) || []).length;
+                            });
+
+                            html += `
+                            <div class="card mb-4">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>${doc.fileName}</strong>
+                                        <span class="text-muted"> - Found ${totalHighlights} match${totalHighlights === 1 ? '' : 'es'}</span>
+                                    </div>
+                                    <div>
+                                        <a href="/Download/${doc.id}" class="btn btn-sm btn-outline-secondary me-2" title="Download">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-primary preview-btn" data-id="${doc.id}" title="Preview">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group">
+                        `;
 
                             doc.snippets.forEach(function (snippet) {
                                 html += `<li class="list-group-item">${snippet}</li>`;
                             });
 
-                            html += `</ul></div>`;
+                            html += `
+                                    </ul>
+                                </div>
+                            </div>
+                        `;
                         });
                     }
 
@@ -103,5 +128,11 @@
                 }
             });
         });
+    });
+
+    // Optional: bind preview logic
+    $(document).on("click", ".preview-btn", function () {
+        const id = $(this).data("id");
+        window.open(`/Home/Preview/${id}`, "_blank");
     });
 </script>
