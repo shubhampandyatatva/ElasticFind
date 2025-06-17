@@ -2,20 +2,33 @@
     ViewData["Title"] = "Search";
 }
 
-<form id="uploadForm" enctype="multipart/form-data" class="mb-3">
-    <div class="form-group">
-        <label for="file">Choose File</label>
-        <input type="file" name="file" id="file" class="form-control mt-1" multiple/>
-    </div>
-    @* <button type="button" class="btn btn-primary mt-2" id="createIndexBtn">Create Document Index</button> *@
-    <button type="submit" class="btn btn-primary mt-2">Upload</button>
-</form>
+@* <!-- Styled Search UI -->
+<div class="container mt-5">
+    <div class="card shadow-sm p-4 bg-white">
+        <h4 class="mb-4 text-center" style="color: #305796;">Search Documents</h4>
 
-<div class="d-flex align-items-center mb-2">
-    <label for="searchKeywordInput" class="me-2 mb-0" style="width: 140px;">Search Keyword:</label>
-    <input type="text" class="form-control" id="searchKeywordInput" placeholder="Enter keyword..." />
+        <div class="d-flex flex-column flex-md-row align-items-center gap-3">
+            <input type="text" class="form-control flex-grow-1" id="searchKeywordInput" placeholder="Enter keyword...">
+            <button type="button" class="btn btn-primary" id="searchKeywordBtn">Search</button>
+        </div>
+    </div>
+
+    <div id="searchResults" class="mt-4">
+        
+    </div>
+</div> *@
+
+<h3 class="mb-4" style="color: #305796;">Search Documents</h3>
+
+<div class="d-flex flex-column flex-md-row align-items-start gap-3 mb-4">
+    <input type="text" class="form-control flex-grow-1" id="searchKeywordInput" placeholder="Enter keyword...">
+    <div class="buttons d-flex align-items-center">
+        <button type="button" class="btn btn-primary me-2" id="searchKeywordBtn">Search</button>
+        <button type="button" class="btn btn-outline-primary" id="clearButton">Clear</button>
+    </div>
 </div>
-<button type="button" class="btn btn-primary" id="searchKeywordBtn">Search</button>
+
+<h3 class="results-text mb-4" style="color: #3f629b;">Your Results Go Here</h3>
 
 <div id="searchResults" class="mt-4">
 
@@ -53,7 +66,7 @@
             });
         });
 
-        $("#createIndexBtn").on("click", function () {
+        @* $("#createIndexBtn").on("click", function () {
             var apiUrl = '@Url.Action("CreateDocumentIndex", "Home")';
 
             $.ajax({
@@ -68,7 +81,7 @@
                     alert("Error creating document index: " + xhr.responseText);
                 }
             });
-        });
+        }); *@
 
         $("#searchKeywordBtn").on("click", function () {
             var keyword = $("#searchKeywordInput").val();
@@ -97,12 +110,14 @@
                                         <span class="text-muted"> - Found ${totalHighlights} match${totalHighlights === 1 ? '' : 'es'}</span>
                                     </div>
                                     <div>
+                                        <span class="d-flex align-items-center">
                                         <a href="/Download/${doc.id}" class="btn btn-sm btn-outline-secondary me-2" title="Download">
                                             <i class="bi bi-download"></i>
                                         </a>
-                                        <button class="btn btn-sm btn-outline-primary preview-btn" data-id="${doc.id}" title="Preview">
+                                        <button class="btn btn-sm btn-outline-primary preview-btn" data-id="${doc.id}" title="Preview" onclick="window.open('/Home/Preview/${doc.id}', '_blank')">
                                             <i class="bi bi-eye"></i>
                                         </button>
+                                        </span>
                                     </div>
                                 </div>
                                 <div class="card-body">
@@ -130,9 +145,15 @@
         });
     });
 
-    // Optional: bind preview logic
-    $(document).on("click", ".preview-btn", function () {
+    //Preview Button
+    @* $(document).on("click", ".preview-btn", function () {
         const id = $(this).data("id");
         window.open(`/Home/Preview/${id}`, "_blank");
+    }); *@
+
+    // Clear Button
+    $("#clearButton").on("click", function () {
+        $("#searchKeywordInput").val("");
+        $("#searchResults").empty();
     });
 </script>

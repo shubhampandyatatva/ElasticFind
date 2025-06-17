@@ -14,8 +14,14 @@
                     <td>@(i + 1)</td>
                     <td>@Model.Files[i].FileName</td>
                     <td class="text-center">
-                        <i class="fa fa-download me-4 pointer" onclick="window.location.href='/Home/Download/@Model.Files[i].Id'" data-toggle="tooltip" data-placement="bottom" title="Download File"></i>
-                        <i class="fa fa-trash pointer" data-bs-toggle="modal" data-bs-target="#delete_file_modal" data-toggle="tooltip" data-placement="bottom" title="Delete File" data-user-id="@Model.Files[i].Id" onclick="setUserId('@Model.Files[i].Id')"></i>
+                        <span class="d-flex justify-content-center align-items-center">
+                            <i class="fa fa-download me-4 pointer"
+                                onclick="window.location.href='/Home/Download/@Model.Files[i].Id'" data-toggle="tooltip"
+                                data-placement="bottom" title="Download File"></i>
+                            <i class="fa fa-trash pointer" data-bs-toggle="modal" data-bs-target="#delete_file_modal"
+                                data-toggle="tooltip" data-placement="bottom" title="Delete File"
+                                data-user-id="@Model.Files[i].Id" onclick="setUserId('@Model.Files[i].Id')"></i>
+                        </span>
                     </td>
                 </tr>
             }
@@ -26,12 +32,12 @@
                     <div class="d-flex justify-content-end align-items-center">
                         <span class="me-2">Items per page:</span>
                         <select class="pointer" id="itemsPerPage" onchange="changePageSize()">
-                            <option value="3" selected=@(Model.Pagination.PageSize == 3 ? "selected" : null)>3
-                            </option>
                             <option value="5" selected=@(Model.Pagination.PageSize == 5 ? "selected" : null)>5
                             </option>
-                            <option value="10" selected=@(Model.Pagination.PageSize == 10 ? "selected" : null)>
-                                10</option>
+                            <option value="10" selected=@(Model.Pagination.PageSize == 10 ? "selected" : null)>10
+                            </option>
+                            <option value="15" selected=@(Model.Pagination.PageSize == 15 ? "selected" : null)>
+                                15</option>
                         </select>
                         <span class="ms-2">Showing @(Model.Pagination.PageSize *
                                                         (Model.Pagination.Page - 1) + 1) -
@@ -40,8 +46,7 @@
                                                         (Model.Pagination.PageSize * Model.Pagination.Page)) of
                             @Model.Pagination.TotalRecords</span>
 
-                        <button
-                            class="btn btn-outline-secondary ms-2 @(Model.Pagination.Page > 1 ? "" : "disabled")"
+                        <button class="btn btn-outline-secondary ms-2 @(Model.Pagination.Page > 1 ? "" : "disabled")"
                             onclick="loadPrevPage()">
                             &lt;
                         </button>
@@ -73,5 +78,5 @@
         var searchString = $("#searchInput").val();
         var sortOrder = $(this).data("order");
         loadPage(page, pageSize, searchString, null);
-    }
+    }    
 </script>

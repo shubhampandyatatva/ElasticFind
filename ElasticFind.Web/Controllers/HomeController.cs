@@ -9,6 +9,7 @@ using ElasticFind.Service.Interfaces;
 using ElasticFind.Web.Connector;
 using System.Threading.Tasks;
 using ElasticFind.Service.Implementations;
+using Elastic.Clients.Elasticsearch;
 
 namespace ElasticFind.Web.Controllers;
 
@@ -32,6 +33,7 @@ public class HomeController : Controller
     }
 
     [Authorize(Roles = "1")]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public async Task<IActionResult> Index(int page = 1, int pageSize = 5, string? searchString = null, string? sortOrder = null)
     {
         PaginationViewModel pagination = new()
@@ -141,35 +143,50 @@ public class HomeController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> UploadDocument(IFormFile file)
+    public async Task<IActionResult> UploadDocuments(List<IFormFile> files)
     {
-        if (file == null || file.Length == 0)
-            return BadRequest("No file selected.");
+        if (files == null || !files.Any())
+            return BadRequest("No files selected.");
 
-        // Generate ID: FileName (without extension) + Timestamp
-        var fileNameWithoutExt = Path.GetFileNameWithoutExtension(file.FileName);
-        var timestamp = DateTime.UtcNow.Ticks;
-        var customId = $"{fileNameWithoutExt}_{timestamp}";
-
-        // Read and convert file to base64
-        using var ms = new MemoryStream();
-        await file.CopyToAsync(ms);
-        var fileBytes = ms.ToArray();
-        var base64Data = Convert.ToBase64String(fileBytes);
-
-        DocumentViewModel document = new()
+        foreach (var file in files)
         {
-            Id = customId,
-            FileName = file.FileName,
-            Data = base64Data
-        };
+            try
+            {
+                if (file.Length == 0)
+                    return BadRequest("One or more files are empty.");
 
-        var response = await _elasticClient.IndexAsync(document, i => i.Id(document.Id).Index("documents").Pipeline("attachment"));
+                var fileNameWithoutExt = Path.GetFileNameWithoutExtension(file.FileName);
+                var timestamp = DateTime.UtcNow.Ticks;
+                var customId = $"{fileNameWithoutExt}_{timestamp}";
 
-        if (response.IsValid)
-            return Ok("Document indexed successfully.");
-        else
-            return BadRequest(response.OriginalException.Message);
+                using var ms = new MemoryStream();
+                await file.CopyToAsync(ms);
+                var fileBytes = ms.ToArray();
+                var base64Data = Convert.ToBase64String(fileBytes);
+
+                var document = new DocumentViewModel
+                {
+                    Id = customId,
+                    FileName = file.FileName.ToLowerInvariant(),
+                    Data = base64Data
+                };
+
+                var response = await _elasticClient.IndexAsync(document, i => i
+                    .Id(document.Id)
+                    .Index("documents")
+                    .Pipeline("attachment")
+                    .Refresh(Elasticsearch.Net.Refresh.WaitFor));
+
+                if (!response.IsValid)
+                    return BadRequest("Some error occurred in uploading the files.");
+            }
+            catch
+            {
+                return BadRequest("Some error occurred in uploading the files.");
+            }
+        }
+
+        return Ok("Files uploaded successfully.");
     }
 
     [HttpPost]
@@ -227,7 +244,7 @@ public class HomeController : Controller
         if (!string.IsNullOrEmpty(html))
         {
             Console.WriteLine("HTML is not null!");
-            return Content(html, "text/html");  
+            return Content(html, "text/html");
         }
 
         // Fallback for direct rendering (PDF, TXT, etc.)
@@ -250,13 +267,11 @@ public class HomeController : Controller
 
         if (result)
         {
-            TempData["DeleteSuccess"] = "Document deleted successfully.";
-            return RedirectToAction("Index");
+            return Json(new { success = true, message = "File deleted successfully." });
         }
         else
         {
-            TempData["DeleteError"] = "Error deleting document!";
-            return RedirectToAction("Index");
+            return Json(new { success = false, message = "There was an error deleting the file." });
         }
     }
 

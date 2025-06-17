@@ -28,7 +28,9 @@ html {
   border-right: 1px solid #dfe3ea;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.03);
   transition: all 0.3s ease-in-out;
-}
+  /* min-width: 300px; */
+  flex-shrink: 0;
+} 
 
 .sidebar .header-tab {
   font-size: 1.5rem;
@@ -125,7 +127,7 @@ html {
 .upload-dropzone {
   border: 2px dashed #6c757d;
   border-radius: 10px;
-  padding: 50px 30px;
+  padding: 35px 20px;
   text-align: center;
   transition: all 0.3s ease-in-out;
   background-color: #f8f9fa;
@@ -316,6 +318,7 @@ html {
 #brandHeader {
   transition: opacity 0.3s ease;
 }
+
 .sidebar.collapsed #brandHeader {
   opacity: 0;
   pointer-events: none;
@@ -328,6 +331,23 @@ html {
 
 .hide-brand-elements {
   display: none;
+}
+
+#searchKeywordInput::placeholder {
+  color: #858b91;
+}
+
+#searchKeywordBtn {
+  white-space: nowrap;
+}
+
+.results-text {
+  font-size: 25px;
+}
+
+#searchResults {
+  max-width: 100%;
+  overflow-wrap: break-word;
 }
 
 /* Responsive sidebar behavior */

@@ -66,7 +66,7 @@ public class ElasticSearchService : IElasticSearchService
 
     public async Task<bool> DeleteAsync(string id)
     {
-        var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index("documents"));
+        var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index("documents").Refresh(Elasticsearch.Net.Refresh.WaitFor));
         Console.WriteLine($"Delete response: {response.DebugInformation}");
         return response.IsValid;
     }
@@ -122,7 +122,7 @@ public class ElasticSearchService : IElasticSearchService
             ? q.MatchAll()
             : q.Wildcard(w => w
                     .Field(f => f.FileName.Suffix("keyword"))
-                    .Value($"*{paginationViewModel.SearchString.ToLower()}*")
+                    .Value($"*{paginationViewModel.SearchString.ToLowerInvariant()}*")
                 ))
             .Sort(st => string.IsNullOrEmpty(paginationViewModel.SortOrder) ? null : st.Field(f => f.FileName, paginationViewModel.SortOrder == "Asc" ? SortOrder.Ascending : SortOrder.Descending))
         );
@@ -139,7 +139,7 @@ public class ElasticSearchService : IElasticSearchService
                 .Index("documents")
                 .Query(q => q.Wildcard(w => w
                     .Field(f => f.FileName.Suffix("keyword"))
-                    .Value($"*{paginationViewModel.SearchString}*")
+                    .Value($"*{paginationViewModel.SearchString.ToLowerInvariant()}*")
                 ))
             )).Count;
 

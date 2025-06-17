@@ -1,33 +1,39 @@
 ﻿@{
     ViewData["Title"] = "Admin Dashboard";
 }
+@model ElasticFind.Repository.ViewModels.DisplayFilesViewModel
 
+@* <h2 class="mb-4" style="color: #305796;">Manage Files</h2> *@
 <h2 class="mb-4">Manage Files</h2>
 
-<div class="d-flex justify-content-center mb-4">
+@* <div class="d-flex justify-content-center mb-4">
     <div class="card p-4 shadow" style="width: 100%; max-width: 600px;">
         <h4 class="mb-4 text-center">Upload Files</h4>
 
-        <form id="uploadForm" asp-controller="Home" asp-action="UploadFiles" method="post"
-            enctype="multipart/form-data">
-            <div id="dropzone" class="upload-dropzone">
-                <i class="fas fa-cloud-upload-alt"></i>
-                <p class="mb-2">Drag & drop your files here</p>
-                <p class="text-muted">or click to browse (PDF, DOC, TXT)</p>
-                <input type="file" name="files" id="fileInput" class="hidden-input" accept=".pdf,.doc,.docx,.txt"
-                    multiple>
-            </div>
-
-            <p id="fileNameDisplay" class="mt-3 text-center text-success fw-semibold"></p>
-
-            <div class="mt-4 d-grid">
-                <button type="submit" class="btn btn-primary">Upload</button>
-            </div>
-        </form>
+        
     </div>
-</div>
+</div> *@
+
+<form id="uploadForm" enctype="multipart/form-data" style="width: 100%; max-width: 550px;" class="mx-auto mb-4">
+    <div id="dropzone" class="upload-dropzone">
+        <i class="fas fa-cloud-upload-alt"></i>
+        <p class="mb-2">Drag & drop your files here</p>
+        <p class="text-muted">or click to browse (PDF, DOC, TXT)</p>
+        <input type="file" name="files" id="fileInput" class="hidden-input" accept=".pdf,.doc,.docx,.txt,.xlxs"
+            multiple>
+
+        <div id="fileNameDisplay" class="mt-3 text-center text-success fw-semibold"></div>
+    </div>
+
+
+
+    <div class="mt-4 d-grid">
+        <button type="submit" class="btn btn-primary">Upload</button>
+    </div>
+</form>
 
 <div class="d-flex justify-content-between align-items-center">
+    @* <h2 style="color: #305796;">Your Files</h2> *@
     <h2>Your Files</h2>
 
     <div class="search d-flex align-items-center">
@@ -36,8 +42,8 @@
     </div>
 </div>
 
-<div id="filesPartialView">
-    @await Html.PartialAsync("_FilesPartial")
+<div id="filesPartialView" style="max-height: 320px; overflow-x: auto; margin-top: 20px;">
+    @await Html.PartialAsync("_FilesPartial", Model)
 </div>
 
 <div class="modal fade" id="delete_file_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"
@@ -66,7 +72,6 @@
     const dropzone = document.getElementById('dropzone');
     const fileInput = document.getElementById('fileInput');
     const fileNameDisplay = document.getElementById('fileNameDisplay');
-    const form = document.getElementById('uploadForm');
 
     let allFiles = [];
 
@@ -115,49 +120,78 @@
         updateFileNameDisplay(allFiles);
     });
 
-    // Submit files manually with FormData
-    form.addEventListener('submit', (e) => {
-        e.preventDefault();
-
-        if (allFiles.length === 0) {
-            alert("Please select at least one file.");
-            return;
-        }
-
-        const formData = new FormData();
-        allFiles.forEach(file => formData.append('files', file));
-
-        fetch(form.action, {
-            method: 'POST',
-            body: formData
-        })
-            .then(response => {
-                if (response.redirected) {
-                    window.location.href = response.url;
-                } else {
-                    return response.text();
-                }
-            })
-            .catch(err => {
-                console.error('Upload error:', err);
-            });
-    });
-
     var SortOrder = null;
-    function loadPage(page, pageSize, searchString, sortOrder) {
+    @* async function loadPage(page, pageSize, searchString, sortOrder) {
         console.log(page, pageSize, searchString, SortOrder);
         $.ajax({
             url: "/Home/Index",
             type: "GET",
             data: { page: page, pageSize: pageSize, searchString: searchString, sortOrder: SortOrder },
             success: function (data) {
+                console.log("Success reached!");
+                console.log("Partial view HTML:", data);
                 $("#filesPartialView").html(data);
             },
             error: function (err) {
                 console.error("Error loading page: ", err);
             }
         });
-    }
+    } *@
+
+        async function loadPage(page, pageSize, searchString, sortOrder) {
+            console.log(page, pageSize, searchString, sortOrder);
+            try {
+                const data = await $.ajax({
+                    url: "/Home/Index",
+                    type: "GET",
+                    data: { page: page, pageSize: pageSize, searchString: searchString, sortOrder: sortOrder }
+                });
+
+                console.log("Success reached!");
+                console.log("Partial view HTML:", data);
+                $("#filesPartialView").html(data);
+            } catch (err) {
+                console.error("Error loading page: ", err);
+            }
+        }
+
+
+    $("#uploadForm").on("submit", function (e) {
+        e.preventDefault();
+
+        if (allFiles.length === 0) {
+            @* toastr.warning("No files selected. Please select files to upload."); *@
+                alert("No files selected. Please select files to upload.");
+            return;
+        }
+
+        var formData = new FormData();
+
+        // Append each file from allFiles array
+        allFiles.forEach(file => {
+            formData.append("files", file);
+        });
+
+        var pageSize = $("#itemsPerPage").val();
+        var searchString = $("#searchInput").val();
+
+        $.ajax({
+            url: "/Home/UploadDocuments",
+            type: "POST",
+            data: formData,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                loadPage(1, pageSize, searchString, SortOrder);
+                toastr.success(response, "Success");
+                allFiles = []; // reset after successful upload
+                updateFileNameDisplay([]);
+            },
+            error: function (xhr) {
+                toastr.error(response.message, "Error");
+            }
+        });
+    });
 
     function changePageSize() {
         var pageSize = $("#itemsPerPage").val();
@@ -176,9 +210,12 @@
         fileId = id;
     }
 
-    $(document).on("click", "#deleteModalYesButton", function () {
-        var searchString = $(this).val();
+    @* $(document).on("click", "#deleteModalYesButton", function () {
+        var searchString = $("#searchInput").val();
         var pageSize = $("#itemsPerPage").val();
+        console.log("searchString:", searchString);
+        console.log("pageSize:", pageSize);
+        console.log("fileId:", fileId);
 
         $.ajax({
             url: "/Home/DeleteFile",
@@ -186,13 +223,15 @@
             data: { id: fileId },
             success: function (response) {
                 if (response.success) {
+                    console.log("Success before loadPage");
+                    await loadPage(1, pageSize, searchString, SortOrder);
+                    console.log("Success after loadPage");
                     $('#delete_file_modal').modal('hide');
-                    loadPage(1, pageSize, searchString, SortOrder);
-                    toastr.success("File deleted successfully!");
+                    toastr.success(response.message, "Success");
                 }
                 else {
                     $('#delete_file_modal').modal('hide');
-                    alert('Error deleting user');
+                    toastr.success(response.message, "Error");
                 }
             },
             error: function () {
@@ -200,5 +239,34 @@
                 alert('An error occurred while deleting file!');
             }
         });
-    });
+    }); *@
+
+        $(document).on("click", "#deleteModalYesButton", async function () {
+            var searchString = $("#searchInput").val();
+            var pageSize = $("#itemsPerPage").val();
+
+            try {
+                const response = await $.ajax({
+                    url: "/Home/DeleteFile",
+                    type: "POST",
+                    data: { id: fileId }
+                });
+
+                if (response.success) {
+                    console.log("Success before loadPage");
+                    await loadPage(1, pageSize, searchString, SortOrder);
+                    console.log("Success after loadPage");
+                    $('#delete_file_modal').modal('hide');
+                    toastr.success(response.message, "Success");
+                } else {
+                    $('#delete_file_modal').modal('hide');
+                    toastr.error(response.message, "Error");
+                }
+            } catch (err) {
+                $('#delete_file_modal').modal('hide');
+                alert("An error occurred while deleting the file!");
+                console.error(err);
+            }
+        });
+
 </script>

@@ -100,7 +100,7 @@
     }
 
     $(document).on("click", "#deleteModalYesButton", function () {
-        var searchString = $(this).val();
+        var searchString = $("#searchInput").val();
         var pageSize = $("#itemsPerPage").val();
 
         $.ajax({

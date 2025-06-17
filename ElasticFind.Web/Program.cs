@@ -87,7 +87,9 @@ var pool = new SingleNodeConnectionPool(new Uri("https://localhost:9200"));
 var settings = new ConnectionSettings(pool)
     .ServerCertificateValidationCallback((sender, cert, chain, errors) => true) // Ignore cert errors
     .BasicAuthentication("elastic", "158xkDDd9Qn1fajXw0K1")
-    .DefaultIndex("jobs");
+    .DisableDirectStreaming()
+    .EnableDebugMode()
+    .DefaultIndex("documents");
 
 var client = new ElasticClient(settings);
 
