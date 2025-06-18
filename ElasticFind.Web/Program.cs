@@ -10,6 +10,7 @@ using Elasticsearch.Net;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Rotativa.AspNetCore;
 using Nest;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -150,6 +151,16 @@ builder.Services.AddSingleton<IElasticClient>(client);
 //     Console.WriteLine($"Found: {doc.Jobtitle} - {doc.Nationalidnumber}");
 // }
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(policy =>
+    {
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
 
 app.Use(async (context, next) =>
@@ -168,6 +179,11 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+app.UseCors();
+
+app.UseWebSockets();
+app.UseRotativa();
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();

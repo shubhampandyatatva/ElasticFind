@@ -1,0 +1,116 @@
+@{
+    Layout = null;
+}
+@model ElasticFind.Repository.ViewModels.ExportResultViewModel
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <title>ElasticFind Search Results</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #fff;
+            color: #333;
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 20px;
+        }
+
+        .card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-header {
+            padding: 10px 15px;
+            border-bottom: 1px solid #ddd;
+            background-color: #f8f9fa;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .card-body {
+            padding: 15px;
+        }
+
+        .list-group {
+            padding-left: 0;
+            margin-bottom: 0;
+            border-radius: 0.25rem;
+        }
+
+        .list-group-item {
+            position: relative;
+            display: block;
+            padding: 0.75rem 1.25rem;
+            background-color: #fff;
+            border: 1px solid #ddd;
+            border-bottom: none;
+        }
+
+        /* Add border to the last item */
+        .list-group-item:last-child {
+            border-bottom: 1px solid #ddd;
+            border-radius: 0 0 0.25rem 0.25rem;
+        }
+
+        .list-group-item:first-child {
+            border-radius: 0.25rem 0.25rem 0 0;
+        }
+
+        .text-muted {
+            color: #6c757d;
+        }
+
+        strong {
+            font-weight: 600;
+        }
+
+        .toggle-snippets-link {
+            display: inline-block;
+            margin-top: 5px;
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .toggle-snippets-link:hover {
+            text-decoration: underline;
+        }
+
+        .pdf-exclude {
+            display: none;
+        }
+
+        h2 {
+            font-size: 20px;
+            color: #305796;
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>Search Results for "@Model.Keyword"</h2>
+
+    @foreach (var doc in Model.Results)
+    {
+        <div class="card">
+            <div class="card-header">@doc.FileName - Found @doc.MatchCount match@(doc.MatchCount == 1 ? "" : "es")</div>
+            <div class="card-body">
+                @foreach (var snippet in doc.Snippets)
+                {
+                    <div class="snippet">@Html.Raw(snippet)</div>
+                }
+            </div>
+        </div>
+    }
+</body>
+
+</html>

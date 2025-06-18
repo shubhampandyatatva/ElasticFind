@@ -34,7 +34,37 @@
 
 </div>
 
+<div id="exportSection" class="mt-4 d-none">
+    <div class="dropdown">
+        <button class="btn btn-primary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown"
+            aria-expanded="false">
+            Export Results
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+            <li><a class="dropdown-item" href="#" id="exportPdfBtn">Export as PDF</a></li>
+            <li><a class="dropdown-item" href="#" id="exportCsvBtn">Export as CSV</a></li>
+        </ul>
+    </div>
+</div>
+
+<!-- Preview Modal -->
+<div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="previewModalLabel">Preview File</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-0" style="height: 80vh;">
+                <iframe id="onlyofficeFrame" style="width: 100%; height: 100%; border: none;"></iframe>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    let latestSearchResults = [];
+
     $(document).ready(function () {
         $('#uploadForm').submit(function (e) {
             e.preventDefault();
@@ -66,23 +96,6 @@
             });
         });
 
-        @* $("#createIndexBtn").on("click", function () {
-            var apiUrl = '@Url.Action("CreateDocumentIndex", "Home")';
-
-            $.ajax({
-                url: apiUrl,
-                type: "POST",
-                contentType: "application/json",
-                success: function (data) {
-                    alert("Document index created successfully!");
-                    console.log(data);
-                },
-                error: function (xhr, err) {
-                    alert("Error creating document index: " + xhr.responseText);
-                }
-            });
-        }); *@
-
         $("#searchKeywordBtn").on("click", function () {
             var keyword = $("#searchKeywordInput").val();
 
@@ -109,12 +122,12 @@
                                         <strong>${doc.fileName}</strong>
                                         <span class="text-muted"> - Found ${totalHighlights} match${totalHighlights === 1 ? '' : 'es'}</span>
                                     </div>
-                                    <div>
+                                    <div class="pdf-exclude">
                                         <span class="d-flex align-items-center">
                                         <a href="/Download/${doc.id}" class="btn btn-sm btn-outline-secondary me-2" title="Download">
                                             <i class="bi bi-download"></i>
                                         </a>
-                                        <button class="btn btn-sm btn-outline-primary preview-btn" data-id="${doc.id}" title="Preview" onclick="window.open('/Home/Preview/${doc.id}', '_blank')">
+                                        <button class="btn btn-sm btn-outline-primary preview-btn" data-id="${doc.id}" title="Preview">
                                             <i class="bi bi-eye"></i>
                                         </button>
                                         </span>
@@ -124,9 +137,18 @@
                                     <ul class="list-group">
                         `;
 
-                            doc.snippets.forEach(function (snippet) {
-                                html += `<li class="list-group-item">${snippet}</li>`;
+                            doc.snippets.forEach(function (snippet, idx) {
+                                const isHidden = idx >= 5 ? 'd-none extra-snippet' : '';
+                                html += `<li class="list-group-item ${isHidden}" data-doc-index="${index}">${snippet}</li>`;
                             });
+
+                            if (doc.snippets.length > 5) {
+                                html += `
+                                    <li class="list-group-item">
+                                        <a href="#" class="toggle-snippets-link" data-doc-index="${index}" data-expanded="false">View all matches</a>
+                                    </li>
+                                `;
+                            }
 
                             html += `
                                     </ul>
@@ -137,6 +159,14 @@
                     }
 
                     $("#searchResults").html(html);
+
+                    latestSearchResults = data;
+
+                    if (data.length > 0) {
+                        $("#exportSection").removeClass("d-none");
+                    } else {
+                        $("#exportSection").addClass("d-none");
+                    }
                 },
                 error: function (xhr) {
                     $("#searchResults").html("<div class='alert alert-danger'>An error occurred while searching.</div>");
@@ -145,15 +175,113 @@
         });
     });
 
+    // Toggle snippets visibility
+    $(document).on("click", ".toggle-snippets-link", function (e) {
+        e.preventDefault();
+        const link = $(this);
+        const index = link.data("doc-index");
+        const expanded = link.data("expanded");
+
+        if (!expanded) {
+            $(`li.extra-snippet[data-doc-index='${index}']`).removeClass("d-none");
+            link.text("Show less");
+            link.data("expanded", true);
+        } else {
+            $(`li.extra-snippet[data-doc-index='${index}']`).addClass("d-none");
+            link.text("View all matches");
+            link.data("expanded", false);
+        }
+    });
+
     //Preview Button
-    @* $(document).on("click", ".preview-btn", function () {
-        const id = $(this).data("id");
-        window.open(`/Home/Preview/${id}`, "_blank");
-    }); *@
+    $(document).on("click", ".preview-btn", function () {
+        const fileId = $(this).data("id");
+        console.log("Previewing file with ID:", fileId);
+
+        $("#onlyofficeFrame").attr("src", `/Home/OnlyOfficeViewerPage?id=${fileId}`);
+        $("#previewModal").modal("show");
+    });
 
     // Clear Button
     $("#clearButton").on("click", function () {
         $("#searchKeywordInput").val("");
         $("#searchResults").empty();
     });
+
+    function exportToCSV(data) {
+        let csvContent = "data:text/csv;charset=utf-8,";
+        csvContent += "File Name,Match Count,Snippets\n";
+
+        data.forEach(doc => {
+            const totalMatches = doc.snippets.reduce((acc, snip) => acc + (snip.match(/<mark>/g) || []).length, 0);
+            const flatSnippets = doc.snippets.map(s => s.replace(/(<([^>]+)>)/gi, "")).join(" | "); // remove HTML
+            csvContent += `"${doc.fileName}",${totalMatches},"${flatSnippets}"\n`;
+        });
+
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", "search_results.csv");
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    $("#exportCsvBtn").on("click", function (e) {
+        e.preventDefault();
+        exportToCSV(latestSearchResults);
+    });
+
+    $("#exportPdfBtn").on("click", function () {
+        // Extract data from current results
+        const keyword = $("#searchKeywordInput").val();
+        const results = [];
+
+        $("#searchResults .card").each(function () {
+            const fileName = $(this).find(".card-header strong").text().trim();
+            const matchText = $(this).find(".card-header .text-muted").text();
+            const matchCount = parseInt(matchText.match(/\d+/)[0]);
+
+            const snippets = [];
+            $(this).find(".list-group-item").each(function () {
+                // Skip the item if it contains the "View all matches" link
+                const anchor = $(this).find("a.toggle-snippets-link");
+                if (anchor.length === 0) {
+                    snippets.push($(this).html().trim());
+                }
+            });
+
+            results.push({
+                fileName,
+                matchCount,
+                snippets
+            });
+        });
+
+        // Send to backend
+        $.ajax({
+            url: '/Home/ExportToPdf',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                keyword,
+                results
+            }),
+            xhrFields: {
+                responseType: 'blob'  // so we can download the PDF
+            },
+            success: function (blob) {
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = "ElasticFind_Results.pdf";
+                link.click();
+            },
+            error: function () {
+                alert("Failed to export PDF");
+            }
+        });
+    });
+
+
+
 </script>

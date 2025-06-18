@@ -10,6 +10,7 @@ using ElasticFind.Web.Connector;
 using System.Threading.Tasks;
 using ElasticFind.Service.Implementations;
 using Elastic.Clients.Elasticsearch;
+using Rotativa.AspNetCore;
 
 namespace ElasticFind.Web.Controllers;
 
@@ -32,7 +33,8 @@ public class HomeController : Controller
         _previewFileService = previewFileService;
     }
 
-    [Authorize(Roles = "1")]
+    // [Authorize(Roles = "1")]
+    [AllowAnonymous]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public async Task<IActionResult> Index(int page = 1, int pageSize = 5, string? searchString = null, string? sortOrder = null)
     {
@@ -274,6 +276,99 @@ public class HomeController : Controller
             return Json(new { success = false, message = "There was an error deleting the file." });
         }
     }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> OnlyOfficeViewer(string id)
+    {
+        var response = await _elasticClient.GetAsync<DocumentViewModel>(id, g => g.Index("documents"));
+        if (!response.Found)
+            return NotFound();
+
+        var file = response.Source;
+        var fileUrl = $"http://192.168.4.90:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}";
+        var ext = Path.GetExtension(file.FileName).Trim('.').ToLower();
+
+        var documentConfig = new
+        {
+            document = new
+            {
+                title = file.FileName,
+                url = $"http://192.168.4.90:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
+                fileType = ext,
+                key = file.Id,
+                permissions = new
+                {
+                    download = true,
+                    print = true,
+                    edit = false
+                }
+            },
+            editorConfig = new
+            {
+                mode = "view"
+            }
+        };
+
+        return Json(documentConfig);
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> DownloadFileForViewer(string id)
+    {
+        var response = await _elasticClient.GetAsync<DocumentViewModel>(id, g => g.Index("documents"));
+        if (!response.Found)
+            return NotFound();
+
+        var file = response.Source;
+        var fileBytes = Convert.FromBase64String(file.Data);
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        var mimeType = ext switch
+        {
+            ".pdf" => "application/pdf",
+            ".txt" => "text/plain",
+            ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ".doc" => "application/msword",
+            ".html" => "text/html",
+            ".png" => "image/png",
+            ".jpg" => "image/jpeg",
+            ".jpeg" => "image/jpeg",
+            ".gif" => "image/gif",
+            ".csv" => "text/csv",
+            ".json" => "application/json",
+            ".xml" => "application/xml",
+            ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".xls" => "application/vnd.ms-excel",
+            ".pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            ".ppt" => "application/vnd.ms-powerpoint",
+            ".rtf" => "application/rtf",
+            _ => "application/octet-stream"
+        };
+
+        return File(fileBytes, mimeType, file.FileName);
+    }
+
+    [HttpGet]
+    [AllowAnonymous]
+    public IActionResult OnlyOfficeViewerPage(string id)
+    {
+        ViewBag.FileId = id;
+        return View();
+    }
+
+    [HttpPost]
+    public IActionResult ExportToPdf([FromBody] ExportResultViewModel model)
+    {
+        // Return Razor view as PDF using Rotativa
+        return new ViewAsPdf("ExportResults", model)
+        {
+            FileName = "ElasticFind_Results.pdf",
+            PageSize = Rotativa.AspNetCore.Options.Size.A4,
+            PageMargins = new Rotativa.AspNetCore.Options.Margins(20, 10, 20, 10)
+        };
+    }
+
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
