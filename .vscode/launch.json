@@ -1,0 +1,23 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "C#: ElasticFind Debug",
+            "type": "dotnet",
+            "request": "launch",
+            "projectPath": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\ElasticFind.Web.csproj"
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Application",
+            "program": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\Program.cs", // Replace with your entry point file
+            "cwd": "D:\\Tatva\\ElasticFind",
+            "port": 5052, // Specify the port number for debugging
+            "runtimeArgs": ["--inspect=192.168.6.80:5052"]
+        }
+    ]
+}

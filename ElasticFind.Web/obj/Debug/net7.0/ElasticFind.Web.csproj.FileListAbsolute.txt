@@ -93,3 +93,5 @@ D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\System.Drawing.Common.dll
 D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\System.IO.Packaging.dll
 D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\runtimes\win\lib\net7.0\Microsoft.Win32.SystemEvents.dll
 D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\runtimes\win\lib\net7.0\System.Drawing.Common.dll
+D:\Tatva\ElasticFind\ElasticFind.Web\bin\Debug\net7.0\Rotativa.AspNetCore.dll
+D:\Tatva\ElasticFind\ElasticFind.Web\obj\Debug\net7.0\ElasticFind.Web.MvcApplicationPartsAssemblyInfo.cs

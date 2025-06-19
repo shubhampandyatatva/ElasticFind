@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "NGnnb1EpF5tl3qrzARUA5ss1VqOAQeRkgLrRt452wO7pnDhO6/R9rlw1mPc32W87obuKTsPcoasSdN2nJx2nRQ==",
+  "dgSpecHash": "h8+qNccwaEhT+UO2JrrTCXeTxCsc3fKqevTIAkcDU0QDTOZVzD1FLVp8PbSztNtc68NtKnkGOS3fR9zj6LWuzg==",
   "success": true,
   "projectFilePath": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\ElasticFind.Web.csproj",
   "expectedPackageFiles": [
@@ -79,6 +79,7 @@
     "C:\\Users\\pcs90\\.nuget\\packages\\npgsql\\7.0.0\\npgsql.7.0.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\npgsql.entityframeworkcore.postgresql\\7.0.0\\npgsql.entityframeworkcore.postgresql.7.0.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\npgsql.entityframeworkcore.postgresql.design\\1.1.0\\npgsql.entityframeworkcore.postgresql.design.1.1.0.nupkg.sha512",
+    "C:\\Users\\pcs90\\.nuget\\packages\\rotativa.aspnetcore\\1.4.0\\rotativa.aspnetcore.1.4.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\runtime.debian.8-x64.runtime.native.system.security.cryptography.openssl\\4.3.0\\runtime.debian.8-x64.runtime.native.system.security.cryptography.openssl.4.3.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\runtime.fedora.23-x64.runtime.native.system.security.cryptography.openssl\\4.3.0\\runtime.fedora.23-x64.runtime.native.system.security.cryptography.openssl.4.3.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\runtime.fedora.24-x64.runtime.native.system.security.cryptography.openssl\\4.3.0\\runtime.fedora.24-x64.runtime.native.system.security.cryptography.openssl.4.3.0.nupkg.sha512",

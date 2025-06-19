@@ -98,7 +98,10 @@
 
         $("#searchKeywordBtn").on("click", function () {
             var keyword = $("#searchKeywordInput").val();
-
+            if (!keyword) {
+                alert("Please enter a keyword to search.");
+                return;
+            }
             $.ajax({
                 url: "/Home/SearchDocumentContent",
                 type: "POST",

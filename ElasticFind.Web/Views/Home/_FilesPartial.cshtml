@@ -1,6 +1,6 @@
 @model ElasticFind.Repository.ViewModels.DisplayFilesViewModel
 
-<div class="table-responsive">
+@* <div class="table-responsive">
     <table class="table">
         <thead>
             <th style="width: 8%;">Sr. No</th>
@@ -56,6 +56,71 @@
                             onclick="loadNextPage()">
                             &gt;
                         </button>
+                    </div>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</div> *@
+
+<div class="table-responsive">
+    <table class="table align-middle">
+        <thead class="table-light">
+            <tr>
+                <th style="width: 8%;">#</th>
+                <th style="width: 72%;">File Name</th>
+                <th style="width: 20%;" class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody style="max-height: 100px; overflow-y: auto;">
+            @for (int i = 0; i < Model.Files.Count; i++)
+            {
+            <tr style="width: 100%; table-layout: fixed;">
+                <td>@(i + 1)</td>
+                <td class="fw-medium">@Model.Files[i].FileName</td>
+                <td class="text-center">
+                <div class="d-flex justify-content-center gap-3">
+                    <i class="fa fa-download text-primary pointer"
+                       onclick="window.location.href='/Home/Download/@Model.Files[i].Id'"
+                       data-toggle="tooltip" title="Download File"></i>
+                    <i class="fa fa-trash text-danger pointer"
+                       data-bs-toggle="modal" data-bs-target="#delete_file_modal"
+                       data-user-id="@Model.Files[i].Id"
+                       onclick="setUserId('@Model.Files[i].Id')"
+                       data-toggle="tooltip" title="Delete File"></i>
+                </div>
+                </td>
+            </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="3">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 p-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <span>Items per page:</span>
+                            <select class="form-select form-select-sm w-auto pointer" id="itemsPerPage" onchange="changePageSize()">
+                                <option value="5" selected=@(Model.Pagination.PageSize == 5 ? "selected" : null)>5</option>
+                                <option value="10" selected=@(Model.Pagination.PageSize == 10 ? "selected" : null)>10</option>
+                                <option value="15" selected=@(Model.Pagination.PageSize == 15 ? "selected" : null)>15</option>
+                            </select>
+                        </div>
+
+                        <div class="d-flex align-items-center gap-2">
+                            <span>
+                                Showing
+                                @(Model.Pagination.PageSize * (Model.Pagination.Page - 1) + 1) -
+                                @((Model.Pagination.PageSize * Model.Pagination.Page) >
+                                    Model.Pagination.TotalRecords ? Model.Pagination.TotalRecords :
+                                    (Model.Pagination.PageSize * Model.Pagination.Page))
+                                of @Model.Pagination.TotalRecords
+                            </span>
+
+                            <button class="btn btn-outline-primary btn-sm px-3 @(Model.Pagination.Page > 1 ? "" : "disabled")"
+                                    style="border-radius: 5px;" onclick="loadPrevPage()">&lt;</button>
+
+                            <button class="btn btn-outline-primary btn-sm px-3 @((Model.Pagination.Page * Model.Pagination.PageSize < Model.Pagination.TotalRecords) ? "" : "disabled")" onclick="loadNextPage()" style="border-radius: 5px;">&gt;</button>
+                        </div>
                     </div>
                 </td>
             </tr>

@@ -37,6 +37,11 @@ builder.Services.AddScoped<IPreviewFileService, PreviewFileService>();
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
+builder.Services.Configure<IISServerOptions>(options =>
+{
+    options.MaxRequestBodySize = int.MaxValue;
+});
+
 // JWT Authentication
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
    .AddJwtBearer(options =>
@@ -153,11 +158,11 @@ builder.Services.AddSingleton<IElasticClient>(client);
 
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(policy =>
+    options.AddPolicy("OnlyOfficePolicy", builder =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyHeader()
-              .AllowAnyMethod();
+        builder.WithOrigins("http://192.168.4.90")
+               .AllowAnyMethod()
+               .AllowAnyHeader();
     });
 });
 
@@ -180,7 +185,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
-app.UseCors();
+app.UseCors("OnlyOfficePolicy");
 
 app.UseWebSockets();
 app.UseRotativa();

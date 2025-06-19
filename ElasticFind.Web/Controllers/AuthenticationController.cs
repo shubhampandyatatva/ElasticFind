@@ -24,6 +24,7 @@ public class AuthenticationController : Controller
     [HttpGet]
     public async Task<IActionResult> Login()
     {
+        Console.WriteLine(HttpContext.Connection.RemoteIpAddress?.ToString());
         string? jwtToken = Request.Cookies["JwtToken"];
         if (jwtToken == null)
         {
@@ -60,8 +61,8 @@ public class AuthenticationController : Controller
             };
             Response.Cookies.Append("ProfileImagePath", existingUser.ProfileImage, cookieOptions);
         }
-
-        return roleId == "1" ? RedirectToAction("Index", "Home") : RedirectToAction("Index", "UserDashboard");
+        // return roleId == "1" ? RedirectToAction("Index", "Home") : RedirectToAction("Index", "UserDashboard");
+        return RedirectToAction("Index", "Home");
     }
 
     [HttpPost]
@@ -69,6 +70,7 @@ public class AuthenticationController : Controller
     {
         if (ModelState.IsValid)
         {
+            Console.WriteLine(HttpContext.Connection.RemoteIpAddress?.ToString());
             JsonResponse response = await _authService.ValidateUser(loginViewModel.Email, loginViewModel.Password);
             if (response.Success)
             {

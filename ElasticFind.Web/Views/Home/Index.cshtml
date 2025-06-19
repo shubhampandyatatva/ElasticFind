@@ -3,8 +3,8 @@
 }
 @model ElasticFind.Repository.ViewModels.DisplayFilesViewModel
 
-@* <h2 class="mb-4" style="color: #305796;">Manage Files</h2> *@
-<h2 class="mb-4">Manage Files</h2>
+<h2 class="mb-4" style="color: #305796;">Manage Files</h2>
+@* <h2 class="mb-4">Manage Files</h2> *@ 
 
 @* <div class="d-flex justify-content-center mb-4">
     <div class="card p-4 shadow" style="width: 100%; max-width: 600px;">
@@ -32,18 +32,36 @@
     </div>
 </form>
 
-<div class="d-flex justify-content-between align-items-center">
-    @* <h2 style="color: #305796;">Your Files</h2> *@
-    <h2>Your Files</h2>
+@* <div class="d-flex justify-content-between align-items-center"> *@
+@* <h2 style="color: #305796;">Your Files</h2> *@
+@* <h2>Your Files</h2>
 
     <div class="search d-flex align-items-center">
         <input type="text" id="searchInput" placeholder="Search" class="form-control" style="max-width: 500px;">
         <img src="~/images/search-icon.svg" alt="Search Icon" class="search-icon">
     </div>
+</div> *@
+
+@* <div id="filesPartialView" style="max-height: 320px; overflow-x: auto; margin-top: 20px;"> *@
+@* @await Html.PartialAsync("_FilesPartial", Model) *@
+@* </div> *@
+
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+    <h2 class="mb-0" style="color: #305796;">Your Files</h2>
+    <div class="search position-relative" style="max-width: 400px;">
+        <input type="text" id="searchInput" placeholder="Search"
+            class="form-control pe-4" />
+        <img src="~/images/search-icon.svg" alt="Search Icon"
+            class="position-absolute top-50 translate-middle-y end-0 me-3 pointer" style="height: 18px;" />
+    </div>
 </div>
 
-<div id="filesPartialView" style="max-height: 320px; overflow-x: auto; margin-top: 20px;">
-    @await Html.PartialAsync("_FilesPartial", Model)
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body">
+        <div id="filesPartialView" style="max-height: 320px; overflow-x: auto;">
+            @await Html.PartialAsync("_FilesPartial", Model)
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="delete_file_modal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle"

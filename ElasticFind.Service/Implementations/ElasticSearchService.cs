@@ -86,7 +86,7 @@ public class ElasticSearchService : IElasticSearchService
                     .Field("attachment.content")
                     .PreTags("<mark>")     // Highlight start
                     .PostTags("</mark>")   // Highlight end
-                    .FragmentSize(300)           // increase fragment length
+                    .FragmentSize(200)           // increase fragment length
                     .NumberOfFragments(50)       // allow more fragments to be returned
                     .NoMatchSize(150)           // return snippet even if keyword is not matched
                 )

@@ -288,6 +288,7 @@ public class HomeController : Controller
         var file = response.Source;
         var fileUrl = $"http://192.168.4.90:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}";
         var ext = Path.GetExtension(file.FileName).Trim('.').ToLower();
+        Console.WriteLine("File Extension: " + ext);
 
         var documentConfig = new
         {
@@ -295,8 +296,10 @@ public class HomeController : Controller
             {
                 title = file.FileName,
                 url = $"http://192.168.4.90:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
+                // url = $"http://localhost:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
                 fileType = ext,
                 key = file.Id,
+                directUrl = $"http://192.168.4.90:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
                 permissions = new
                 {
                     download = true,
@@ -306,14 +309,21 @@ public class HomeController : Controller
             },
             editorConfig = new
             {
-                mode = "view"
-            }
+                mode = "view",
+                lang = "en",
+                parentOrigin = "http://192.168.4.90:5052"
+            },
+            documentType = ext,
+            width = "100%",
+            height = "100%",
+            type = "desktop",
+            documentServerUrl = "http://192.168.4.90/"
         };
 
         return Json(documentConfig);
     }
 
-    [HttpGet]
+    // [HttpPost]
     [AllowAnonymous]
     public async Task<IActionResult> DownloadFileForViewer(string id)
     {
@@ -367,6 +377,47 @@ public class HomeController : Controller
             PageSize = Rotativa.AspNetCore.Options.Size.A4,
             PageMargins = new Rotativa.AspNetCore.Options.Margins(20, 10, 20, 10)
         };
+    }
+
+    [HttpGet("/downloadfile/{id}")]
+    [HttpPost("/downloadfile/{id}")]
+    public async Task<IActionResult> DownloadFileForOnlyOffice(string id)
+    {
+        var response = await _elasticClient.GetAsync<DocumentViewModel>(id, g => g.Index("documents"));
+        if (!response.Found)
+            return NotFound();
+
+        var file = response.Source;
+        var fileBytes = Convert.FromBase64String(file.Data);
+        var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+        Console.WriteLine("Heyyyyyyyyyyyyy");
+        var mimeType = ext switch
+        {
+            ".pdf" => "application/pdf",
+            ".txt" => "text/plain",
+            ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            ".doc" => "application/msword",
+            ".html" => "text/html",
+            ".png" => "image/png",
+            ".jpg" => "image/jpeg",
+            ".jpeg" => "image/jpeg",
+            ".gif" => "image/gif",
+            ".csv" => "text/csv",
+            ".json" => "application/json",
+            ".xml" => "application/xml",
+            ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".xls" => "application/vnd.ms-excel",
+            ".pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            ".ppt" => "application/vnd.ms-powerpoint",
+            ".rtf" => "application/rtf",
+            _ => "application/octet-stream"
+        };
+
+        Response.Headers["Accept-Ranges"] = "bytes"; // important for partial PDF loads
+        // Response.Headers["Content-Disposition"] = $"attachment; filename=\"{file.FileName}\"";
+        // Response.Headers["Access-Control-Allow-Origin"] = "*";
+        Console.WriteLine("Request Method: " + Request.Method);
+        return File(fileBytes, mimeType, file.FileName);
     }
 
 

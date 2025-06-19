@@ -350,6 +350,37 @@ html {
   overflow-wrap: break-word;
 }
 
+/* Modern table hover effect */
+.table-hover tbody tr:hover {
+  background-color: #f1f5fb;
+}
+
+/* Soft shadows and cards */
+/* .card {
+  border-radius: 10px;
+  background-color: #e9f5ff;
+}
+
+.card-body {
+  border-radius: 10px;
+  background-color: #e9f5ff;
+}
+
+.table {
+  border-radius: 20px;
+  background-color: #ffffff;
+} */
+
+/* Custom file action icons */
+.fa {
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.fa:hover {
+  transform: scale(1.2);
+}
+
+
 /* Responsive sidebar behavior */
 @media (max-width: 768px) {
   .sidebar {

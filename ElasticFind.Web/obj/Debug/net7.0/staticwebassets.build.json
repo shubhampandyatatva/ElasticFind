@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "qjT/G3UFwG5a6mrhVphdLa71CamPj0MGdlaxrWIdT8k=",
+  "Hash": "3NS+FjNouOfEsbTzUM/p3oZVadS2MeVF6fzp9y/ONsU=",
   "Source": "ElasticFind.Web",
   "BasePath": "_content/ElasticFind.Web",
   "Mode": "Default",
@@ -1207,6 +1207,23 @@
       "OriginalItemSpec": "wwwroot\\lib\\jquery\\LICENSE.txt"
     },
     {
+      "Identity": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\Rotativa\\wkhtmltopdf.exe",
+      "SourceId": "ElasticFind.Web",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\",
+      "BasePath": "_content/ElasticFind.Web",
+      "RelativePath": "Rotativa/wkhtmltopdf.exe",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\Rotativa\\wkhtmltopdf.exe"
+    },
+    {
       "Identity": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\062c52d7-cf39-49b0-8197-00e67b7ffbcb.png",
       "SourceId": "ElasticFind.Web",
       "SourceType": "Discovered",
@@ -1273,6 +1290,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\uploads\\2025 Trainees Allocation PM-20250610172545945.pdf"
+    },
+    {
+      "Identity": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\2025 Trainees Allocation PM-20250617111406368.pdf",
+      "SourceId": "ElasticFind.Web",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\",
+      "BasePath": "_content/ElasticFind.Web",
+      "RelativePath": "uploads/2025 Trainees Allocation PM-20250617111406368.pdf",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\2025 Trainees Allocation PM-20250617111406368.pdf"
     },
     {
       "Identity": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\261c1160-d32c-4e52-b241-91c2a85fb804.png",
@@ -1358,6 +1392,23 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\uploads\\6d68c3b3-60e9-43bf-9cf8-5881fdd4f018.png"
+    },
+    {
+      "Identity": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\7. 3hrs_Image Gallery with Filters (jQuery)-20250617110003093.pdf",
+      "SourceId": "ElasticFind.Web",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\",
+      "BasePath": "_content/ElasticFind.Web",
+      "RelativePath": "uploads/7. 3hrs_Image Gallery with Filters (jQuery)-20250617110003093.pdf",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\7. 3hrs_Image Gallery with Filters (jQuery)-20250617110003093.pdf"
     },
     {
       "Identity": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\790db4d9-213b-4d6d-a050-d99ceba581ce.png",
@@ -1783,6 +1834,40 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\uploads\\OrderDetailsReport (42)-20250610172545947.pdf"
+    },
+    {
+      "Identity": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\OrderDetailsReport (42)-20250617111406371.pdf",
+      "SourceId": "ElasticFind.Web",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\",
+      "BasePath": "_content/ElasticFind.Web",
+      "RelativePath": "uploads/OrderDetailsReport (42)-20250617111406371.pdf",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\OrderDetailsReport (42)-20250617111406371.pdf"
+    },
+    {
+      "Identity": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\OrderDetailsReport40-20250617111406372.pdf",
+      "SourceId": "ElasticFind.Web",
+      "SourceType": "Discovered",
+      "ContentRoot": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\",
+      "BasePath": "_content/ElasticFind.Web",
+      "RelativePath": "uploads/OrderDetailsReport40-20250617111406372.pdf",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\uploads\\OrderDetailsReport40-20250617111406372.pdf"
     },
     {
       "Identity": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\Orders (20)-20250613143645246.xlsx",
