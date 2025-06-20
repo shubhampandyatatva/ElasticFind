@@ -61,8 +61,7 @@ public class AuthenticationController : Controller
             };
             Response.Cookies.Append("ProfileImagePath", existingUser.ProfileImage, cookieOptions);
         }
-        // return roleId == "1" ? RedirectToAction("Index", "Home") : RedirectToAction("Index", "UserDashboard");
-        return RedirectToAction("Index", "Home");
+        return roleId == "1" ? RedirectToAction("Index", "Home") : RedirectToAction("Search", "Home");
     }
 
     [HttpPost]
@@ -70,7 +69,6 @@ public class AuthenticationController : Controller
     {
         if (ModelState.IsValid)
         {
-            Console.WriteLine(HttpContext.Connection.RemoteIpAddress?.ToString());
             JsonResponse response = await _authService.ValidateUser(loginViewModel.Email, loginViewModel.Password);
             if (response.Success)
             {
@@ -120,7 +118,7 @@ public class AuthenticationController : Controller
 
                 TempData["SuccessMessage"] = response.Message;
 
-                return user.RoleId == 1 ? RedirectToAction("Index", "Home") : RedirectToAction("Index", "UserDashboard");
+                return user.RoleId == 1 ? RedirectToAction("Index", "Home") : RedirectToAction("Search", "Home");
             }
             else
             {
@@ -169,7 +167,7 @@ public class AuthenticationController : Controller
                 Response.Cookies.Append("JwtToken", token, cookieOptions);
 
                 TempData["SuccessMessage"] = response.Message;
-                return RedirectToAction("Index", "UserDashboard");
+                return RedirectToAction("Search", "Home");
             }
             else
             {

@@ -1,6 +1,7 @@
 using System.Security.Claims;
 using ElasticFind.Repository.ViewModels;
 using ElasticFind.Service.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ElasticFind.Web.Controllers;
@@ -18,6 +19,7 @@ public class ProfileController : Controller
     }
 
     [HttpGet]
+    [Authorize]
     public IActionResult ChangePassword()
     {
         string? jwtToken = Request.Cookies["JwtToken"];
@@ -64,6 +66,7 @@ public class ProfileController : Controller
     }
 
     [HttpGet]
+    [Authorize]
     public async Task<IActionResult> MyProfile()
     {
         string? jwtToken = Request.Cookies["JwtToken"];
@@ -79,7 +82,12 @@ public class ProfileController : Controller
             return RedirectToAction("Authentication", "Login");
         }
 
-        MyProfileViewModel myProfile = await _profileService.GetProfileByEmail(email);
+        MyProfileViewModel? myProfile = await _profileService.GetProfileByEmail(email);
+        if (myProfile == null)
+        {
+            TempData["ErrorMessage"] = "Profile not found!";
+            return RedirectToAction("Index", "Home");
+        }
         ViewBag.Id = myProfile.Id;
         ViewBag.Email = myProfile.Email;
         Console.WriteLine("Id in viewbag in profile service: " + @ViewBag.Id);

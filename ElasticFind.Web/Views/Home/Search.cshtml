@@ -28,21 +28,68 @@
     </div>
 </div>
 
-<h3 class="results-text mb-4" style="color: #3f629b;">Your Results Go Here</h3>
+<div class="d-flex align-items-center mb-4">
+<h3 class="results-text me-3" style="color: #3f629b;">Your Results Go Here</h3>
+<h4 class="matching-docs-count d-none" style="color: #3f629b;">Found <span id="matchingDocsCount"></span> matching documents</h4>
+</div>
 
-<div id="searchResults" class="mt-4">
+<div class="filters-sorters-container d-flex justify-content-between align-items-center d-none"
+    id="filtersSortersContainer">
+    <div class="filters-sorters d-flex align-items-center">
+        <div class="filter-container d-flex align-items-center me-3 flex-wrap">
+            <div class="fs-5 me-2" style="font-weight: 500;">Filters: </div>
+            <div class="filters d-flex align-items-center">
+                <select class="select-filter form-select form-select-sm pointer" aria-label="Small select example"
+                    style="width: 125px;" id="fileTypeFilter">
+                    <option selected>File Type</option>
+                    <option value=".pdf">pdf</option>
+                    <option value=".xlsx">xlsx</option>
+                    <option value=".docx">docx</option>
+                    <option value=".xls">xls</option>
+                    <option value=".doc">doc</option>
+                    <option value=".txt">txt</option>
+                    <option value=".pptx">pptx</option>
+                    <option value=".ppt">ppt</option>
+                    <option value=".rtf">rtf</option>
+                </select>
+                <button type="button" class="btn btn-sm ms-2" id="selectDateButton" data-bs-toggle="modal"
+                    data-bs-target="#datePickerModal"
+                    style="width: 100px; border: 1px solid rgb(206, 206, 206); background-color: #fff;">Select
+                    Date</button>
+            </div>
+        </div>
+
+        <div class="sorter-container d-flex align-items-center">
+            <div class="fs-5" style="font-weight: 500;">Sort By: </div>
+            <select class="select-sorter form-select form-select-sm ms-2 pointer" aria-label="Small select example"
+                style="width: 125px;" id="sortBySelect">
+                <option selected>Sort By</option>
+                <option value="1">Date</option>
+                <option value="2">File Type</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="search d-flex align-items-center">
+        <input type="text" id="searchInput" placeholder="Search by file name..." class="form-control form-control-sm"
+            style="width: 190px;">
+        <img src="~/images/search-icon.svg" alt="Search Icon" class="search-icon">
+    </div>
+</div>
+
+<div id="searchResults" class="mt-4" style="max-height: 50vh; overflow-y: auto;">
 
 </div>
 
-<div id="exportSection" class="mt-4 d-none">
+<div id="exportSection" class="mt-3 d-none">
     <div class="dropdown">
         <button class="btn btn-primary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown"
             aria-expanded="false">
             Export Results
         </button>
         <ul class="dropdown-menu" aria-labelledby="exportDropdown">
-            <li><a class="dropdown-item" href="#" id="exportPdfBtn">Export as PDF</a></li>
-            <li><a class="dropdown-item" href="#" id="exportCsvBtn">Export as CSV</a></li>
+            <li><a class="dropdown-item" id="exportPdfBtn">Export as PDF</a></li>
+            <li><a class="dropdown-item" id="exportCsvBtn">Export as CSV</a></li>
         </ul>
     </div>
 </div>
@@ -62,8 +109,133 @@
     </div>
 </div>
 
+<!-- Date Picker Modal -->
+
+<div class="modal fade" id="datePickerModal" tabindex="-1" aria-labelledby="datePickerModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="datePickerModalLabel">Select Date Range</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="startDate" class="form-label">Start Date</label>
+                    <input type="date" class="form-control pointer" id="startDate" onclick="this.showPicker();">
+                    <div id="startDateError" class="ms-2"></div>
+                </div>
+                <div class="mb-3">
+                    <label for="endDate" class="form-label">End Date</label>
+                    <input type="date" class="form-control pointer" id="endDate" onclick="this.showPicker();">
+                    <div id="endDateError" class="ms-2"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="applyCustomDateBtn">Apply</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="datePickerCloseBtn">Close</button>
+                <button type="button" class="btn btn-secondary" id="datePickerClearBtn">Clear</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
     let latestSearchResults = [];
+    var startDate = "";
+    var endDate = "";
+
+    function searchDocumentContent() {
+        var keyword = $("#searchKeywordInput").val();
+        if (!keyword) {
+            alert("Please enter a keyword to search.");
+            return;
+        }
+        var fileTypeFitler = $("#fileTypeFilter").val();
+        var sortBy = $("#sortBySelect").val();
+        var searchInput = $("#searchInput").val();
+        console.log("Searching with parameters:", { keyword: keyword, fileTypeFilter: fileTypeFitler, startDate: startDate, endDate: endDate, sortBy: sortBy, searchInput: searchInput });
+
+        $.ajax({
+            url: "/Home/SearchDocumentContent",
+            type: "POST",
+            data: { keyword: keyword, fileTypeFilter: fileTypeFitler, startDate: startDate, endDate: endDate, sortBy: sortBy, searchInput: searchInput },
+            success: function (data) {
+                var html = "";
+                console.log("Search results:", data);
+                console.log("Data length:", data.length);
+
+                if (data.length === 0) {
+                    html = "<div class='alert alert-warning'>No results found.</div>";
+                } else {
+                    data.forEach(function (doc, index) {
+                        let totalHighlights = 0;
+                        doc.snippets.forEach(snippet => {
+                            totalHighlights += (snippet.match(/<mark>/g) || []).length;
+                        });
+
+                        html += `
+                            <div class="card mb-4">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>${doc.fileName}</strong>
+                                        <span class="text-muted"> - Found ${totalHighlights} match${totalHighlights === 1 ? '' : 'es'}</span>
+                                    </div>
+                                    <div class="pdf-exclude">
+                                        <span class="d-flex align-items-center">
+                                        <a href="/Download/${doc.id}" class="btn btn-sm btn-outline-secondary me-2" title="Download">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                        <button class="btn btn-sm btn-outline-primary preview-btn" data-id="${doc.id}" title="Preview">
+                                            <i class="bi bi-eye"></i>
+                                        </button>
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group">
+                        `;
+
+                        doc.snippets.forEach(function (snippet, idx) {
+                            const isHidden = idx >= 5 ? 'd-none extra-snippet' : '';
+                            html += `<li class="list-group-item ${isHidden}" data-doc-index="${index}">${snippet}</li>`;
+                        });
+
+                        if (doc.snippets.length > 5) {
+                            html += `
+                                    <li class="list-group-item">
+                                        <a href="#" class="toggle-snippets-link" data-doc-index="${index}" data-expanded="false">View all matches</a>
+                                    </li>
+                                `;
+                        }
+
+                        html += `
+                                    </ul>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                $("#searchResults").html(html);
+
+                latestSearchResults = data;
+
+                if (data.length > 0) {
+                    $("#exportSection").removeClass("d-none");
+                } else {
+                    $("#exportSection").addClass("d-none");
+                }
+
+                $("#filtersSortersContainer").removeClass("d-none");
+                $(".matching-docs-count").removeClass("d-none");
+                $("#matchingDocsCount").text(data.length);
+                $(".results-text").addClass("d-none");
+            },
+            error: function (xhr) {
+                $("#searchResults").html("<div class='alert alert-danger'>An error occurred while searching.</div>");
+            }
+        });
+    }
 
     $(document).ready(function () {
         $('#uploadForm').submit(function (e) {
@@ -95,87 +267,106 @@
                 }
             });
         });
+    });
 
-        $("#searchKeywordBtn").on("click", function () {
-            var keyword = $("#searchKeywordInput").val();
-            if (!keyword) {
-                alert("Please enter a keyword to search.");
-                return;
-            }
-            $.ajax({
-                url: "/Home/SearchDocumentContent",
-                type: "POST",
-                data: { keyword: keyword },
-                success: function (data) {
-                    var html = "";
+    $("#searchKeywordBtn").on("click", function () {
+        startDate = $("#startDate").val();
+        endDate = $("#endDate").val();
+        searchDocumentContent();
+    });
 
-                    if (data.length === 0) {
-                        html = "<div class='alert alert-warning'>No results found.</div>";
-                    } else {
-                        data.forEach(function (doc, index) {
-                            let totalHighlights = 0;
-                            doc.snippets.forEach(snippet => {
-                                totalHighlights += (snippet.match(/<mark>/g) || []).length;
-                            });
+    $(document).on("change", "#fileTypeFilter", function () {
+        startDate = $("#startDate").val();
+        endDate = $("#endDate").val();
+        searchDocumentContent();
+    });
 
-                            html += `
-                            <div class="card mb-4">
-                                <div class="card-header d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <strong>${doc.fileName}</strong>
-                                        <span class="text-muted"> - Found ${totalHighlights} match${totalHighlights === 1 ? '' : 'es'}</span>
-                                    </div>
-                                    <div class="pdf-exclude">
-                                        <span class="d-flex align-items-center">
-                                        <a href="/Download/${doc.id}" class="btn btn-sm btn-outline-secondary me-2" title="Download">
-                                            <i class="bi bi-download"></i>
-                                        </a>
-                                        <button class="btn btn-sm btn-outline-primary preview-btn" data-id="${doc.id}" title="Preview">
-                                            <i class="bi bi-eye"></i>
-                                        </button>
-                                        </span>
-                                    </div>
-                                </div>
-                                <div class="card-body">
-                                    <ul class="list-group">
-                        `;
+    $(document).on("change", "#sortBySelect", function () {
+        startDate = $("#startDate").val();
+        endDate = $("#endDate").val();
+        searchDocumentContent();
+    });
 
-                            doc.snippets.forEach(function (snippet, idx) {
-                                const isHidden = idx >= 5 ? 'd-none extra-snippet' : '';
-                                html += `<li class="list-group-item ${isHidden}" data-doc-index="${index}">${snippet}</li>`;
-                            });
+    $(document).on("input", "#searchInput", function () {
+        startDate = $("#startDate").val();
+        endDate = $("#endDate").val();
+        searchDocumentContent();
+    });
 
-                            if (doc.snippets.length > 5) {
-                                html += `
-                                    <li class="list-group-item">
-                                        <a href="#" class="toggle-snippets-link" data-doc-index="${index}" data-expanded="false">View all matches</a>
-                                    </li>
-                                `;
-                            }
+    $("#applyCustomDateBtn").on("click", function () {
+        startDate = $("#startDate").val();
+        endDate = $("#endDate").val();
 
-                            html += `
-                                    </ul>
-                                </div>
-                            </div>
-                        `;
-                        });
-                    }
+        if (!startDate && !endDate) {
+            $("#startDateError").text("Please select a start date.").addClass("text-danger");
+            $("#endDateError").text("Please select an end date.").addClass("text-danger");
+            return;
+        }
+        @* if (!startDate) {
+            $("#startDateError").text("Please select a start date.").addClass("text-danger");
+            return;
+        } else {
+            $("#startDateError").text("").removeClass("text-danger");
+        }
+        if (!endDate) {
+            $("#endDateError").text("Please select an end date.").addClass("text-danger");
+            return;
+        } else {
+            $("#endDateError").text("").removeClass("text-danger");
+        } *@
+        validateDateInputs();
 
-                    $("#searchResults").html(html);
+        searchDocumentContent();
+        $("#datePickerModal").modal("hide");
+        $("#startDate").text("");
+        $("#endDate").text("");
+    });
 
-                    latestSearchResults = data;
+    function validateDateInputs() {
+        const startDate = $("#startDate").val();
+        if (startDate) {
+            $("#startDateError").text("").removeClass("text-danger");
+        } else {
+            $("#startDateError").text("Please select a start date.").addClass("text-danger");
+        }
 
-                    if (data.length > 0) {
-                        $("#exportSection").removeClass("d-none");
-                    } else {
-                        $("#exportSection").addClass("d-none");
-                    }
-                },
-                error: function (xhr) {
-                    $("#searchResults").html("<div class='alert alert-danger'>An error occurred while searching.</div>");
-                }
-            });
-        });
+        const endDate = $("#endDate").val();
+        if (endDate) {
+            $("#endDateError").text("").removeClass("text-danger");
+        } else {
+            $("#endDateError").text("Please select an end date.").addClass("text-danger");
+        }
+    }
+
+    $("#startDate, #endDate").on("change", validateDateInputs);
+
+    $("#datePickerCloseBtn").on("click", function () {
+        $("#startDateError").text("");
+        $("#endDateError").text("");
+    });
+
+    // Restrict endDate based on startDate and vice versa
+    $("#startDate").on("change", function () {
+        const startDate = $(this).val();
+        if (startDate) {
+            $("#endDate").attr("min", startDate);
+        } else {
+            $("#endDate").removeAttr("min");
+        }
+    });
+    $("#endDate").on("change", function () {
+        const endDate = $(this).val();
+        if (endDate) {
+            $("#startDate").attr("max", endDate);
+        } else {
+            $("#startDate").removeAttr("max");
+        }
+    });
+
+    $("#datePickerClearBtn").on("click", function () {
+        $("#startDate").val("");
+        $("#endDate").val("");
+        @* validateDateInputs(); *@
     });
 
     // Toggle snippets visibility
@@ -205,10 +396,25 @@
         $("#previewModal").modal("show");
     });
 
+    function clearFilters() {
+        $("#fileTypeFilter").val("File Type");
+        $("#startDate").val("");
+        $("#endDate").val("");
+        $("#sortBySelect").val("Sort By");
+        $("#searchInput").val("");
+        startDate = "";
+        endDate = "";
+    }
+
     // Clear Button
     $("#clearButton").on("click", function () {
         $("#searchKeywordInput").val("");
         $("#searchResults").empty();
+        $("#exportSection").addClass("d-none");
+        $("#filtersSortersContainer").addClass("d-none");
+        $(".matching-docs-count").addClass("d-none"); 
+        $(".results-text").removeClass("d-none");
+        clearFilters();
     });
 
     function exportToCSV(data) {

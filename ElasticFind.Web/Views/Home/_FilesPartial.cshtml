@@ -64,7 +64,7 @@
 </div> *@
 
 <div class="table-responsive">
-    <table class="table align-middle">
+    <table class="table align-middle files-table">
         <thead class="table-light">
             <tr>
                 <th style="width: 8%;">#</th>
@@ -116,10 +116,10 @@
                                 of @Model.Pagination.TotalRecords
                             </span>
 
-                            <button class="btn btn-outline-primary btn-sm px-3 @(Model.Pagination.Page > 1 ? "" : "disabled")"
+                            <button class="btn btn-outline-primary @(Model.Pagination.Page > 1 ? "" : "disabled")"
                                     style="border-radius: 5px;" onclick="loadPrevPage()">&lt;</button>
 
-                            <button class="btn btn-outline-primary btn-sm px-3 @((Model.Pagination.Page * Model.Pagination.PageSize < Model.Pagination.TotalRecords) ? "" : "disabled")" onclick="loadNextPage()" style="border-radius: 5px;">&gt;</button>
+                            <button class="btn btn-outline-primary @((Model.Pagination.Page * Model.Pagination.PageSize < Model.Pagination.TotalRecords) ? "" : "disabled")" onclick="loadNextPage()" style="border-radius: 5px;">&gt;</button>
                         </div>
                     </div>
                 </td>

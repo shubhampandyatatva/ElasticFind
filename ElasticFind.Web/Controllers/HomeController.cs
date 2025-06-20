@@ -33,8 +33,7 @@ public class HomeController : Controller
         _previewFileService = previewFileService;
     }
 
-    // [Authorize(Roles = "1")]
-    [AllowAnonymous]
+    [Authorize(Roles = "1")]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public async Task<IActionResult> Index(int page = 1, int pageSize = 5, string? searchString = null, string? sortOrder = null)
     {
@@ -94,6 +93,7 @@ public class HomeController : Controller
         return RedirectToAction("Index");
     }
 
+    [Authorize(Roles = "1")]
     public async Task<IActionResult> Users(int page = 1, int pageSize = 5, string? searchString = null, string sortOrder = "Asc")
     {
         DisplayUsersViewModel listOfUsers = await _userService.GetUserList(page, pageSize, searchString, sortOrder);
@@ -133,6 +133,7 @@ public class HomeController : Controller
     }
 
     [HttpGet]
+    [Authorize]
     public ActionResult Search()
     {
         return View();
@@ -170,6 +171,8 @@ public class HomeController : Controller
                 {
                     Id = customId,
                     FileName = file.FileName.ToLowerInvariant(),
+                    FileType = Path.GetExtension(file.FileName).ToLowerInvariant(),
+                    UploadedDate = DateTime.UtcNow,
                     Data = base64Data
                 };
 
@@ -203,9 +206,9 @@ public class HomeController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> SearchDocumentContent(string keyword)
+    public async Task<IActionResult> SearchDocumentContent(string keyword, string? fileTypeFilter = null, DateTime? startDate = null, DateTime? endDate = null, string? sortBy = null, string? searchInput = null)
     {
-        var results = await _elasticSearchService.SearchDocumentsAsync(keyword);
+        var results = await _elasticSearchService.SearchDocumentsAsync(keyword, fileTypeFilter, startDate, endDate, sortBy, searchInput);
         return Json(results);
     }
 
@@ -295,11 +298,11 @@ public class HomeController : Controller
             document = new
             {
                 title = file.FileName,
-                url = $"http://192.168.4.90:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
+                url = $"http://127.0.0.1:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
                 // url = $"http://localhost:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
                 fileType = ext,
                 key = file.Id,
-                directUrl = $"http://192.168.4.90:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
+                directUrl = $"http://127.0.0.1:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
                 permissions = new
                 {
                     download = true,

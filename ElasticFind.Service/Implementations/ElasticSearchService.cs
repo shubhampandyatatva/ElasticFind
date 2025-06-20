@@ -1,5 +1,7 @@
+using System.Text;
 using ElasticFind.Repository.ViewModels;
 using ElasticFind.Service.Interfaces;
+using Elasticsearch.Net;
 using Nest;
 
 namespace ElasticFind.Service.Implementations;
@@ -71,27 +73,92 @@ public class ElasticSearchService : IElasticSearchService
         return response.IsValid;
     }
 
-    public async Task<List<GroupedSearchResults>> SearchDocumentsAsync(string keyword)
+    public async Task<List<GroupedSearchResults>> SearchDocumentsAsync(
+    string keyword, string? fileTypeFilter = null, DateTime? startDate = null,
+    DateTime? endDate = null, string? sortBy = null, string? searchInput = null)
     {
+        var mustQueries = new List<Func<QueryContainerDescriptor<DocumentViewModel>, QueryContainer>>();
+
+        // Full-text search on content
+        if (!string.IsNullOrWhiteSpace(keyword))
+        {
+            // mustQueries.Add(q => q.Match(m => m
+            //     .Field(f => f.Attachment.Content)
+            //     .Query(keyword)
+            // ));
+            mustQueries.Add(q => q.Match(m => m
+                .Field(f => f.Attachment.Content)
+                .Query(keyword)
+            ));
+        }
+
+        // Filter by file type
+        if (!string.IsNullOrWhiteSpace(fileTypeFilter) && fileTypeFilter != "File Type")
+        {
+            mustQueries.Add(q => q.Term(t => t
+                .Field(f => f.FileType.Suffix("keyword"))  // keyword for exact match
+                .Value(fileTypeFilter)
+            ));
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchInput))
+        {
+            mustQueries.Add(q => q.Wildcard(w => w
+                .Field(f => f.FileName.Suffix("keyword"))
+                .Value($"*{searchInput.ToLowerInvariant()}*")
+            ));
+        }
+
+        // Normalize to date only
+        var start = startDate?.Date; //Sets time component to 00:00:00
+        var end = endDate?.Date.AddDays(1).AddTicks(-1); // End of the day, Sets time component to 23:59:59
+        // Filter by date range
+        if (startDate.HasValue || endDate.HasValue)
+        {
+            mustQueries.Add(q => q.DateRange(dr => dr
+                .Field(f => f.UploadedDate)
+                .GreaterThanOrEquals(start)
+                .LessThanOrEquals(end)
+            ));
+        }
+
+        // Sorting
+        Func<SortDescriptor<DocumentViewModel>, IPromise<IList<ISort>>>? sort = null;
+        if (!string.IsNullOrWhiteSpace(sortBy) && sortBy != "Sort By")
+        {
+            sort = s =>
+            {
+                switch (sortBy)
+                {
+                    case "1": // Sort by date
+                        s.Descending(f => f.UploadedDate);
+                        break;
+                    case "2": // Sort by file type
+                        s.Ascending(f => f.FileType.Suffix("keyword"));
+                        break;
+                }
+                return s;
+            };
+        }
+
         var response = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
             .Index("documents")
-            .Query(q => q
-                .Match(m => m
-                    .Field("attachment.content")
-                    .Query(keyword)
-                )
-            )
+            .Query(q => q.Bool(b => b.Must(mustQueries)))
             .Highlight(h => h
                 .Fields(f => f
                     .Field("attachment.content")
-                    .PreTags("<mark>")     // Highlight start
-                    .PostTags("</mark>")   // Highlight end
-                    .FragmentSize(200)           // increase fragment length
-                    .NumberOfFragments(50)       // allow more fragments to be returned
-                    .NoMatchSize(150)           // return snippet even if keyword is not matched
+                    .PreTags("<mark>")
+                    .PostTags("</mark>")
+                    .FragmentSize(200)
+                    .NumberOfFragments(50)
+                    .NoMatchSize(150)
                 )
             )
+            .Sort(sort)
         );
+
+        var decoded = Encoding.UTF8.GetString(response.ApiCall.RequestBodyInBytes);
+        Console.WriteLine("ElasticClient Response Decoded: " + decoded);
 
         var results = new List<GroupedSearchResults>();
 
@@ -110,6 +177,7 @@ public class ElasticSearchService : IElasticSearchService
 
         return results;
     }
+
 
     public async Task<DisplayFilesViewModel> GetFilesAsync(PaginationViewModel paginationViewModel)
     {

@@ -63,14 +63,14 @@
                 style="display: @(roleId == "1" ? "" : "none");" title="Manage Files">
                 <i class="fas fa-folder-open me-2"></i> <span>Manage Files</span>
             </a>
-            <a asp-controller="Home" asp-action="Search" class="tab-link @(action == "Search" ? "active" : "")">
-                <i class="fas fa-search me-2"></i> <span>Search for Keywords</span>
+            <a asp-controller="Home" asp-action="Search" class="tab-link @(action == "Search" ? "active" : "")" title="Search Documents">
+                <i class="fas fa-search me-2"></i> <span>Search Documents</span>
             </a>
-            <a asp-controller="Home" asp-action="Index" class="tab-link @(action == "Analytics" ? "active" : "")">
+            <a asp-controller="Home" asp-action="Index" class="tab-link @(action == "Analytics" ? "active" : "")" title="Analytics">
                 <i class="fas fa-chart-line me-2"></i> <span>Analytics</span>
             </a>
             <a asp-controller="Home" asp-action="Users" class="tab-link @(action == "Users" ? "active" : "")"
-                style="display: @(roleId == "1" ? "" : "none");">
+                style="display: @(roleId == "1" ? "" : "none");" title="Users">
                 <i class="fas fa-users me-2"></i> <span>Users</span>
             </a>
         </nav>

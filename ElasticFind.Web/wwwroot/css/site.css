@@ -359,17 +359,24 @@ html {
 /* .card {
   border-radius: 10px;
   background-color: #e9f5ff;
+} */
+
+.card-header {
+  background-color: #e8f0fe;
 }
 
 .card-body {
-  border-radius: 10px;
-  background-color: #e9f5ff;
-}
+  background-color: #f8f9ff;
+} 
 
-.table {
+/* .table {
   border-radius: 20px;
   background-color: #ffffff;
 } */
+
+.list-group-item {
+  background-color: #f8faff;
+}  
 
 /* Custom file action icons */
 .fa {
@@ -380,6 +387,9 @@ html {
   transform: scale(1.2);
 }
 
+/* .matching-docs-count {
+  color: rgb(94, 94, 94);
+} */
 
 /* Responsive sidebar behavior */
 @media (max-width: 768px) {
