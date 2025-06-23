@@ -52,6 +52,9 @@ public class HomeController : Controller
             return PartialView("_FilesPartial", displayFilesViewModel);
         }
 
+        // bool result = await _elasticSearchService.CreateDocumentIndexAsync("documents");
+        // Console.WriteLine("Index creation result: " + result);
+
         return View(displayFilesViewModel);
     }
 

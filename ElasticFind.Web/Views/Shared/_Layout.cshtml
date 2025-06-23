@@ -38,19 +38,20 @@
     }
     string username = jwtToken != null ? jwtService.GetClaimValue(jwtToken, ClaimTypes.Name) : "Guest";
     if (string.IsNullOrEmpty(username)) // if token is corrupt, it won't be verified and hence GetClaimValue will return null
-    {
+{
         username = "Guest";
     }
 }
 
 <body>
-    <div class="d-flex" style="height: 100vh;">
+    <div class="d-flex" style="min-height: 100vh;"> 
         <!-- Backdrop for mobile when sidebar is open -->
         <div id="sidebarBackdrop" class="sidebar-backdrop d-md-none"></div>
         <!-- Sidebar -->
         <nav id="sidebar" class="sidebar p-3">
             <div class="d-flex justify-content-between align-items-center mb-4">
-                <div class="d-flex align-items-center gap-2 header-tab pointer" id="brandHeader" onclick="window.location.href='@Url.Action("Index", "Home")'">
+                <div class="d-flex align-items-center gap-2 header-tab pointer" id="brandHeader"
+                    onclick="window.location.href='@Url.Action("Index", "Home")'">
                     <i class="fas fa-cubes fa-2x" style="color: #4983e2;" id="brandIcon"></i>
                     <span class="fw-bold" id="brandText">ElasticFind</span>
                 </div>
@@ -63,10 +64,12 @@
                 style="display: @(roleId == "1" ? "" : "none");" title="Manage Files">
                 <i class="fas fa-folder-open me-2"></i> <span>Manage Files</span>
             </a>
-            <a asp-controller="Home" asp-action="Search" class="tab-link @(action == "Search" ? "active" : "")" title="Search Documents">
+            <a asp-controller="Home" asp-action="Search" class="tab-link @(action == "Search" ? "active" : "")"
+                title="Search Documents">
                 <i class="fas fa-search me-2"></i> <span>Search Documents</span>
             </a>
-            <a asp-controller="Home" asp-action="Index" class="tab-link @(action == "Analytics" ? "active" : "")" title="Analytics">
+            <a asp-controller="Home" asp-action="Index" class="tab-link @(action == "Analytics" ? "active" : "")"
+                title="Analytics">
                 <i class="fas fa-chart-line me-2"></i> <span>Analytics</span>
             </a>
             <a asp-controller="Home" asp-action="Users" class="tab-link @(action == "Users" ? "active" : "")"
@@ -76,7 +79,7 @@
         </nav>
 
         <!-- Main content -->
-        <div class="flex-grow-1 d-flex flex-column">
+        <div class="main-content flex-grow-1 d-flex flex-column">
             <!-- Header -->
             <div class="header d-flex align-items-center px-3">
                 <!-- Hamburger for small screens -->
@@ -117,7 +120,10 @@
         $(document).ready(function () {
             // Toggle for mobile hamburger
             $('#sidebarToggleMobile').click(function () {
-                $('#brandIcon, #brandText, #brandHeader').removeClass('hide-brand-elements');
+                $('#brandIcon, #brandText, #brandHeader').removeClass('hide-brand-elements').css({
+                    'opacity': '',
+                    'pointer-events': ''
+                });
                 $('#sidebar').addClass('open');
                 $('#sidebarBackdrop').show();
             });
@@ -157,7 +163,11 @@
             $(window).on('resize', function () {
                 if (window.innerWidth <= 768) {
                     // Ensure brand elements are shown on mobile view
-                    $('#brandIcon, #brandText, #brandHeader').removeClass('hide-brand-elements');
+                    $('#sidebar').removeClass('collapsed');
+                    $('#brandIcon, #brandText, #brandHeader').removeClass('hide-brand-elements').css({
+                        'opacity': '',
+                        'pointer-events': ''
+                    });
                 }
             });
 
@@ -237,7 +247,7 @@
 
     $(function () {
         $('[data-toggle="tooltip"]').tooltip()
-    })
+    });
 </script>
 
 </html>

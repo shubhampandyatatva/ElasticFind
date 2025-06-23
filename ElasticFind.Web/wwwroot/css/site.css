@@ -425,6 +425,14 @@ html {
   .sidebar.open {
     transform: translateX(0);
   }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    overflow-y: auto;
+  }
 }
 
 /* When collapsed, shrink sidebar width on desktop */
@@ -463,5 +471,12 @@ html {
 
   .sidebar.collapsed .header-tab i {
     margin-right: 0;
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
   }
 }

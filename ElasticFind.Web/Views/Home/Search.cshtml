@@ -30,8 +30,10 @@
 
 <div class="d-flex align-items-center mb-4">
 <h3 class="results-text me-3" style="color: #3f629b;">Your Results Go Here</h3>
-<h4 class="matching-docs-count d-none" style="color: #3f629b;">Found <span id="matchingDocsCount"></span> matching documents</h4>
+<h4 class="matching-docs-count d-none" style="color: #3f629b;">Found <span id="matchingDocsCountSpan"> matching documents</span></h4>
 </div>
+
+@* <button type="button" class="btn btn-primary" id="createDocumentBtn">Create Document</button> *@
 
 <div class="filters-sorters-container d-flex justify-content-between align-items-center d-none"
     id="filtersSortersContainer">
@@ -228,7 +230,7 @@
 
                 $("#filtersSortersContainer").removeClass("d-none");
                 $(".matching-docs-count").removeClass("d-none");
-                $("#matchingDocsCount").text(data.length);
+                $("#matchingDocsCountSpan").text(`${data.length} matching document${data.length === 1 ? '' : 's'}`);
                 $(".results-text").addClass("d-none");
             },
             error: function (xhr) {
@@ -491,6 +493,20 @@
         });
     });
 
-
+    @* $("#createDocumentBtn").on("click", function () {
+        $.ajax({
+            url: "/Home/CreateDocumentIndex",
+            type: "POST",
+            data: { indexName: "documents" },
+            success: function (response) {
+                alert("Document index created successfully!");
+                console.log(response);
+            },
+            error: function (xhr, status, error) {
+                alert("Failed to create document index.");
+                console.error(xhr.responseText);
+            }
+        });
+    }); *@
 
 </script>

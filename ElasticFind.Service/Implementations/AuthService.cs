@@ -98,8 +98,8 @@ public class AuthService : IAuthService
             return false;
         }
         string[] tokenParts = decryptedToken.Split('|');
-        // string email = tokenParts[0].Trim();
-        string email = "tatva.pcs90@outlook.com";
+        string email = tokenParts[0].Trim();
+        // string email = "tatva.pcs90@outlook.com";
 
         User? user = await _authRepository.GetUserByEmail(email);
         if (user == null)

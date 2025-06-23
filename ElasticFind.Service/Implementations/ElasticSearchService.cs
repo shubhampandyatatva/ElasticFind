@@ -28,6 +28,7 @@ public class ElasticSearchService : IElasticSearchService
                 .AutoMap()
             )
         );
+        
 
         return createIndexResponse.IsValid;
     }
