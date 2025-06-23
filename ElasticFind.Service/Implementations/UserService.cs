@@ -89,4 +89,10 @@ public class UserService : IUserService
 
         return viewModel;
     }
+
+    public async Task<User?> GetUserByEmail(string email)
+    {
+        return await _userRepository.GetUserByEmail(email);
+    }
+
 }

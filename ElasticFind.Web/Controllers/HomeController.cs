@@ -11,6 +11,8 @@ using System.Threading.Tasks;
 using ElasticFind.Service.Implementations;
 using Elastic.Clients.Elasticsearch;
 using Rotativa.AspNetCore;
+using System.Security.Claims;
+using ElasticFind.Repository.Data;
 
 namespace ElasticFind.Web.Controllers;
 
@@ -22,8 +24,10 @@ public class HomeController : Controller
     private readonly IElasticSearchService _elasticSearchService;
     private readonly IElasticClient _elasticClient;
     private readonly IPreviewFileService _previewFileService;
+    private readonly IExportService _exportService;
+    private readonly IJwtService _jwtService;
 
-    public HomeController(ILogger<HomeController> logger, IUserService userService, IElasticSearchService elasticSearchService, IElasticClient elasticClient, IPreviewFileService previewFileService)
+    public HomeController(ILogger<HomeController> logger, IUserService userService, IElasticSearchService elasticSearchService, IElasticClient elasticClient, IPreviewFileService previewFileService, IExportService exportService, IJwtService jwtService)
     {
         _logger = logger;
         _userService = userService;
@@ -31,6 +35,8 @@ public class HomeController : Controller
         _elasticSearchService = elasticSearchService;
         _elasticClient = elasticClient;
         _previewFileService = previewFileService;
+        _exportService = exportService;
+        _jwtService = jwtService;
     }
 
     [Authorize(Roles = "1")]
@@ -154,6 +160,22 @@ public class HomeController : Controller
         if (files == null || !files.Any())
             return BadRequest("No files selected.");
 
+        string? jwtToken = Request.Cookies["jwtToken"];
+        if (jwtToken == null)
+        {
+            return BadRequest("Unauthorized: JWT token is missing.");
+        }
+        string? email = _jwtService.GetClaimValue(jwtToken, ClaimTypes.Email);
+        if (email == null)
+        {
+            return BadRequest("Unauthorized: Email cannot be retrieved from JWT token.");
+        }
+        var user = await _userService.GetUserByEmail(email);
+        if (user == null)
+        {
+            return BadRequest("Error: User not found by this email.");
+        }
+
         foreach (var file in files)
         {
             try
@@ -175,6 +197,8 @@ public class HomeController : Controller
                     Id = customId,
                     FileName = file.FileName.ToLowerInvariant(),
                     FileType = Path.GetExtension(file.FileName).ToLowerInvariant(),
+                    // UploadedBy = User.Identity?.Name ?? "Anonymous",
+                    UploadedBy = $"{user.FirstName} {user.LastName}",
                     UploadedDate = DateTime.UtcNow,
                     Data = base64Data
                 };
@@ -211,7 +235,7 @@ public class HomeController : Controller
     [HttpPost]
     public async Task<IActionResult> SearchDocumentContent(string keyword, string? fileTypeFilter = null, DateTime? startDate = null, DateTime? endDate = null, string? sortBy = null, string? searchInput = null)
     {
-        var results = await _elasticSearchService.SearchDocumentsAsync(keyword, fileTypeFilter, startDate, endDate, sortBy, searchInput);
+        List<GroupedSearchResults> results = await _elasticSearchService.SearchDocumentsAsync(keyword, fileTypeFilter, startDate, endDate, sortBy, searchInput);
         return Json(results);
     }
 
@@ -426,6 +450,17 @@ public class HomeController : Controller
         return File(fileBytes, mimeType, file.FileName);
     }
 
+    public async Task<IActionResult> ExportResultsToExcel(string keyword, string fileType, DateTime? startDate, DateTime? endDate, string sortBy, string searchString)
+    {
+        List<GroupedSearchResults> results = await _elasticSearchService.SearchDocumentsAsync(keyword, fileType, startDate, endDate, sortBy, searchString);
+        if (results == null || !results.Any())
+        {
+            return NotFound("No results found for the given criteria.");
+        }
+        byte[] fileBytes = _exportService.ExportSearchResultsToExcel(results, keyword, fileType, startDate, endDate, sortBy, searchString, results.Count);
+
+        return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ElasticFind_Results.xlsx");
+    }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()

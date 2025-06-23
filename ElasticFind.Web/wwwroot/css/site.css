@@ -97,7 +97,7 @@ html {
 .tab-content {
   padding: 2rem;
   background-color: #f9fbfd;
-  flex: 1;
+  /* flex: 1; */
   overflow-y: auto;
 }
 
@@ -390,6 +390,17 @@ html {
 /* .matching-docs-count {
   color: rgb(94, 94, 94);
 } */
+
+#clearFiltersBtn {
+  background-color: #f1f5fb;
+  border-color: #c4c6ca;
+}
+
+#clearFiltersBtn:hover {
+  background-color: #fafafa;
+  border: 1px solid rgb(126, 126, 126);
+  color: rgb(63, 63, 63);
+} 
 
 /* Responsive sidebar behavior */
 @media (max-width: 768px) {

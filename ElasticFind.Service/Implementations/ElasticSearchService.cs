@@ -69,7 +69,7 @@ public class ElasticSearchService : IElasticSearchService
 
     public async Task<bool> DeleteAsync(string id)
     {
-        var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index("documents").Refresh(Elasticsearch.Net.Refresh.WaitFor));
+        var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index("documents").Refresh(Refresh.WaitFor));
         Console.WriteLine($"Delete response: {response.DebugInformation}");
         return response.IsValid;
     }
@@ -83,10 +83,6 @@ public class ElasticSearchService : IElasticSearchService
         // Full-text search on content
         if (!string.IsNullOrWhiteSpace(keyword))
         {
-            // mustQueries.Add(q => q.Match(m => m
-            //     .Field(f => f.Attachment.Content)
-            //     .Query(keyword)
-            // ));
             mustQueries.Add(q => q.Match(m => m
                 .Field(f => f.Attachment.Content)
                 .Query(keyword)
@@ -114,7 +110,7 @@ public class ElasticSearchService : IElasticSearchService
         var start = startDate?.Date; //Sets time component to 00:00:00
         var end = endDate?.Date.AddDays(1).AddTicks(-1); // End of the day, Sets time component to 23:59:59
         // Filter by date range
-        if (startDate.HasValue || endDate.HasValue)
+        if (start.HasValue || end.HasValue)
         {
             mustQueries.Add(q => q.DateRange(dr => dr
                 .Field(f => f.UploadedDate)
@@ -199,7 +195,9 @@ public class ElasticSearchService : IElasticSearchService
         List<FileViewModel> files = searchResponse.Documents.Select(doc => new FileViewModel
         {
             Id = doc.Id,
-            FileName = doc.FileName
+            FileName = doc.FileName,
+            UploadedBy = doc.UploadedBy,
+            UploadedDate = doc.UploadedDate
         }).ToList();
 
         paginationViewModel.TotalRecords = paginationViewModel.SearchString == null ?

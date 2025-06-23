@@ -68,7 +68,7 @@
                 title="Search Documents">
                 <i class="fas fa-search me-2"></i> <span>Search Documents</span>
             </a>
-            <a asp-controller="Home" asp-action="Index" class="tab-link @(action == "Analytics" ? "active" : "")"
+            <a asp-controller="Home" asp-action="Search" class="tab-link @(action == "Analytics" ? "active" : "")"
                 title="Analytics">
                 <i class="fas fa-chart-line me-2"></i> <span>Analytics</span>
             </a>
@@ -111,7 +111,7 @@
 
 
             <!-- Dynamic content -->
-            <div class="tab-content p-4">
+            <div class="tab-content flex-grow-1 p-4">
                 @RenderBody()
             </div>
         </div>

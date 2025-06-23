@@ -1,100 +1,99 @@
 @{
     ViewData["Title"] = "Search";
+    Layout = "_Layout";
 }
 
-@* <!-- Styled Search UI -->
-<div class="container mt-5">
-    <div class="card shadow-sm p-4 bg-white">
-        <h4 class="mb-4 text-center" style="color: #305796;">Search Documents</h4>
+<body>
+    <h3 class="mb-4" style="color: #305796;">Search Documents</h3>
 
-        <div class="d-flex flex-column flex-md-row align-items-center gap-3">
-            <input type="text" class="form-control flex-grow-1" id="searchKeywordInput" placeholder="Enter keyword...">
-            <button type="button" class="btn btn-primary" id="searchKeywordBtn">Search</button>
+    <div class="search-type d-flex align-items-center mb-4">
+        <div class="fs-5 me-3" style="font-weight: 450; color: rgb(61, 58, 58)">Select Search Type: </div>
+        <select class="form-select pointer" aria-label="Default select example" style="max-width: 300px;">
+            <option value="1" class="pointer">Full-Text Search</option>
+            <option value="2" class="pointer">Multiple-Text Search</option>
+        </select>
+    </div>
+
+    <div class="d-flex flex-column flex-md-row align-items-start gap-3 mb-4">
+        <input type="text" class="form-control flex-grow-1" id="searchKeywordInput" placeholder="Enter keyword...">
+        <div class="buttons d-flex align-items-center">
+            <button type="button" class="btn btn-primary me-2" id="searchKeywordBtn">Search</button>
+            <button type="button" class="btn btn-outline-primary" id="clearButton">Clear</button>
         </div>
     </div>
 
-    <div id="searchResults" class="mt-4">
-        
+    <div class="d-flex align-items-center mb-4">
+        <h3 class="results-text me-3" style="color: #3f629b;">Your Results Go Here</h3>
+        <h4 class="matching-docs-count d-none" style="color: #3f629b;">Found <span id="matchingDocsCountSpan"> matching
+                documents</span></h4>
     </div>
-</div> *@
 
-<h3 class="mb-4" style="color: #305796;">Search Documents</h3>
+    @* <button type="button" class="btn btn-primary" id="createDocumentBtn">Create Document</button> *@
 
-<div class="d-flex flex-column flex-md-row align-items-start gap-3 mb-4">
-    <input type="text" class="form-control flex-grow-1" id="searchKeywordInput" placeholder="Enter keyword...">
-    <div class="buttons d-flex align-items-center">
-        <button type="button" class="btn btn-primary me-2" id="searchKeywordBtn">Search</button>
-        <button type="button" class="btn btn-outline-primary" id="clearButton">Clear</button>
-    </div>
-</div>
+    <div class="filters-sorters-container d-flex justify-content-between align-items-center d-none"
+        id="filtersSortersContainer">
+        <div class="filters-sorters d-flex align-items-center">
+            <div class="filter-container d-flex align-items-center me-3 flex-wrap">
+                <div class="fs-5 me-2" style="font-weight: 500;">Filters: </div>
+                <div class="filters d-flex align-items-center">
+                    <select class="select-filter form-select form-select-sm pointer" aria-label="Small select example"
+                        style="width: 125px;" id="fileTypeFilter">
+                        <option selected>File Type</option>
+                        <option value=".pdf">pdf</option>
+                        <option value=".xlsx">xlsx</option>
+                        <option value=".docx">docx</option>
+                        <option value=".xls">xls</option>
+                        <option value=".doc">doc</option>
+                        <option value=".txt">txt</option>
+                        <option value=".pptx">pptx</option>
+                        <option value=".ppt">ppt</option>
+                        <option value=".rtf">rtf</option>
+                    </select>
+                    <button type="button" class="btn btn-sm ms-2" id="selectDateButton" data-bs-toggle="modal"
+                        data-bs-target="#datePickerModal"
+                        style="min-width: 100px; border: 1px solid rgb(206, 206, 206); background-color: #fff;">Select
+                        Date</button>
+                </div>
+            </div>
 
-<div class="d-flex align-items-center mb-4">
-<h3 class="results-text me-3" style="color: #3f629b;">Your Results Go Here</h3>
-<h4 class="matching-docs-count d-none" style="color: #3f629b;">Found <span id="matchingDocsCountSpan"> matching documents</span></h4>
-</div>
-
-@* <button type="button" class="btn btn-primary" id="createDocumentBtn">Create Document</button> *@
-
-<div class="filters-sorters-container d-flex justify-content-between align-items-center d-none"
-    id="filtersSortersContainer">
-    <div class="filters-sorters d-flex align-items-center">
-        <div class="filter-container d-flex align-items-center me-3 flex-wrap">
-            <div class="fs-5 me-2" style="font-weight: 500;">Filters: </div>
-            <div class="filters d-flex align-items-center">
-                <select class="select-filter form-select form-select-sm pointer" aria-label="Small select example"
-                    style="width: 125px;" id="fileTypeFilter">
-                    <option selected>File Type</option>
-                    <option value=".pdf">pdf</option>
-                    <option value=".xlsx">xlsx</option>
-                    <option value=".docx">docx</option>
-                    <option value=".xls">xls</option>
-                    <option value=".doc">doc</option>
-                    <option value=".txt">txt</option>
-                    <option value=".pptx">pptx</option>
-                    <option value=".ppt">ppt</option>
-                    <option value=".rtf">rtf</option>
+            <div class="sorter-container d-flex align-items-center">
+                <div class="fs-5" style="font-weight: 500;">Sort By: </div>
+                <select class="select-sorter form-select form-select-sm ms-2 pointer" aria-label="Small select example"
+                    style="width: 125px;" id="sortBySelect">
+                    <option selected>Sort By</option>
+                    <option value="1">Date</option>
+                    <option value="2">File Type</option>
                 </select>
-                <button type="button" class="btn btn-sm ms-2" id="selectDateButton" data-bs-toggle="modal"
-                    data-bs-target="#datePickerModal"
-                    style="width: 100px; border: 1px solid rgb(206, 206, 206); background-color: #fff;">Select
-                    Date</button>
             </div>
         </div>
 
-        <div class="sorter-container d-flex align-items-center">
-            <div class="fs-5" style="font-weight: 500;">Sort By: </div>
-            <select class="select-sorter form-select form-select-sm ms-2 pointer" aria-label="Small select example"
-                style="width: 125px;" id="sortBySelect">
-                <option selected>Sort By</option>
-                <option value="1">Date</option>
-                <option value="2">File Type</option>
-            </select>
+        <div class="d-flex align-items-center">
+            <div class="search d-flex align-items-center">
+                <input type="text" id="searchInput" placeholder="Search by file name..."
+                    class="form-control form-control-sm" style="width: 190px;">
+                <img src="~/images/search-icon.svg" alt="Search Icon" class="search-icon">
+            </div>
+            <button type="button" class="btn btn-sm ms-2" id="clearFiltersBtn">Clear Filters</button>
         </div>
     </div>
 
-    <div class="search d-flex align-items-center">
-        <input type="text" id="searchInput" placeholder="Search by file name..." class="form-control form-control-sm"
-            style="width: 190px;">
-        <img src="~/images/search-icon.svg" alt="Search Icon" class="search-icon">
+    <div id="searchResults" class="mt-4" style="max-height: 50vh; overflow-y: auto;">
+
     </div>
-</div>
 
-<div id="searchResults" class="mt-4" style="max-height: 50vh; overflow-y: auto;">
-
-</div>
-
-<div id="exportSection" class="mt-3 d-none">
-    <div class="dropdown">
-        <button class="btn btn-primary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown"
-            aria-expanded="false">
-            Export Results
-        </button>
-        <ul class="dropdown-menu" aria-labelledby="exportDropdown">
-            <li><a class="dropdown-item" id="exportPdfBtn">Export as PDF</a></li>
-            <li><a class="dropdown-item" id="exportCsvBtn">Export as CSV</a></li>
-        </ul>
+    <div id="exportSection" class="mt-3 d-none">
+        <div class="dropdown">
+            <button class="btn btn-primary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown"
+                aria-expanded="false">
+                Export Results
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="exportDropdown">
+                <li><a class="dropdown-item pointer" id="exportToPdfBtn">Export as PDF</a></li>
+                <li><a class="dropdown-item pointer" id="exportToExcelBtn">Export as Excel</a></li>
+            </ul>
+        </div>
     </div>
-</div>
+</body>
 
 <!-- Preview Modal -->
 <div class="modal fade" id="previewModal" tabindex="-1" aria-labelledby="previewModalLabel" aria-hidden="true">
@@ -134,7 +133,8 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="applyCustomDateBtn">Apply</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" id="datePickerCloseBtn">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                    id="datePickerCloseBtn">Close</button>
                 <button type="button" class="btn btn-secondary" id="datePickerClearBtn">Clear</button>
             </div>
         </div>
@@ -184,10 +184,13 @@
                                     </div>
                                     <div class="pdf-exclude">
                                         <span class="d-flex align-items-center">
-                                        <a href="/Download/${doc.id}" class="btn btn-sm btn-outline-secondary me-2" title="Download">
+                                        <button class="btn btn-sm btn-outline-primary single-export-btn me-2"" data-id="${doc.id}" title="Export this search result">
+                                            <i class="bi bi-file-earmark-arrow-up"></i>
+                                        </button>
+                                        <a href="/Home/Download/${doc.id}" class="btn btn-sm btn-outline-secondary me-2" title="Download">
                                             <i class="bi bi-download"></i>
                                         </a>
-                                        <button class="btn btn-sm btn-outline-primary preview-btn" data-id="${doc.id}" title="Preview">
+                                        <button class="btn btn-sm btn-outline-primary preview-btn data-id="${doc.id}" title="Preview">
                                             <i class="bi bi-eye"></i>
                                         </button>
                                         </span>
@@ -316,12 +319,13 @@
         } else {
             $("#endDateError").text("").removeClass("text-danger");
         } *@
-        validateDateInputs();
+            validateDateInputs();
 
         searchDocumentContent();
         $("#datePickerModal").modal("hide");
         $("#startDate").text("");
         $("#endDate").text("");
+        $("#selectDateButton").text(startDate && endDate ? `${new Date(startDate).toLocaleDateString('en-GB')} - ${new Date(endDate).toLocaleDateString('en-GB')}` : "Select Date");
     });
 
     function validateDateInputs() {
@@ -406,6 +410,7 @@
         $("#searchInput").val("");
         startDate = "";
         endDate = "";
+        $("#selectDateButton").text("Select Date");
     }
 
     // Clear Button
@@ -414,7 +419,7 @@
         $("#searchResults").empty();
         $("#exportSection").addClass("d-none");
         $("#filtersSortersContainer").addClass("d-none");
-        $(".matching-docs-count").addClass("d-none"); 
+        $(".matching-docs-count").addClass("d-none");
         $(".results-text").removeClass("d-none");
         clearFilters();
     });
@@ -438,17 +443,91 @@
         document.body.removeChild(link);
     }
 
-    $("#exportCsvBtn").on("click", function (e) {
+    @* $("#exportCsvBtn").on("click", function (e) {
         e.preventDefault();
         exportToCSV(latestSearchResults);
-    });
+    }); *@
 
-    $("#exportPdfBtn").on("click", function () {
+        $("#exportToExcelBtn").on("click", function (e) {
+            e.preventDefault();
+
+            const keyword = $("#searchKeywordInput").val();
+            const fileType = $("#fileTypeFilter").val();
+            const sortBy = $("#sortBySelect").val();
+            const searchString = $("#searchInput").val() || null;
+            if (!startDate || !endDate) {
+                startDate = "";
+                endDate = "";
+            }
+
+            var exportLink = "/Home/ExportResultsToExcel?keyword=" + keyword + "&fileType=" + fileType + "&startDate=" + startDate + "&endDate=" + endDate + "&sortBy=" + sortBy + "&searchInput=" + searchString;
+            console.log("Export Link: ", exportLink);
+            window.location.href = exportLink;
+        });
+
+    $("#exportToPdfBtn").on("click", function () {
         // Extract data from current results
         const keyword = $("#searchKeywordInput").val();
         const results = [];
 
         $("#searchResults .card").each(function () {
+            const fileName = $(this).find(".card-header strong").text().trim();
+            const matchText = $(this).find(".card-header .text-muted").text();
+            const matchCount = parseInt(matchText.match(/\d+/)[0]);
+
+            const snippets = [];
+            $(this).find(".list-group-item").each(function () {
+                // Skip the item if it contains the "View all matches" link
+                const anchor = $(this).find("a.toggle-snippets-link");
+                if (anchor.length === 0) {
+                    snippets.push($(this).html().trim());
+                }
+            });
+
+            results.push({
+                fileName,
+                matchCount,
+                snippets
+            });
+        });
+
+        // Send to backend
+        $.ajax({
+            url: '/Home/ExportToPdf',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                keyword,
+                results
+            }),
+            xhrFields: {
+                responseType: 'blob'  // so we can download the PDF
+            },
+            success: function (blob) {
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = "ElasticFind_Results.pdf";
+                link.click();
+            },
+            error: function () {
+                alert("Failed to export PDF");
+            }
+        });
+    });
+
+    $(document).on("click", ".single-export-btn", function () {
+        const docId = $(this).data("id");
+        console.log("Exporting single document with ID:", docId);
+
+        // Extract data from current document
+        const keyword = $("#searchKeywordInput").val();
+        const fileType = $("#fileTypeFilter").val();
+        const sortBy = $("#sortBySelect").val();
+        const searchString = $("#searchInput").val() || null;
+
+        const results = [];
+
+        $(this).closest(".card").each(function () {
             const fileName = $(this).find(".card-header strong").text().trim();
             const matchText = $(this).find(".card-header .text-muted").text();
             const matchCount = parseInt(matchText.match(/\d+/)[0]);
@@ -509,4 +588,8 @@
         });
     }); *@
 
+        $("#clearFiltersBtn").on("click", function () {
+            clearFilters();
+            searchDocumentContent();
+        });
 </script>

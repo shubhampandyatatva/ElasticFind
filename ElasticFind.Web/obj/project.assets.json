@@ -2782,7 +2782,10 @@
         },
         "runtime": {
           "bin/placeholder/ElasticFind.Service.dll": {}
-        }
+        },
+        "frameworkReferences": [
+          "Microsoft.AspNetCore.App"
+        ]
       }
     }
   },
