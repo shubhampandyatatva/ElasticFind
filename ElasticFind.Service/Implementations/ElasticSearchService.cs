@@ -28,7 +28,7 @@ public class ElasticSearchService : IElasticSearchService
                 .AutoMap()
             )
         );
-        
+
 
         return createIndexResponse.IsValid;
     }
@@ -75,18 +75,33 @@ public class ElasticSearchService : IElasticSearchService
     }
 
     public async Task<List<GroupedSearchResults>> SearchDocumentsAsync(
-    string keyword, string? fileTypeFilter = null, DateTime? startDate = null,
+    string searchType, string keyword, string? fileTypeFilter = null, DateTime? startDate = null,
     DateTime? endDate = null, string? sortBy = null, string? searchInput = null)
     {
         var mustQueries = new List<Func<QueryContainerDescriptor<DocumentViewModel>, QueryContainer>>();
 
-        // Full-text search on content
-        if (!string.IsNullOrWhiteSpace(keyword))
+        if (searchType == "1")
         {
-            mustQueries.Add(q => q.Match(m => m
-                .Field(f => f.Attachment.Content)
-                .Query(keyword)
-            ));
+            // Contain like search
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                mustQueries.Add(q => q.Wildcard(w => w
+                    .Field(f => f.Attachment.Content.Suffix("keyword"))
+                    .Value($"*{keyword.ToLowerInvariant()}*")
+                ));
+            }
+        }
+
+        else if (searchType == "2")
+        {
+            // Full-text search on content (multiple text search)
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                mustQueries.Add(q => q.Match(m => m
+                    .Field(f => f.Attachment.Content)
+                    .Query(keyword)
+                ));
+            }
         }
 
         // Filter by file type

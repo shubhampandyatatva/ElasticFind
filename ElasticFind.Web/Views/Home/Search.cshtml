@@ -8,8 +8,8 @@
 
     <div class="search-type d-flex align-items-center mb-4">
         <div class="fs-5 me-3" style="font-weight: 450; color: rgb(61, 58, 58)">Select Search Type: </div>
-        <select class="form-select pointer" aria-label="Default select example" style="max-width: 300px;">
-            <option value="1" class="pointer">Full-Text Search</option>
+        <select class="form-select pointer" aria-label="Default select example" style="max-width: 300px;" id="searchTypeSelect">
+            <option value="1" class="pointer" selected>Full-Text Search</option>
             <option value="2" class="pointer">Multiple-Text Search</option>
         </select>
     </div>
@@ -155,12 +155,13 @@
         var fileTypeFitler = $("#fileTypeFilter").val();
         var sortBy = $("#sortBySelect").val();
         var searchInput = $("#searchInput").val();
-        console.log("Searching with parameters:", { keyword: keyword, fileTypeFilter: fileTypeFitler, startDate: startDate, endDate: endDate, sortBy: sortBy, searchInput: searchInput });
+        var searchType = $("#searchTypeSelect").val();
+        console.log("Searching with parameters:", { searchType: searchType, keyword: keyword, fileTypeFilter: fileTypeFitler, startDate: startDate, endDate: endDate, sortBy: sortBy, searchInput: searchInput });
 
         $.ajax({
             url: "/Home/SearchDocumentContent",
             type: "POST",
-            data: { keyword: keyword, fileTypeFilter: fileTypeFitler, startDate: startDate, endDate: endDate, sortBy: sortBy, searchInput: searchInput },
+            data: { searchType: searchType, keyword: keyword, fileTypeFilter: fileTypeFitler, startDate: startDate, endDate: endDate, sortBy: sortBy, searchInput: searchInput },
             success: function (data) {
                 var html = "";
                 console.log("Search results:", data);

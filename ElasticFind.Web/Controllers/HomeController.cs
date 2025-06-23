@@ -233,9 +233,9 @@ public class HomeController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> SearchDocumentContent(string keyword, string? fileTypeFilter = null, DateTime? startDate = null, DateTime? endDate = null, string? sortBy = null, string? searchInput = null)
+    public async Task<IActionResult> SearchDocumentContent(string searchType, string keyword, string? fileTypeFilter = null, DateTime? startDate = null, DateTime? endDate = null, string? sortBy = null, string? searchInput = null)
     {
-        List<GroupedSearchResults> results = await _elasticSearchService.SearchDocumentsAsync(keyword, fileTypeFilter, startDate, endDate, sortBy, searchInput);
+        List<GroupedSearchResults> results = await _elasticSearchService.SearchDocumentsAsync(searchType, keyword, fileTypeFilter, startDate, endDate, sortBy, searchInput);
         return Json(results);
     }
 
@@ -450,9 +450,9 @@ public class HomeController : Controller
         return File(fileBytes, mimeType, file.FileName);
     }
 
-    public async Task<IActionResult> ExportResultsToExcel(string keyword, string fileType, DateTime? startDate, DateTime? endDate, string sortBy, string searchString)
+    public async Task<IActionResult> ExportResultsToExcel(string searchType, string keyword, string fileType, DateTime? startDate, DateTime? endDate, string sortBy, string searchString)
     {
-        List<GroupedSearchResults> results = await _elasticSearchService.SearchDocumentsAsync(keyword, fileType, startDate, endDate, sortBy, searchString);
+        List<GroupedSearchResults> results = await _elasticSearchService.SearchDocumentsAsync(searchType, keyword, fileType, startDate, endDate, sortBy, searchString);
         if (results == null || !results.Any())
         {
             return NotFound("No results found for the given criteria.");
