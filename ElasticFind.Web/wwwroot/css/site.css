@@ -175,7 +175,7 @@ html {
 }
 
 .bg-image {
-  background: url('../images/profile_div_bg.jpg') no-repeat center;
+  /* background: url('../images/profile_div_bg.jpg') no-repeat center; */
   height: 60px;
   background-size: cover;
 }
@@ -191,7 +191,7 @@ html {
   height: 100px;
   border-radius: 50%;
   overflow: hidden;
-  top: -40px;
+  top: -30px;
 }
 
 .profile-image img {
@@ -211,6 +211,11 @@ html {
   border-radius: 50%;
   cursor: pointer;
   z-index: 100;
+}
+
+.remove-profile-image-button {
+  position: relative;
+  top: -20px;
 }
 
 .search {

@@ -9,10 +9,12 @@ namespace ElasticFind.Service.Implementations;
 public class ElasticSearchService : IElasticSearchService
 {
     private readonly IElasticClient _elasticClient;
+    private readonly IUserService _userService;
 
-    public ElasticSearchService(IElasticClient elasticClient)
+    public ElasticSearchService(IElasticClient elasticClient, IUserService userService)
     {
         _elasticClient = elasticClient;
+        _userService = userService;
     }
 
     public async Task<bool> CreateDocumentIndexAsync(string indexName)
@@ -78,6 +80,14 @@ public class ElasticSearchService : IElasticSearchService
     string searchType, string keyword, string? fileTypeFilter = null, DateTime? startDate = null,
     DateTime? endDate = null, string? sortBy = null, string? searchInput = null)
     {
+        // var mustQueries = new List<Func<QueryContainerDescriptor<DocumentViewModel>, QueryContainer>>
+        // {
+        //     q => q.Match(m => m
+        //         .Field(f => f.Attachment.Content)
+        //         .Query(keyword)
+        //     )
+        // };
+
         var mustQueries = new List<Func<QueryContainerDescriptor<DocumentViewModel>, QueryContainer>>();
 
         if (searchType == "1")
@@ -86,9 +96,13 @@ public class ElasticSearchService : IElasticSearchService
             if (!string.IsNullOrWhiteSpace(keyword))
             {
                 mustQueries.Add(q => q.Wildcard(w => w
-                    .Field(f => f.Attachment.Content.Suffix("keyword"))
+                    .Field(f => f.Attachment.Content)
                     .Value($"*{keyword.ToLowerInvariant()}*")
                 ));
+                // mustQueries.Add(q => q.QueryString(qs => qs
+                //     .Fields(f => f.Field(ff => ff.Attachment.Content))
+                //     .Query($"*{keyword.ToLowerInvariant()}*")
+                // ));
             }
         }
 
@@ -207,13 +221,17 @@ public class ElasticSearchService : IElasticSearchService
             .Sort(st => string.IsNullOrEmpty(paginationViewModel.SortOrder) ? null : st.Field(f => f.FileName, paginationViewModel.SortOrder == "Asc" ? SortOrder.Ascending : SortOrder.Descending))
         );
 
-        List<FileViewModel> files = searchResponse.Documents.Select(doc => new FileViewModel
+        List<FileViewModel> files = new();
+        foreach (var doc in searchResponse.Documents)
         {
-            Id = doc.Id,
-            FileName = doc.FileName,
-            UploadedBy = doc.UploadedBy,
-            UploadedDate = doc.UploadedDate
-        }).ToList();
+            files.Add(new FileViewModel
+            {
+                Id = doc.Id,
+                FileName = doc.FileName,
+                UploadedBy = await _userService.GetUserFullNameById(doc.UploadedBy),
+                UploadedDate = doc.UploadedDate
+            });
+        }
 
         paginationViewModel.TotalRecords = paginationViewModel.SearchString == null ?
                 (int)searchResponse.Total :

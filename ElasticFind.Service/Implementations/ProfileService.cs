@@ -85,13 +85,14 @@ public class ProfileService : IProfileService
         }
 
         string? imagePath = await _uploadImageService.UploadImage(myProfileViewModel.ProfileImage);
+        Console.WriteLine("Image Path: " + imagePath);
 
         //Change user information
         user.FirstName = myProfileViewModel.FirstName;
         user.LastName = myProfileViewModel.LastName;
         user.Username = myProfileViewModel.Username;
         user.Phone = myProfileViewModel.Phone;
-        user.ProfileImage = imagePath ?? user.ProfileImage;
+        user.ProfileImage = imagePath;
 
         bool isProfileUpdated = await _userRepository.UpdateUser(user);
         if (isProfileUpdated)

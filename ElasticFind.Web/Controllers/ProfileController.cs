@@ -113,6 +113,9 @@ public class ProfileController : Controller
                         HttpOnly = true,
                         Secure = true
                     });
+                } else
+                {
+                    HttpContext.Response.Cookies.Delete("ProfileImagePath");
                 }
                 ViewBag.Id = myProfileViewModel.Id;
                 TempData["SuccessMessage"] = "Your profile has been updated successfully!";

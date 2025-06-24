@@ -9,7 +9,7 @@
     <div class="search-type d-flex align-items-center mb-4">
         <div class="fs-5 me-3" style="font-weight: 450; color: rgb(61, 58, 58)">Select Search Type: </div>
         <select class="form-select pointer" aria-label="Default select example" style="max-width: 300px;" id="searchTypeSelect">
-            <option value="1" class="pointer" selected>Full-Text Search</option>
+            <option value="1" class="pointer" selected>Normal Search</option>
             <option value="2" class="pointer">Multiple-Text Search</option>
         </select>
     </div>
@@ -135,7 +135,7 @@
                 <button type="button" class="btn btn-primary" id="applyCustomDateBtn">Apply</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
                     id="datePickerCloseBtn">Close</button>
-                <button type="button" class="btn btn-secondary" id="datePickerClearBtn">Clear</button>
+                <button type="button" class="btn btn-secondary" id="datePickerClearBtn">Clear Filter</button>
             </div>
         </div>
     </div>
@@ -373,7 +373,15 @@
     $("#datePickerClearBtn").on("click", function () {
         $("#startDate").val("");
         $("#endDate").val("");
-        @* validateDateInputs(); *@
+        startDate = "";
+        endDate = "";
+        $("#startDateError").text("");
+        $("#endDateError").text("");
+        $("#startDate").removeAttr("min max");
+        $("#endDate").removeAttr("min max");
+        $("#datePickerModal").modal("hide");
+        $("#selectDateButton").text("Select Date");
+        searchDocumentContent();
     });
 
     // Toggle snippets visibility
@@ -468,7 +476,27 @@
 
     $("#exportToPdfBtn").on("click", function () {
         // Extract data from current results
+        var searchType = $("#searchTypeSelect").val();
+        if(searchType == "1") {
+            searchType = "Full-Text Search";
+        } else if(searchType == "2") {
+            searchType = "Multiple-Text Search";
+        }
         const keyword = $("#searchKeywordInput").val();
+        const fileType = $("#fileTypeFilter").val().replace(".", "");
+        var sortBy = $("#sortBySelect").val();
+        if(sortBy == "1") {
+            sortBy = "Date";
+        } else if(sortBy == "2") {
+            sortBy = "File Type";
+        } else {
+            sortBy = "No sorting";
+        }
+        const searchString = $("#searchInput").val() || null;
+        if (!startDate || !endDate) {
+            startDate = null;
+            endDate = null;
+        }
         const results = [];
 
         $("#searchResults .card").each(function () {
@@ -491,15 +519,16 @@
                 snippets
             });
         });
-
+        console.log("Exporting filters:", {
+            searchType, keyword, fileType, startDate, endDate, sortBy, searchString, results
+        });
         // Send to backend
         $.ajax({
             url: '/Home/ExportToPdf',
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
-                keyword,
-                results
+                searchType, keyword, fileType, startDate, endDate, sortBy, searchString, results
             }),
             xhrFields: {
                 responseType: 'blob'  // so we can download the PDF
@@ -517,14 +546,27 @@
     });
 
     $(document).on("click", ".single-export-btn", function () {
-        const docId = $(this).data("id");
-        console.log("Exporting single document with ID:", docId);
-
-        // Extract data from current document
+        var searchType = $("#searchTypeSelect").val();
+        if(searchType == "1") {
+            searchType = "Full-Text Search";
+        } else if(searchType == "2") {
+            searchType = "Multiple-Text Search";
+        }
         const keyword = $("#searchKeywordInput").val();
-        const fileType = $("#fileTypeFilter").val();
-        const sortBy = $("#sortBySelect").val();
+        const fileType = $("#fileTypeFilter").val().replace(".", "");
+        var sortBy = $("#sortBySelect").val();
+        if(sortBy == "1") {
+            sortBy = "Date";
+        } else if(sortBy == "2") {
+            sortBy = "File Type";
+        } else {
+            sortBy = "No sorting";
+        }
         const searchString = $("#searchInput").val() || null;
+        if (!startDate || !endDate) {
+            startDate = null;
+            endDate = null;
+        }
 
         const results = [];
 
@@ -548,15 +590,16 @@
                 snippets
             });
         });
-
+        console.log("Exporting filters in single export:", {
+            searchType, keyword, fileType, startDate, endDate, sortBy, searchString, results
+        });
         // Send to backend
         $.ajax({
             url: '/Home/ExportToPdf',
             method: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
-                keyword,
-                results
+                searchType, keyword, fileType, startDate, endDate, sortBy, searchString, results
             }),
             xhrFields: {
                 responseType: 'blob'  // so we can download the PDF

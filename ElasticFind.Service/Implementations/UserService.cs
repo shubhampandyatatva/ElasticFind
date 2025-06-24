@@ -95,4 +95,19 @@ public class UserService : IUserService
         return await _userRepository.GetUserByEmail(email);
     }
 
+    public async Task<string> GetUserFullNameById(string? uploadedBy)
+    {
+        if (!int.TryParse(uploadedBy, out int uploadedByInt))
+        {
+            Console.WriteLine("Error: Invalid user ID format: " + uploadedBy);
+            return string.Empty;
+        }
+        User? user = await _userRepository.GetUserById(uploadedByInt);
+        if (user == null)
+        {
+            Console.WriteLine("Error: User not found with ID: " + uploadedBy);
+            return string.Empty;
+        }
+        return $"{user.FirstName} {user.LastName}";
+    }
 }
