@@ -10,6 +10,6 @@ public interface IElasticSearchService
     Task<bool> UpdateAsync(Humanresources hr);
     Task<bool> UpdateFieldAsync(int id, string newJobTitle);
     Task<bool> DeleteAsync(string id);
-    Task<List<GroupedSearchResults>> SearchDocumentsAsync(string searchType, string keyword, string? fileTypeFilter = null, DateTime? startDate = null, DateTime? endDate = null, string? sortBy = null, string? searchInput = null);
+    Task<List<GroupedSearchResults>> SearchDocumentsAsync(string searchType, bool matchAllTerms, string keyword, string? fileTypeFilter = null, DateTime? startDate = null, DateTime? endDate = null, string? sortBy = null, string? searchInput = null);
     Task<DisplayFilesViewModel> GetFilesAsync(PaginationViewModel paginationViewModel);
 }

@@ -8,19 +8,31 @@
 
     <div class="search-type d-flex align-items-center mb-4">
         <div class="fs-5 me-3" style="font-weight: 450; color: rgb(61, 58, 58)">Select Search Type: </div>
-        <select class="form-select pointer" aria-label="Default select example" style="max-width: 300px;" id="searchTypeSelect">
-            <option value="1" class="pointer" selected>Normal Search</option>
-            <option value="2" class="pointer">Multiple-Text Search</option>
+        <select class="form-select pointer" aria-label="Default select example"
+            style="max-width: 300px; margin-right: 56px;" id="searchTypeSelect">
+            <option value="1" class="pointer" title="Normal keyword search" selected>Normal Search</option>
+            <option value="2" class="pointer" title="Search by multiple words separeted by space">Multiple-Text Search
+            </option>
+            <option value="3" class="pointer" title="Search with minor spelling errors or typos in keywords">Fuzzy
+                Search</option>
         </select>
+        <div class="match-all-checkbox-container form-check form-check-lg d-none">
+            <input class="form-check-input pointer" type="checkbox" id="matchAllCheckbox">
+            <label class="match-all-terms-label form-check-label ms-1" for="matchAllCheckbox">
+                Match All Terms
+            </label>
+        </div>
     </div>
 
-    <div class="d-flex flex-column flex-md-row align-items-start gap-3 mb-4">
+    <div class="d-flex flex-column flex-md-row align-items-start gap-3 mb-2">
         <input type="text" class="form-control flex-grow-1" id="searchKeywordInput" placeholder="Enter keyword...">
         <div class="buttons d-flex align-items-center">
             <button type="button" class="btn btn-primary me-2" id="searchKeywordBtn">Search</button>
             <button type="button" class="btn btn-outline-primary" id="clearButton">Clear</button>
         </div>
     </div>
+
+    <div class="info-text mb-4 d-none" style="color: rgb(128, 128, 0);">Enter more than two characters for best results</div>
 
     <div class="d-flex align-items-center mb-4">
         <h3 class="results-text me-3" style="color: #3f629b;">Your Results Go Here</h3>
@@ -141,27 +153,52 @@
     </div>
 </div>
 
+<!-- Search loader -->
+
+<div id="loader"
+    class="position-fixed top-0 start-0 w-100 h-100 justify-content-center align-items-center bg-white bg-opacity-75"
+    style="display: none; z-index: 9999;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Searching...</span>
+    </div>
+</div>
+
+<!-- Export loader -->
+
+@* <div id="exportLoader"
+    class="position-fixed top-0 start-0 w-100 h-100 justify-content-center align-items-center bg-white bg-opacity-75"
+    style="display: none; z-index: 9999;">
+    <div class="spinner-border text-success" role="status">
+        <span class="visually-hidden">Exporting...</span>
+    </div>
+</div> *@
+
 <script>
     let latestSearchResults = [];
     var startDate = "";
     var endDate = "";
 
     function searchDocumentContent() {
-        var keyword = $("#searchKeywordInput").val();
+        var keyword = $("#searchKeywordInput").val().trim();
         if (!keyword) {
             alert("Please enter a keyword to search.");
             return;
         }
-        var fileTypeFitler = $("#fileTypeFilter").val();
-        var sortBy = $("#sortBySelect").val();
-        var searchInput = $("#searchInput").val();
-        var searchType = $("#searchTypeSelect").val();
-        console.log("Searching with parameters:", { searchType: searchType, keyword: keyword, fileTypeFilter: fileTypeFitler, startDate: startDate, endDate: endDate, sortBy: sortBy, searchInput: searchInput });
+        var searchType = $("#searchTypeSelect").val().trim();
+        var matchAllTerms = $("#matchAllCheckbox").is(":checked") ? true : false;
+        var fileTypeFitler = $("#fileTypeFilter").val().trim();
+        var sortBy = $("#sortBySelect").val().trim();
+        var searchInput = $("#searchInput").val().trim();
+        console.log("Searching with parameters:", { searchType: searchType, matchAllTerms: matchAllTerms, keyword: keyword, fileTypeFilter: fileTypeFitler, startDate: startDate, endDate: endDate, sortBy: sortBy, searchInput: searchInput });
+
+        $("#loader").find(".spinner-border").removeClass("text-success").addClass("text-primary");
+        @* $("#loader").show(); *@
+            $("#loader").css("display", "flex");
 
         $.ajax({
             url: "/Home/SearchDocumentContent",
             type: "POST",
-            data: { searchType: searchType, keyword: keyword, fileTypeFilter: fileTypeFitler, startDate: startDate, endDate: endDate, sortBy: sortBy, searchInput: searchInput },
+            data: { searchType: searchType, matchAllTerms: matchAllTerms, keyword: keyword, fileTypeFilter: fileTypeFitler, startDate: startDate, endDate: endDate, sortBy: sortBy, searchInput: searchInput },
             success: function (data) {
                 var html = "";
                 console.log("Search results:", data);
@@ -188,9 +225,9 @@
                                         <button class="btn btn-sm btn-outline-primary single-export-btn me-2"" data-id="${doc.id}" title="Export this search result">
                                             <i class="bi bi-file-earmark-arrow-up"></i>
                                         </button>
-                                        <a href="/Home/Download/${doc.id}" class="btn btn-sm btn-outline-secondary me-2" title="Download">
+                                        <button onclick="downloadFile('${doc.id}', '${doc.fileName}')" class="btn btn-sm btn-outline-secondary me-2" title="Download">
                                             <i class="bi bi-download"></i>
-                                        </a>
+                                        </button>
                                         <button class="btn btn-sm btn-outline-primary preview-btn data-id="${doc.id}" title="Preview">
                                             <i class="bi bi-eye"></i>
                                         </button>
@@ -239,6 +276,10 @@
             },
             error: function (xhr) {
                 $("#searchResults").html("<div class='alert alert-danger'>An error occurred while searching.</div>");
+            },
+            complete: function () {
+                @* $("#loader").css("display", "none"); *@
+                    $("#loader").hide();
             }
         });
     }
@@ -293,11 +334,21 @@
         searchDocumentContent();
     });
 
-    $(document).on("input", "#searchInput", function () {
+    // Debounce function to wait for user search
+    function debounce(func, delay) {
+        let timeoutId;
+        return function (...args) {
+            clearTimeout(timeoutId);
+            timeoutId = setTimeout(() => func.apply(this, args), delay);
+        };
+    }
+    const debounceSearch = debounce(function () {
         startDate = $("#startDate").val();
         endDate = $("#endDate").val();
         searchDocumentContent();
-    });
+    }, 500);
+
+    $(document).on("input", "#searchInput", debounceSearch);
 
     $("#applyCustomDateBtn").on("click", function () {
         startDate = $("#startDate").val();
@@ -452,42 +503,59 @@
         document.body.removeChild(link);
     }
 
-    @* $("#exportCsvBtn").on("click", function (e) {
+    $("#exportToExcelBtn").on("click", function (e) {
         e.preventDefault();
-        exportToCSV(latestSearchResults);
-    }); *@
+        $("#loader").find(".spinner-border").removeClass("text-primary").addClass("text-success");
+        $("#loader").show();
 
-        $("#exportToExcelBtn").on("click", function (e) {
-            e.preventDefault();
+        const keyword = $("#searchKeywordInput").val();
+        const fileType = $("#fileTypeFilter").val();
+        const sortBy = $("#sortBySelect").val();
+        const searchInput = $("#searchInput").val() || null;
+        const searchType = $("#searchTypeSelect").val();
+        const matchAllTerms = $("#matchAllCheckbox").is(":checked");
 
-            const keyword = $("#searchKeywordInput").val();
-            const fileType = $("#fileTypeFilter").val();
-            const sortBy = $("#sortBySelect").val();
-            const searchString = $("#searchInput").val() || null;
-            if (!startDate || !endDate) {
-                startDate = "";
-                endDate = "";
+        const url = `/Home/ExportResultsToExcel?keyword=${keyword}&fileType=${fileType}&startDate=${startDate}&endDate=${endDate}&sortBy=${sortBy}&searchInput=${searchInput}&searchType=${searchType}&matchAllTerms=${matchAllTerms}`;
+
+        $.ajax({
+            url: url,
+            method: 'GET',
+            xhrFields: {
+                responseType: 'blob'
+            },
+            success: function (blob) {
+                const a = document.createElement('a');
+                a.href = window.URL.createObjectURL(blob);
+                a.download = "ElasticFind_Results.xlsx";
+                a.click();
+            },
+            error: function () {
+                alert("Failed to export Excel");
+            },
+            complete: function () {
+                $("#loader").hide();
             }
-
-            var exportLink = "/Home/ExportResultsToExcel?keyword=" + keyword + "&fileType=" + fileType + "&startDate=" + startDate + "&endDate=" + endDate + "&sortBy=" + sortBy + "&searchInput=" + searchString;
-            console.log("Export Link: ", exportLink);
-            window.location.href = exportLink;
         });
+    });
+
 
     $("#exportToPdfBtn").on("click", function () {
+        $("#loader").find(".spinner-border").removeClass("text-primary").addClass("text-success");
+        $("#loader").show();
+
         // Extract data from current results
         var searchType = $("#searchTypeSelect").val();
-        if(searchType == "1") {
+        if (searchType == "1") {
             searchType = "Full-Text Search";
-        } else if(searchType == "2") {
+        } else if (searchType == "2") {
             searchType = "Multiple-Text Search";
         }
         const keyword = $("#searchKeywordInput").val();
         const fileType = $("#fileTypeFilter").val().replace(".", "");
         var sortBy = $("#sortBySelect").val();
-        if(sortBy == "1") {
+        if (sortBy == "1") {
             sortBy = "Date";
-        } else if(sortBy == "2") {
+        } else if (sortBy == "2") {
             sortBy = "File Type";
         } else {
             sortBy = "No sorting";
@@ -541,23 +609,29 @@
             },
             error: function () {
                 alert("Failed to export PDF");
+            },
+            complete: function () {
+                $("#loader").hide();
             }
         });
     });
 
     $(document).on("click", ".single-export-btn", function () {
+        $("#loader").find(".spinner-border").removeClass("text-primary").addClass("text-success");
+        $("#loader").show();
+
         var searchType = $("#searchTypeSelect").val();
-        if(searchType == "1") {
+        if (searchType == "1") {
             searchType = "Full-Text Search";
-        } else if(searchType == "2") {
+        } else if (searchType == "2") {
             searchType = "Multiple-Text Search";
         }
         const keyword = $("#searchKeywordInput").val();
         const fileType = $("#fileTypeFilter").val().replace(".", "");
         var sortBy = $("#sortBySelect").val();
-        if(sortBy == "1") {
+        if (sortBy == "1") {
             sortBy = "Date";
-        } else if(sortBy == "2") {
+        } else if (sortBy == "2") {
             sortBy = "File Type";
         } else {
             sortBy = "No sorting";
@@ -612,6 +686,9 @@
             },
             error: function () {
                 alert("Failed to export PDF");
+            },
+            complete: function () {
+                $("#loader").hide();
             }
         });
     });
@@ -636,4 +713,50 @@
             clearFilters();
             searchDocumentContent();
         });
+
+    $("#searchTypeSelect").on("change", function () {
+        const searchType = $(this).val();
+        if (searchType == "1") {
+            $(".match-all-checkbox-container").addClass("d-none");
+            $(".info-text").addClass("d-none");
+        } else if (searchType == "2") {
+            $(".match-all-checkbox-container").removeClass("d-none");
+            $("#matchAllCheckbox").prop("checked", false);
+            $(".info-text").addClass("d-none");
+        } else {
+            $(".match-all-checkbox-container").addClass("d-none");
+            $(".info-text").removeClass("d-none");
+        }
+    });
+
+    function downloadFile(fileId, fileName) {
+        $("#loader").find(".spinner-border").removeClass("text-success").addClass("text-primary");
+        $("#loader").show();
+
+        $.ajax({
+            url: `/Home/Download/${fileId}`,
+            method: "GET",
+            xhrFields: {
+                responseType: 'blob' // Get the raw binary data
+            },
+            success: function (data, status, xhr) {
+                const blob = new Blob([data], { type: xhr.getResponseHeader('Content-Type') });
+                const downloadUrl = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = downloadUrl;
+                a.download = fileName;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(downloadUrl);
+                console.log("successss!");
+            },
+            error: function () {
+                alert("Error downloading file.");
+            },
+            complete: function () {
+                $("#loader").hide();
+            }
+        });
+    }
 </script>

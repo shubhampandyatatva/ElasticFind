@@ -405,7 +405,15 @@ html {
   background-color: #fafafa;
   border: 1px solid rgb(126, 126, 126);
   color: rgb(63, 63, 63);
-} 
+}
+
+#matchAllCheckbox {
+  transform: scale(1.5);
+}
+
+.match-all-terms-label {
+  font-size: 18px;
+}
 
 /* Responsive sidebar behavior */
 @media (max-width: 768px) {

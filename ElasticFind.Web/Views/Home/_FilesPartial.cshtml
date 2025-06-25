@@ -22,7 +22,7 @@
                 <td class="text-center">
                 <div class="d-flex justify-content-center gap-3">
                     <i class="fa fa-download text-primary pointer"
-                       onclick="window.location.href='/Home/Download/@Model.Files[i].Id'"
+                       onclick="downloadFile('@Model.Files[i].Id', '@Model.Files[i].FileName')"
                        data-toggle="tooltip" title="Download File"></i>
                     <i class="fa fa-trash text-danger pointer"
                        data-bs-toggle="modal" data-bs-target="#delete_file_modal"

@@ -77,9 +77,14 @@ public class ElasticSearchService : IElasticSearchService
     }
 
     public async Task<List<GroupedSearchResults>> SearchDocumentsAsync(
-    string searchType, string keyword, string? fileTypeFilter = null, DateTime? startDate = null,
+    string searchType, bool matchAllTerms, string keyword, string? fileTypeFilter = null, DateTime? startDate = null,
     DateTime? endDate = null, string? sortBy = null, string? searchInput = null)
     {
+        if (string.IsNullOrEmpty(keyword) || string.IsNullOrWhiteSpace(keyword))
+        {
+            Console.WriteLine("Error: Keyword is null or empty, returning empty results.");
+            return new List<GroupedSearchResults>();
+        }
         // var mustQueries = new List<Func<QueryContainerDescriptor<DocumentViewModel>, QueryContainer>>
         // {
         //     q => q.Match(m => m
@@ -93,29 +98,119 @@ public class ElasticSearchService : IElasticSearchService
         if (searchType == "1")
         {
             // Contain like search
-            if (!string.IsNullOrWhiteSpace(keyword))
+            if (keyword.Contains(' '))
+            {
+                mustQueries.Add(q => q.MatchPhrase(mp => mp
+                    .Field(f => f.Attachment.Content)
+                    .Query(keyword)
+                ));
+            }
+            else
             {
                 mustQueries.Add(q => q.Wildcard(w => w
                     .Field(f => f.Attachment.Content)
                     .Value($"*{keyword.ToLowerInvariant()}*")
                 ));
-                // mustQueries.Add(q => q.QueryString(qs => qs
-                //     .Fields(f => f.Field(ff => ff.Attachment.Content))
-                //     .Query($"*{keyword.ToLowerInvariant()}*")
-                // ));
             }
+            // mustQueries.Add(q => q.Wildcard(w => w
+            //     .Field(f => f.Attachment.Content)
+            //     .Value($"*{keyword}*")
+            // ));
+            // mustQueries.Add(q => q.QueryString(qs => qs
+            //     .Fields(f => f.Field(ff => ff.Attachment.Content))
+            //     .Query($"*{keyword.ToLowerInvariant()}*")
+            // ));
+            // mustQueries.Add(q => q.MatchPhrase(w => w
+            //     .Field(f => f.Attachment.Content)
+            //     .Query($"*{keyword}*")
+            // ));
         }
 
         else if (searchType == "2")
         {
             // Full-text search on content (multiple text search)
-            if (!string.IsNullOrWhiteSpace(keyword))
+            if (matchAllTerms)
+            {
+                mustQueries.Add(q => q.Match(m => m
+                    .Field(f => f.Attachment.Content)
+                    .Query(keyword)
+                    .Operator(Operator.And) // Match all terms
+                ));
+
+                // var keywords = keyword.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                // foreach (var term in keywords)
+                // {
+                //     var fuzzinessValue = term.Length switch
+                //     {
+                //         <= 2 => 0,
+                //         <= 5 => 1,
+                //         <= 10 => 2,
+                //         _ => 3,
+                //     };
+
+                //     mustQueries.Add(q => q.Match(m => m
+                //         .Field(f => f.Attachment.Content)
+                //         .Query(term)
+                //         .Fuzziness(Fuzziness.EditDistance(fuzzinessValue))
+                //         .Operator(Operator.And)
+                //     ));
+                // }
+            }
+            else
             {
                 mustQueries.Add(q => q.Match(m => m
                     .Field(f => f.Attachment.Content)
                     .Query(keyword)
                 ));
+
+                // var keywords = keyword.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                // foreach (var term in keywords)
+                // {
+                //     var fuzzinessValue = term.Length switch
+                //     {
+                //         <= 2 => 0,
+                //         <= 5 => 1,
+                //         <= 10 => 2,
+                //         _ => 3,
+                //     };
+
+                //     mustQueries.Add(q => q.Match(m => m
+                //         .Field(f => f.Attachment.Content)
+                //         .Query(term)
+                //         .Fuzziness(Fuzziness.EditDistance(fuzzinessValue))
+                //     ));
+                // }
             }
+        }
+        else
+        {
+            mustQueries.Add(q => q.Match(fz => fz
+                .Field(f => f.Attachment.Content)
+                .Query(keyword)
+                .Fuzziness(Fuzziness.Auto)
+            ));
+
+            // var keywords = keyword.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            // Console.WriteLine("Keywords: " + string.Join(", ", keywords));
+            // Console.WriteLine("Keywords Count: " + keywords.Length);
+            // foreach (var term in keywords)
+            // {
+            //     var fuzzinessValue = term.Length switch
+            //     {
+            //         <= 2 => 0,
+            //         <= 5 => 1,
+            //         <= 10 => 2,
+            //         _ => 3,
+            //     };
+
+            //     mustQueries.Add(q => q.Fuzzy(m => m
+            //         .Field(f => f.Attachment.Content)
+            //         .Value(term)
+            //         .Fuzziness(Fuzziness.EditDistance(fuzzinessValue))
+            //     ));
+            // }
         }
 
         // Filter by file type
