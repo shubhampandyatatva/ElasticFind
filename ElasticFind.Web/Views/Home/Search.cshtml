@@ -15,6 +15,8 @@
             </option>
             <option value="3" class="pointer" title="Search with minor spelling errors or typos in keywords">Fuzzy
                 Search</option>
+            <option value="4" class="pointer" title="Search words with similar meanings">Synonym
+                Search</option>
         </select>
         <div class="match-all-checkbox-container form-check form-check-lg d-none">
             <input class="form-check-input pointer" type="checkbox" id="matchAllCheckbox">
@@ -32,7 +34,8 @@
         </div>
     </div>
 
-    <div class="info-text mb-4 d-none" style="color: rgb(128, 128, 0);">Enter more than two characters for best results</div>
+    <div class="info-text mb-4 d-none" style="color: rgb(128, 128, 0);">Enter more than two characters for best results
+    </div>
 
     <div class="d-flex align-items-center mb-4">
         <h3 class="results-text me-3" style="color: #3f629b;">Your Results Go Here</h3>
@@ -40,10 +43,10 @@
                 documents</span></h4>
     </div>
 
-    @* <button type="button" class="btn btn-primary" id="createDocumentBtn">Create Document</button> *@
+    @* <button type="button" class="btn btn-primary" id="createDocumentBtn">Create Document</button> *@ 
 
     <div class="filters-sorters-container d-flex justify-content-between align-items-center d-none"
-        id="filtersSortersContainer">
+        id="filtersSortersContainer"> 
         <div class="filters-sorters d-flex align-items-center">
             <div class="filter-container d-flex align-items-center me-3 flex-wrap">
                 <div class="fs-5 me-2" style="font-weight: 500;">Filters: </div>
@@ -228,7 +231,7 @@
                                         <button onclick="downloadFile('${doc.id}', '${doc.fileName}')" class="btn btn-sm btn-outline-secondary me-2" title="Download">
                                             <i class="bi bi-download"></i>
                                         </button>
-                                        <button class="btn btn-sm btn-outline-primary preview-btn data-id="${doc.id}" title="Preview">
+                                        <button class="btn btn-sm btn-outline-primary preview-btn" data-id="${doc.id}" title="Preview">
                                             <i class="bi bi-eye"></i>
                                         </button>
                                         </span>
@@ -693,11 +696,11 @@
         });
     });
 
-    @* $("#createDocumentBtn").on("click", function () {
+    $("#createDocumentBtn").on("click", function () {
         $.ajax({
             url: "/Home/CreateDocumentIndex",
             type: "POST",
-            data: { indexName: "documents" },
+            data: { indexName: "documents3" },
             success: function (response) {
                 alert("Document index created successfully!");
                 console.log(response);
@@ -707,9 +710,19 @@
                 console.error(xhr.responseText);
             }
         });
-    }); *@
+    });
 
         $("#clearFiltersBtn").on("click", function () {
+            if ($("#fileTypeFilter").val() === "File Type" && startDate === "" && endDate === "" && $("#sortBySelect").val() === "Sort By" && $("#searchInput").val() === "") {
+                console.log("Filters: ", {
+                    fileType: $("#fileTypeFilter").val(),
+                    startDate: startDate,
+                    endDate: endDate,
+                    sortBy: $("#sortBySelect").val(),
+                    searchInput: $("#searchInput").val()
+                });
+                return; // No need to clear if already set to default
+            }
             clearFilters();
             searchDocumentContent();
         });
@@ -723,9 +736,12 @@
             $(".match-all-checkbox-container").removeClass("d-none");
             $("#matchAllCheckbox").prop("checked", false);
             $(".info-text").addClass("d-none");
-        } else {
+        } else if (searchType == "3") {
             $(".match-all-checkbox-container").addClass("d-none");
             $(".info-text").removeClass("d-none");
+        } else {
+            $(".match-all-checkbox-container").addClass("d-none");
+            $(".info-text").addClass("d-none");
         }
     });
 

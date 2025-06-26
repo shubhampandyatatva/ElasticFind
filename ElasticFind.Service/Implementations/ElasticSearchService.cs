@@ -1,7 +1,9 @@
 using System.Text;
+using System.Text.Json;
 using ElasticFind.Repository.ViewModels;
 using ElasticFind.Service.Interfaces;
 using Elasticsearch.Net;
+using Microsoft.Extensions.Caching.Memory;
 using Nest;
 
 namespace ElasticFind.Service.Implementations;
@@ -10,11 +12,13 @@ public class ElasticSearchService : IElasticSearchService
 {
     private readonly IElasticClient _elasticClient;
     private readonly IUserService _userService;
+    private readonly IMemoryCache _cache;
 
-    public ElasticSearchService(IElasticClient elasticClient, IUserService userService)
+    public ElasticSearchService(IElasticClient elasticClient, IUserService userService, IMemoryCache cache)
     {
         _elasticClient = elasticClient;
         _userService = userService;
+        _cache = cache;
     }
 
     public async Task<bool> CreateDocumentIndexAsync(string indexName)
@@ -184,7 +188,7 @@ public class ElasticSearchService : IElasticSearchService
                 // }
             }
         }
-        else
+        else if (searchType == "3") // Fuzzy search
         {
             mustQueries.Add(q => q.Match(fz => fz
                 .Field(f => f.Attachment.Content)
@@ -211,6 +215,30 @@ public class ElasticSearchService : IElasticSearchService
             //         .Fuzziness(Fuzziness.EditDistance(fuzzinessValue))
             //     ));
             // }
+        }
+        else
+        {
+            var terms = keyword.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
+            var allTermsWithSynonyms = new List<string>(terms);
+
+            foreach (var term in terms)
+            {
+                var synonyms = await GetSynonymsAsync(term);
+                allTermsWithSynonyms.AddRange(synonyms);
+            }
+            foreach (var term in allTermsWithSynonyms)
+            {
+                Console.WriteLine("Term with Synonym: " + term);
+            }
+
+            mustQueries.Add(q => q.Bool(b => b
+                .Should(allTermsWithSynonyms.Select(t => (Func<QueryContainerDescriptor<DocumentViewModel>, QueryContainer>)(m =>
+                    m.Match(mm => mm
+                        .Field(f => f.Attachment.Content)
+                        .Query(t)
+                    ))).ToArray())
+                .MinimumShouldMatch(1)
+            ));
         }
 
         // Filter by file type
@@ -345,5 +373,39 @@ public class ElasticSearchService : IElasticSearchService
         };
 
         return displayFilesViewModel;
+    }
+
+    public async Task<List<string>> GetSynonymsAsync(string word)
+    {
+        if (_cache.TryGetValue(word, out List<string> cachedSynonyms))
+        return cachedSynonyms;
+
+        using var httpClient = new HttpClient();
+        var url = $"https://api.datamuse.com/words?rel_syn={word}&max=10";
+
+        var response = await httpClient.GetAsync(url);
+        if (!response.IsSuccessStatusCode)
+        {
+            Console.WriteLine($"Error fetching synonyms for '{word}': {response.StatusCode}");
+            return new List<string>();
+        }
+
+        var content = await response.Content.ReadAsStringAsync();
+
+        var json = JsonSerializer.Deserialize<List<DatamuseWord>>(content, new JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true
+        });
+        
+        var synonyms = json?
+            .Select(w => w.Word)
+            .Where(w => !string.IsNullOrWhiteSpace(w))
+            .Distinct()
+            .Take(10)
+            .ToList() ?? new List<string>();
+
+        _cache.Set(word, synonyms, TimeSpan.FromHours(8)); // Cache for 8 hours
+
+        return synonyms;
     }
 }

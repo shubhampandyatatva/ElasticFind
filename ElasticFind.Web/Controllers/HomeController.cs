@@ -13,6 +13,7 @@ using Elastic.Clients.Elasticsearch;
 using Rotativa.AspNetCore;
 using System.Security.Claims;
 using ElasticFind.Repository.Data;
+using System.Text.Json;
 
 namespace ElasticFind.Web.Controllers;
 
@@ -155,6 +156,8 @@ public class HomeController : Controller
     }
 
     [HttpPost]
+    [RequestSizeLimit(100_000_000)] // 100 MB
+    [RequestFormLimits(MultipartBodyLengthLimit = 100_000_000)]
     public async Task<IActionResult> UploadDocuments(List<IFormFile> files)
     {
         if (files == null || !files.Any())
@@ -203,6 +206,8 @@ public class HomeController : Controller
                     Data = base64Data
                 };
 
+                Console.WriteLine($"Base64 length: {base64Data.Length} characters, file: {file.FileName}");
+
                 var response = await _elasticClient.IndexAsync(document, i => i
                     .Id(document.Id)
                     .Index("documents")
@@ -210,7 +215,12 @@ public class HomeController : Controller
                     .Refresh(Elasticsearch.Net.Refresh.WaitFor));
 
                 if (!response.IsValid)
+                {
+                    Console.WriteLine("Debug Info: " + response.DebugInformation);
+                    Console.WriteLine("Server Error: " + response.ServerError?.ToString());
                     return BadRequest("Some error occurred in uploading the files.");
+                }
+                Console.WriteLine("Server Error outside: " + response.ServerError?.ToString());
             }
             catch
             {
@@ -227,9 +237,15 @@ public class HomeController : Controller
         var created = await _elasticSearchService.CreateDocumentIndexAsync(indexName);
 
         if (created)
+        {
+            Console.WriteLine($"{indexName} created successfully.");
             return Ok("Index created");
+        }
         else
+        {
+            Console.WriteLine($"Failed to create index {indexName}."); 
             return StatusCode(500, "Failed to create index");
+        }
     }
 
     [HttpPost]
