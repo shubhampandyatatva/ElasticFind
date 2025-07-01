@@ -461,8 +461,9 @@
         const fileId = $(this).data("id");
         console.log("Previewing file with ID:", fileId);
 
-        $("#onlyofficeFrame").attr("src", `/Home/OnlyOfficeViewerPage?id=${fileId}`);
-        $("#previewModal").modal("show");
+        @* $("#onlyofficeFrame").attr("src", `/Home/OnlyOfficeViewerPage?id=${fileId}`); *@
+        window.location.href = `/Home/OnlyOfficeViewerPage?id=${fileId}`;
+        @* $("#previewModal").modal("show"); *@
     });
 
     function clearFilters() {

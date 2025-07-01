@@ -14,6 +14,9 @@ using Rotativa.AspNetCore;
 using System.Security.Claims;
 using ElasticFind.Repository.Data;
 using System.Text.Json;
+using System.Net.Http.Json;
+using System.Text;
+using Jose;
 
 namespace ElasticFind.Web.Controllers;
 
@@ -27,8 +30,9 @@ public class HomeController : Controller
     private readonly IPreviewFileService _previewFileService;
     private readonly IExportService _exportService;
     private readonly IJwtService _jwtService;
+    private readonly IConfiguration _config;
 
-    public HomeController(ILogger<HomeController> logger, IUserService userService, IElasticSearchService elasticSearchService, IElasticClient elasticClient, IPreviewFileService previewFileService, IExportService exportService, IJwtService jwtService)
+    public HomeController(ILogger<HomeController> logger, IUserService userService, IElasticSearchService elasticSearchService, IElasticClient elasticClient, IPreviewFileService previewFileService, IExportService exportService, IJwtService jwtService, IConfiguration config)
     {
         _logger = logger;
         _userService = userService;
@@ -38,6 +42,7 @@ public class HomeController : Controller
         _previewFileService = previewFileService;
         _exportService = exportService;
         _jwtService = jwtService;
+        _config = config;
     }
 
     [Authorize(Roles = "1")]
@@ -243,7 +248,7 @@ public class HomeController : Controller
         }
         else
         {
-            Console.WriteLine($"Failed to create index {indexName}."); 
+            Console.WriteLine($"Failed to create index {indexName}.");
             return StatusCode(500, "Failed to create index");
         }
     }
@@ -332,20 +337,24 @@ public class HomeController : Controller
             return NotFound();
 
         var file = response.Source;
-        var fileUrl = $"http://192.168.4.90:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}";
+        // var fileUrl = $"http://192.168.4.90:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}";
+        var fileUrl = $"http://127.0.0.1:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}";
         var ext = Path.GetExtension(file.FileName).Trim('.').ToLower();
         Console.WriteLine("File Extension: " + ext);
+
+        string? secret = _config["OnlyOffice:JwtSecret"];
 
         var documentConfig = new
         {
             document = new
             {
                 title = file.FileName,
-                url = $"http://127.0.0.1:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
-                // url = $"http://localhost:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
+                // url = $"http://127.0.0.1:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
+                url = $"http://localhost:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
                 fileType = ext,
                 key = file.Id,
-                directUrl = $"http://127.0.0.1:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
+                // directUrl = $"http://127.0.0.1:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
+                directUrl = $"http://localhost:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
                 permissions = new
                 {
                     download = true,
@@ -357,14 +366,36 @@ public class HomeController : Controller
             {
                 mode = "view",
                 lang = "en",
-                parentOrigin = "http://192.168.4.90:5052"
+                // parentOrigin = "http://192.168.4.90:5052"
+                parentOrigin = "http://127.0.0.1:5052"
             },
             documentType = ext,
             width = "100%",
             height = "100%",
             type = "desktop",
-            documentServerUrl = "http://192.168.4.90/"
+            // documentServerUrl = "http://192.168.4.90/"
+            documentServerUrl = "http://127.0.0.1:5052"
         };
+
+        // Sign with JWT if configured
+        if (!string.IsNullOrEmpty(secret))
+        {
+            var payload = JsonSerializer.Serialize(documentConfig);
+            var token = JWT.Encode(payload, Encoding.UTF8.GetBytes(secret), JwsAlgorithm.HS256);
+
+            var documentConfigWithToken = new
+            {
+                documentConfig.document,
+                documentConfig.editorConfig,
+                documentConfig.documentType,
+                documentConfig.width,
+                documentConfig.height,
+                documentConfig.type,
+                token,
+                documentConfig.documentServerUrl
+            };
+            return Json(documentConfigWithToken);
+        }
 
         return Json(documentConfig);
     }
@@ -409,7 +440,38 @@ public class HomeController : Controller
     [AllowAnonymous]
     public IActionResult OnlyOfficeViewerPage(string id)
     {
-        ViewBag.FileId = id;
+        // ViewBag.FileId = id;
+        // ViewData["FileId"] = id;
+        // return View();
+
+        var docConfig = new
+        {
+            document = new
+            {
+                fileType = "docx",
+                title = "Test Document",
+                // url = $"http://localhost:5052/docs/{id}.docx",
+                url = $"http://localhost:5052/docs/test.docx",
+                directUrl = $"http://localhost:5052/docs/test.docx",
+                key = id
+            },
+            documentType = "word",
+            editorConfig = new
+            {
+                mode = "view",
+                lang = "en",
+                customization = new
+                {
+                    forcesave = false
+                }
+            }
+        };
+
+        var token = _jwtService.GenerateJwtTokenForOnlyOffice(docConfig);
+
+        ViewBag.ConfigJson = Newtonsoft.Json.JsonConvert.SerializeObject(docConfig);
+        ViewBag.Token = token;
+
         return View();
     }
 

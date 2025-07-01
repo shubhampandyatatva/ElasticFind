@@ -43,6 +43,22 @@ public class JwtService : IJwtService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
+
+    public string GenerateJwtTokenForOnlyOffice(object payload)
+    {
+        var secret = _configuration["OnlyOffice:JwtSecret"];
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var handler = new JwtSecurityTokenHandler();
+        var token = new JwtSecurityToken(
+            claims: new[] { new Claim(ClaimTypes.UserData, Newtonsoft.Json.JsonConvert.SerializeObject(payload)) },
+            signingCredentials: creds
+        );
+
+        return handler.WriteToken(token);
+    }
+
     public string? GetClaimValue(string jwtToken, string claimType)
     {
         ClaimsPrincipal? claimsPrincipal = ValidateToken(jwtToken);  // Verify if the token is valid
@@ -56,7 +72,7 @@ public class JwtService : IJwtService
 
         return claim?.Value;
     }
-    
+
     public static ClaimsPrincipal? ValidateToken(string token)
     {
         JwtSecurityTokenHandler handler = new();

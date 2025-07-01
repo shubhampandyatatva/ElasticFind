@@ -162,7 +162,8 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("OnlyOfficePolicy", builder =>
     {
-        builder.WithOrigins("http://192.168.4.90")
+        // builder.WithOrigins("http://192.168.4.90")
+        builder.WithOrigins("http://localhost", "http://localhost:5052")
                .AllowAnyMethod()
                .AllowAnyHeader();
     });
