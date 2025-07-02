@@ -10,7 +10,7 @@
         <div id="dropzone" class="upload-dropzone">
             <i class="fas fa-cloud-upload-alt"></i>
             <p class="mb-2">Drag & drop your files here</p>
-            <p class="text-muted">or click to browse (PDF, DOC, TXT)</p>
+            <p class="text-muted">or click to browse (PDF, DOC, TXT,...)</p>
             <input type="file" name="files" id="fileInput" class="hidden-input" accept=".pdf,.doc,.docx,.txt,.xlxs"
                 multiple>
 
@@ -40,7 +40,7 @@
 
     <div class="card shadow-sm border-0 mb-4">
         <div class="card-body">
-            <div id="filesPartialView" style="max-height: 320px; overflow-x: auto;">
+            <div id="filesPartialView" style="max-height: 550px; overflow-x: auto;">
                 @await Html.PartialAsync("_FilesPartial", Model)
             </div>
         </div>

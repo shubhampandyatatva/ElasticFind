@@ -96,7 +96,9 @@
     <script src="http://localhost/web-apps/apps/api/documents/api.js"></script> 
     <script>
         const config = @Html.Raw(ViewBag.ConfigJson);
+        console.log("Config:", config);
         config.token = "@ViewBag.Token";
+        console.log("Token:", config.token);
 
         window.addEventListener("DOMContentLoaded", () => {
             const docEditor = new DocsAPI.DocEditor("placeholder", config);

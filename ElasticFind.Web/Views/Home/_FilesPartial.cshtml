@@ -49,7 +49,7 @@
                         </div>
 
                         <div class="d-flex align-items-center gap-2">
-                            <span>
+                            <span class="d-none d-lg-block">
                                 Showing
                                 @(Model.Pagination.PageSize * (Model.Pagination.Page - 1) + 1) -
                                 @((Model.Pagination.PageSize * Model.Pagination.Page) >
@@ -86,4 +86,8 @@
         var sortOrder = $(this).data("order");
         loadPage(page, pageSize, searchString, null);
     }    
+
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    }); 
 </script>

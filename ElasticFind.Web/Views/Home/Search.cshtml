@@ -26,7 +26,7 @@
         </div>
     </div>
 
-    <div class="d-flex flex-column flex-md-row align-items-start gap-3 mb-2">
+    <div class="d-flex flex-column flex-md-row align-items-start gap-3 mb-4">
         <input type="text" class="form-control flex-grow-1" id="searchKeywordInput" placeholder="Enter keyword...">
         <div class="buttons d-flex align-items-center">
             <button type="button" class="btn btn-primary me-2" id="searchKeywordBtn">Search</button>
@@ -40,13 +40,13 @@
     <div class="d-flex align-items-center mb-4">
         <h3 class="results-text me-3" style="color: #3f629b;">Your Results Go Here</h3>
         <h4 class="matching-docs-count d-none" style="color: #3f629b;">Found <span id="matchingDocsCountSpan"> matching
-                documents</span></h4>
+                documents</span></h4> 
     </div>
 
     @* <button type="button" class="btn btn-primary" id="createDocumentBtn">Create Document</button> *@ 
 
-    <div class="filters-sorters-container d-flex justify-content-between align-items-center d-none"
-        id="filtersSortersContainer"> 
+    @* <div class="filters-sorters-container d-flex justify-content-between align-items-center d-none flex-wrap"
+        id="filtersSortersContainer">
         <div class="filters-sorters d-flex align-items-center">
             <div class="filter-container d-flex align-items-center me-3 flex-wrap">
                 <div class="fs-5 me-2" style="font-weight: 500;">Filters: </div>
@@ -55,8 +55,8 @@
                         style="width: 125px;" id="fileTypeFilter">
                         <option selected>File Type</option>
                         <option value=".pdf">pdf</option>
-                        <option value=".xlsx">xlsx</option>
                         <option value=".docx">docx</option>
+                        <option value=".xlsx">xlsx</option>
                         <option value=".xls">xls</option>
                         <option value=".doc">doc</option>
                         <option value=".txt">txt</option>
@@ -90,13 +90,62 @@
             </div>
             <button type="button" class="btn btn-sm ms-2" id="clearFiltersBtn">Clear Filters</button>
         </div>
+    </div> *@
+
+    <div class="filters-sorters-container d-flex justify-content-between align-items-center d-none flex-wrap"
+        id="filtersSortersContainer">
+        <div class="filters-sorters d-flex align-items-center flex-wrap">
+            <div class="filter-container d-flex align-items-center me-3 flex-wrap">
+                <div class="fs-5 me-2" style="font-weight: 500;">Filters: </div>
+                <div class="filters d-flex align-items-center flex-wrap">
+                    <select class="select-filter form-select form-select-sm pointer me-2" style="width: 125px;"
+                        id="fileTypeFilter">
+                        <option selected>File Type</option>
+                        <option value=".pdf">pdf</option>
+                        <option value=".docx">docx</option>
+                        <option value=".xlsx">xlsx</option>
+                        <option value=".xls">xls</option>
+                        <option value=".doc">doc</option>
+                        <option value=".txt">txt</option>
+                        <option value=".pptx">pptx</option>
+                        <option value=".ppt">ppt</option>
+                        <option value=".rtf">rtf</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <button type="button" class="btn btn-sm" id="selectDateButton" data-bs-toggle="modal"
+                        data-bs-target="#datePickerModal"
+                        style="min-width: 100px; border: 1px solid rgb(206, 206, 206); background-color: #fff;">
+                        Select Uploaded Date
+                    </button>
+                </div>
+            </div>
+
+            <div class="sorter-container d-flex align-items-center">
+                <div class="fs-5" style="font-weight: 500;">Sort By: </div>
+                <select class="select-sorter form-select form-select-sm ms-2 pointer" style="width: 125px;"
+                    id="sortBySelect">
+                    <option selected>Sort By</option>
+                    <option value="1">Date</option>
+                    <option value="2">File Type</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="d-flex align-items-center flex-wrap">
+            <div class="search d-flex align-items-center">
+                <input type="text" id="searchInput" placeholder="Search by file name..."
+                    class="form-control form-control-sm" style="width: 190px;">
+                <img src="~/images/search-icon.svg" alt="Search Icon" class="search-icon">
+            </div>
+            <button type="button" class="btn btn-sm ms-2 mt-2 mt-sm-0" id="clearFiltersBtn">Clear Filters</button>
+        </div>
     </div>
 
     <div id="searchResults" class="mt-4" style="max-height: 50vh; overflow-y: auto;">
 
     </div>
 
-    <div id="exportSection" class="mt-3 d-none">
+    @* <div id="exportSection" class="mt-3 d-none">
         <div class="dropdown">
             <button class="btn btn-primary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown"
                 aria-expanded="false">
@@ -107,6 +156,12 @@
                 <li><a class="dropdown-item pointer" id="exportToExcelBtn">Export as Excel</a></li>
             </ul>
         </div>
+    </div> *@
+    <div id="exportSection" class="mt-3 d-none">
+        <button class="btn btn-primary" type="button" id="exportToPdfBtn" aria-expanded="false">
+            Export Results
+            <img src="~/images/export-white.png" alt="Export Icon" class="ms-1 mb-1" style="width: 20px; height: 20px;">
+        </button>
     </div>
 </body>
 
@@ -360,7 +415,7 @@
         if (!startDate && !endDate) {
             $("#startDateError").text("Please select a start date.").addClass("text-danger");
             $("#endDateError").text("Please select an end date.").addClass("text-danger");
-            return;
+            return; 
         }
         @* if (!startDate) {
             $("#startDateError").text("Please select a start date.").addClass("text-danger");
@@ -374,7 +429,7 @@
         } else {
             $("#endDateError").text("").removeClass("text-danger");
         } *@
-            validateDateInputs();
+        @* validateDateInputs(); *@
 
         searchDocumentContent();
         $("#datePickerModal").modal("hide");
@@ -385,17 +440,26 @@
 
     function validateDateInputs() {
         const startDate = $("#startDate").val();
-        if (startDate) {
+        const endDate = $("#endDate").val();
+
+        @* if (startDate) {
             $("#startDateError").text("").removeClass("text-danger");
         } else {
             $("#startDateError").text("Please select a start date.").addClass("text-danger");
         }
 
-        const endDate = $("#endDate").val();
         if (endDate) {
             $("#endDateError").text("").removeClass("text-danger");
         } else {
             $("#endDateError").text("Please select an end date.").addClass("text-danger");
+        } *@
+
+        if (startDate) {
+            $("#startDateError").text("").removeClass("text-danger");
+        }
+
+        if (endDate) {
+            $("#endDateError").text("").removeClass("text-danger");
         }
     }
 
@@ -462,7 +526,7 @@
         console.log("Previewing file with ID:", fileId);
 
         @* $("#onlyofficeFrame").attr("src", `/Home/OnlyOfficeViewerPage?id=${fileId}`); *@
-        window.location.href = `/Home/OnlyOfficeViewerPage?id=${fileId}`;
+            window.location.href = `/Home/OnlyOfficeViewerPage?id=${fileId}`;
         @* $("#previewModal").modal("show"); *@
     });
 
@@ -553,6 +617,10 @@
             searchType = "Full-Text Search";
         } else if (searchType == "2") {
             searchType = "Multiple-Text Search";
+        } else if (searchType == "3") {
+            searchType = "Fuzzy Search";
+        } else if (searchType == "4") {
+            searchType = "Synonym Search";
         }
         const keyword = $("#searchKeywordInput").val();
         const fileType = $("#fileTypeFilter").val().replace(".", "");
@@ -629,6 +697,10 @@
             searchType = "Full-Text Search";
         } else if (searchType == "2") {
             searchType = "Multiple-Text Search";
+        } else if (searchType == "3") {
+            searchType = "Fuzzy Search";
+        } else if (searchType == "4") {
+            searchType = "Synonym Search";
         }
         const keyword = $("#searchKeywordInput").val();
         const fileType = $("#fileTypeFilter").val().replace(".", "");
@@ -713,20 +785,20 @@
         });
     });
 
-        $("#clearFiltersBtn").on("click", function () {
-            if ($("#fileTypeFilter").val() === "File Type" && startDate === "" && endDate === "" && $("#sortBySelect").val() === "Sort By" && $("#searchInput").val() === "") {
-                console.log("Filters: ", {
-                    fileType: $("#fileTypeFilter").val(),
-                    startDate: startDate,
-                    endDate: endDate,
-                    sortBy: $("#sortBySelect").val(),
-                    searchInput: $("#searchInput").val()
-                });
-                return; // No need to clear if already set to default
-            }
-            clearFilters();
-            searchDocumentContent();
-        });
+    $("#clearFiltersBtn").on("click", function () {
+        if ($("#fileTypeFilter").val() === "File Type" && startDate === "" && endDate === "" && $("#sortBySelect").val() === "Sort By" && $("#searchInput").val() === "") {
+            console.log("Filters: ", {
+                fileType: $("#fileTypeFilter").val(),
+                startDate: startDate,
+                endDate: endDate,
+                sortBy: $("#sortBySelect").val(),
+                searchInput: $("#searchInput").val()
+            });
+            return; // No need to clear if already set to default
+        }
+        clearFilters();
+        searchDocumentContent();
+    });
 
     $("#searchTypeSelect").on("change", function () {
         const searchType = $(this).val();
@@ -736,13 +808,13 @@
         } else if (searchType == "2") {
             $(".match-all-checkbox-container").removeClass("d-none");
             $("#matchAllCheckbox").prop("checked", false);
-            $(".info-text").addClass("d-none");
+            $(".info-text").text("Note: Enter multiple keywords separated by spaces. Check \"Match All Terms\" checkbox to display only those documents which contain all the keywords.").removeClass("d-none");
         } else if (searchType == "3") {
-            $(".match-all-checkbox-container").addClass("d-none");
-            $(".info-text").removeClass("d-none");
+            $(".match-all-checkbox-container").removeClass("d-none");
+            $(".info-text").text("Note: Enter more than two characters for best results").removeClass("d-none");
         } else {
             $(".match-all-checkbox-container").addClass("d-none");
-            $(".info-text").addClass("d-none");
+            $(".info-text").addClass("d-none"); 
         }
     });
 

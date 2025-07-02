@@ -83,7 +83,16 @@ public class ProfileService : IProfileService
             Console.WriteLine("Error: User with this email was not found!");
             return new JsonResponse { Success = false, Message = "Some error occured in updating profile!" };
         }
+        if (myProfileViewModel.ProfileImage != null)
+        {
+            string[] allowedExtensions = { ".jpg", ".jpeg", ".png", ".svg" };
+            string fileExtension = Path.GetExtension(myProfileViewModel.ProfileImage.FileName).ToLower();
 
+            if (!allowedExtensions.Contains(fileExtension))
+            {
+                return new JsonResponse { Success = false, Message = "Selected type for image is not acceptable. Please select jpg, png or svg file." };
+            }
+        }
         string? imagePath = await _uploadImageService.UploadImage(myProfileViewModel.ProfileImage);
         Console.WriteLine("Image Path: " + imagePath);
 

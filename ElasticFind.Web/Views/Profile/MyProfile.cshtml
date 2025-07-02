@@ -17,7 +17,7 @@
                     alt="Profile Image">
                 <i class="fa-solid fa-camera camera-icon" onclick="document.getElementById('profileImageInput').click()"
                     title="Change Profile Image"></i>
-                <input type="file" id="profileImageInput" asp-for="ProfileImage" class="d-none">
+                <input type="file" id="profileImageInput" asp-for="ProfileImage" class="d-none" accept=".jpg,.jpeg,.png,.svg">
             </div>
             <button type="button" class="btn btn-sm btn-danger remove-profile-image-button @(Model.ProfileImagePath == null ? "d-none" : "")"
                 onclick="removeProfileImage()"> Remove Icon <i class="fas fa-trash ms-1"></i> </button> 

@@ -504,3 +504,27 @@ html {
     overflow-y: auto;
   }
 }
+
+@media (max-width: 1220px) {
+  #filtersSortersContainer {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+  }
+
+  #filtersSortersContainer > .filters-sorters,
+  #filtersSortersContainer > .d-flex {
+      margin-top: 10px;
+      width: 100%;
+      justify-content: space-between;
+      flex-wrap: wrap;
+  }
+
+  .filter-container,
+  .sorter-container {
+      margin-bottom: 10px;
+  }
+
+  .search {
+      margin-top: 10px;
+  }
+} 

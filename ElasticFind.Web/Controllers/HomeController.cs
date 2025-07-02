@@ -17,6 +17,7 @@ using System.Text.Json;
 using System.Net.Http.Json;
 using System.Text;
 using Jose;
+using Newtonsoft.Json;
 
 namespace ElasticFind.Web.Controllers;
 
@@ -380,7 +381,8 @@ public class HomeController : Controller
         // Sign with JWT if configured
         if (!string.IsNullOrEmpty(secret))
         {
-            var payload = JsonSerializer.Serialize(documentConfig);
+            // var payload = JsonSerializer.Serialize(documentConfig);
+            var payload = JsonConvert.SerializeObject(documentConfig);
             var token = JWT.Encode(payload, Encoding.UTF8.GetBytes(secret), JwsAlgorithm.HS256);
 
             var documentConfigWithToken = new
@@ -469,7 +471,7 @@ public class HomeController : Controller
 
         var token = _jwtService.GenerateJwtTokenForOnlyOffice(docConfig);
 
-        ViewBag.ConfigJson = Newtonsoft.Json.JsonConvert.SerializeObject(docConfig);
+        ViewBag.ConfigJson = JsonConvert.SerializeObject(docConfig);
         ViewBag.Token = token;
 
         return View();
@@ -498,7 +500,6 @@ public class HomeController : Controller
         var file = response.Source;
         var fileBytes = Convert.FromBase64String(file.Data);
         var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-        Console.WriteLine("Heyyyyyyyyyyyyy");
         var mimeType = ext switch
         {
             ".pdf" => "application/pdf",
