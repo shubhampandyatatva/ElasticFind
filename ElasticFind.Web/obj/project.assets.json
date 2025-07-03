@@ -156,6 +156,15 @@
           }
         }
       },
+      "jose-jwt/5.2.0": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/jose-jwt.dll": {}
+        },
+        "runtime": {
+          "lib/net6.0/jose-jwt.dll": {}
+        }
+      },
       "MailKit/4.12.1": {
         "type": "package",
         "dependencies": {
@@ -1263,6 +1272,19 @@
           "System.Threading.Timer": "4.3.0",
           "System.Xml.ReaderWriter": "4.3.0",
           "System.Xml.XDocument": "4.3.0"
+        }
+      },
+      "Newtonsoft.Json/7.0.1": {
+        "type": "package",
+        "compile": {
+          "lib/net45/Newtonsoft.Json.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net45/Newtonsoft.Json.dll": {
+            "related": ".xml"
+          }
         }
       },
       "Npgsql/7.0.0": {
@@ -2775,6 +2797,7 @@
           "Microsoft.AspNetCore.Identity": "2.3.1",
           "Microsoft.IdentityModel.Tokens": "7.0.0",
           "NEST": "7.17.5",
+          "Newtonsoft.Json": "7.0.1",
           "System.IdentityModel.Tokens.Jwt": "7.0.0"
         },
         "compile": {
@@ -3010,6 +3033,25 @@
         "lib/netstandard2.0/Humanizer.dll",
         "lib/netstandard2.0/Humanizer.xml",
         "logo.png"
+      ]
+    },
+    "jose-jwt/5.2.0": {
+      "sha512": "wCpQXj+i7qJpS6QC/dlNJM2AtJ0OGL1hbml/Lo0K5JzN1+HtvUVKCP4f9KvcwE9vLLQdaeSPjuRe+LPDja6xsA==",
+      "type": "package",
+      "path": "jose-jwt/5.2.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "LICENSE",
+        "README.md",
+        "jose-jwt.5.2.0.nupkg.sha512",
+        "jose-jwt.nuspec",
+        "lib/net40/jose-jwt.dll",
+        "lib/net461/jose-jwt.dll",
+        "lib/net472/jose-jwt.dll",
+        "lib/net6.0/jose-jwt.dll",
+        "lib/netstandard1.4/jose-jwt.dll",
+        "lib/netstandard2.1/jose-jwt.dll"
       ]
     },
     "MailKit/4.12.1": {
@@ -4426,6 +4468,31 @@
         "dotnet_library_license.txt",
         "netstandard.library.1.6.1.nupkg.sha512",
         "netstandard.library.nuspec"
+      ]
+    },
+    "Newtonsoft.Json/7.0.1": {
+      "sha512": "q3V4KLetMLnt1gpAVWgtXnHjKs0UG/RalBc29u2ZKxd5t5Ze4JBL5WiiYIklJyK/5CRiIiNwigVQUo0FgbsuWA==",
+      "type": "package",
+      "path": "newtonsoft.json/7.0.1",
+      "hasTools": true,
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "lib/net20/Newtonsoft.Json.dll",
+        "lib/net20/Newtonsoft.Json.xml",
+        "lib/net35/Newtonsoft.Json.dll",
+        "lib/net35/Newtonsoft.Json.xml",
+        "lib/net40/Newtonsoft.Json.dll",
+        "lib/net40/Newtonsoft.Json.xml",
+        "lib/net45/Newtonsoft.Json.dll",
+        "lib/net45/Newtonsoft.Json.xml",
+        "lib/portable-net40+sl5+wp80+win8+wpa81/Newtonsoft.Json.dll",
+        "lib/portable-net40+sl5+wp80+win8+wpa81/Newtonsoft.Json.xml",
+        "lib/portable-net45+wp80+win8+wpa81+dnxcore50/Newtonsoft.Json.dll",
+        "lib/portable-net45+wp80+win8+wpa81+dnxcore50/Newtonsoft.Json.xml",
+        "newtonsoft.json.7.0.1.nupkg.sha512",
+        "newtonsoft.json.nuspec",
+        "tools/install.ps1"
       ]
     },
     "Npgsql/7.0.0": {
@@ -8191,7 +8258,8 @@
       "Microsoft.AspNetCore.Identity >= 2.3.1",
       "Microsoft.EntityFrameworkCore.Design >= 7.0.0",
       "NEST >= 7.17.5",
-      "Rotativa.AspNetCore >= 1.4.0"
+      "Rotativa.AspNetCore >= 1.4.0",
+      "jose-jwt >= 5.2.0"
     ]
   },
   "packageFolders": {
@@ -8219,8 +8287,8 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "d:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj": {
-              "projectPath": "d:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj"
+            "D:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj": {
+              "projectPath": "D:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj"
             },
             "D:\\Tatva\\ElasticFind\\ElasticFind.Service\\ElasticFind.Service.csproj": {
               "projectPath": "D:\\Tatva\\ElasticFind\\ElasticFind.Service\\ElasticFind.Service.csproj"
@@ -8267,6 +8335,10 @@
           "Rotativa.AspNetCore": {
             "target": "Package",
             "version": "[1.4.0, )"
+          },
+          "jose-jwt": {
+            "target": "Package",
+            "version": "[5.2.0, )"
           }
         },
         "imports": [
@@ -8291,5 +8363,17 @@
         "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\7.0.410\\RuntimeIdentifierGraph.json"
       }
     }
-  }
+  },
+  "logs": [
+    {
+      "code": "NU1701",
+      "level": "Warning",
+      "warningLevel": 1,
+      "message": "Package 'Newtonsoft.Json 7.0.1' was restored using '.NETFramework,Version=v4.6.1, .NETFramework,Version=v4.6.2, .NETFramework,Version=v4.7, .NETFramework,Version=v4.7.1, .NETFramework,Version=v4.7.2, .NETFramework,Version=v4.8, .NETFramework,Version=v4.8.1' instead of the project target framework 'net7.0'. This package may not be fully compatible with your project.",
+      "libraryId": "Newtonsoft.Json",
+      "targetGraphs": [
+        "net7.0"
+      ]
+    }
+  ]
 }

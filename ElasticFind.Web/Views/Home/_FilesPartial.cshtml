@@ -4,7 +4,8 @@
     <table class="table align-middle files-table">
         <thead class="table-light">
             <tr>
-                <th style="width: 8%;">#</th>
+                <th style="width: 4%;"><input type="checkbox" class="form-check pointer" id="masterCheckbox"></th>
+                <th style="width: 4%;">#</th>
                 <th style="width: 50%;">File Name</th>
                 <th style="width: 16%;">Uploaded By</th>
                 <th style="width: 16%;"><span class="ms-3">Uploaded Date</span></th>
@@ -14,37 +15,41 @@
         <tbody style="max-height: 100px; overflow-y: auto;">
             @for (int i = 0; i < Model.Files.Count; i++)
             {
-            <tr style="width: 100%; table-layout: fixed;">
-                <td>@(i + 1)</td>
-                <td class="fw-medium">@Model.Files[i].FileName</td>
-                <td class="fw-medium">@Model.Files[i].UploadedBy</td>
-                <td class="fw-medium">@Model.Files[i].UploadedDate</td>
-                <td class="text-center">
-                <div class="d-flex justify-content-center gap-3">
-                    <i class="fa fa-download text-primary pointer"
-                       onclick="downloadFile('@Model.Files[i].Id', '@Model.Files[i].FileName')"
-                       data-toggle="tooltip" title="Download File"></i>
-                    <i class="fa fa-trash text-danger pointer"
-                       data-bs-toggle="modal" data-bs-target="#delete_file_modal"
-                       data-user-id="@Model.Files[i].Id"
-                       onclick="setUserId('@Model.Files[i].Id')"
-                       data-toggle="tooltip" title="Delete File"></i>
-                </div>
-                </td>
-            </tr>
+                <tr style="width: 100%; table-layout: fixed;">
+                    <td><input type="checkbox" class="slaveCheckbox form-check pointer" data-id="@Model.Files[i].Id"></td>
+                    <td>@(i + 1)</td>
+                    <td class="fw-medium">@Model.Files[i].FileName</td>
+                    <td class="fw-medium">@Model.Files[i].UploadedBy</td>
+                    <td class="fw-medium">@Model.Files[i].UploadedDate</td>
+                    <td class="text-center">
+                        <div class="d-flex justify-content-center gap-3">
+                            <i class="fa fa-download text-primary pointer"
+                                onclick="downloadFile('@Model.Files[i].Id', '@Model.Files[i].FileName')"
+                                data-toggle="tooltip" title="Download File"></i>
+                            <i class="fa fa-trash text-danger pointer" data-bs-toggle="modal"
+                                data-bs-target="#delete_file_modal" data-user-id="@Model.Files[i].Id"
+                                onclick="setUserId('@Model.Files[i].Id')" data-toggle="tooltip" title="Delete File"></i>
+                        </div>
+                    </td>
+                </tr>
             }
         </tbody>
         <tfoot>
             <tr>
-                <td colspan="5">
+                <td colspan="6">
                     <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 p-2">
                         <div class="d-flex align-items-center gap-2">
                             <span>Items per page:</span>
-                            <select class="form-select form-select-sm w-auto pointer" id="itemsPerPage" onchange="changePageSize()">
-                                <option value="5" selected=@(Model.Pagination.PageSize == 5 ? "selected" : null)>5</option>
-                                <option value="10" selected=@(Model.Pagination.PageSize == 10 ? "selected" : null)>10</option>
-                                <option value="15" selected=@(Model.Pagination.PageSize == 15 ? "selected" : null)>15</option>
-                                <option value="20" selected=@(Model.Pagination.PageSize == 20 ? "selected" : null)>20</option>
+                            <select class="form-select form-select-sm w-auto pointer" id="itemsPerPage"
+                                onchange="changePageSize()">
+                                <option value="5" selected=@(Model.Pagination.PageSize == 5 ? "selected" : null)>5
+                                </option>
+                                <option value="10" selected=@(Model.Pagination.PageSize == 10 ? "selected" : null)>10
+                                </option>
+                                <option value="15" selected=@(Model.Pagination.PageSize == 15 ? "selected" : null)>15
+                                </option>
+                                <option value="20" selected=@(Model.Pagination.PageSize == 20 ? "selected" : null)>20
+                                </option>
                             </select>
                         </div>
 
@@ -53,15 +58,17 @@
                                 Showing
                                 @(Model.Pagination.PageSize * (Model.Pagination.Page - 1) + 1) -
                                 @((Model.Pagination.PageSize * Model.Pagination.Page) >
-                                    Model.Pagination.TotalRecords ? Model.Pagination.TotalRecords :
-                                    (Model.Pagination.PageSize * Model.Pagination.Page))
+                                                                Model.Pagination.TotalRecords ? Model.Pagination.TotalRecords :
+                                                                (Model.Pagination.PageSize * Model.Pagination.Page))
                                 of @Model.Pagination.TotalRecords
                             </span>
 
                             <button class="btn btn-outline-primary @(Model.Pagination.Page > 1 ? "" : "disabled")"
-                                    style="border-radius: 5px;" onclick="loadPrevPage()">&lt;</button>
+                                style="border-radius: 5px;" onclick="loadPrevPage()">&lt;</button>
 
-                            <button class="btn btn-outline-primary @((Model.Pagination.Page * Model.Pagination.PageSize < Model.Pagination.TotalRecords) ? "" : "disabled")" onclick="loadNextPage()" style="border-radius: 5px;">&gt;</button>
+                            <button
+                                class="btn btn-outline-primary @((Model.Pagination.Page * Model.Pagination.PageSize < Model.Pagination.TotalRecords) ? "" : "disabled")"
+                                onclick="loadNextPage()" style="border-radius: 5px;">&gt;</button>
                         </div>
                     </div>
                 </td>
@@ -72,20 +79,16 @@
 
 <script>
     function loadPrevPage() {
-        var page = @Model.Pagination.Page - 1;
-        var pageSize = @Model.Pagination.PageSize;
-        var searchString = $("#searchInput").val();
-        var sortOrder = $(this).data("order");
-        loadPage(page, pageSize, searchString, null);
+        const searchString = $("#searchInput").val();
+        if (currentPage > 1) {
+            loadPage(currentPage - 1, currentPageSize, searchString, null);
+        }
     }
 
     function loadNextPage() {
-        var page = @Model.Pagination.Page + 1;
-        var pageSize = @Model.Pagination.PageSize;
-        var searchString = $("#searchInput").val();
-        var sortOrder = $(this).data("order");
-        loadPage(page, pageSize, searchString, null);
-    }    
+        const searchString = $("#searchInput").val();
+        loadPage(currentPage + 1, currentPageSize, searchString, null);
+    }
 
     $(function () {
         $('[data-toggle="tooltip"]').tooltip()

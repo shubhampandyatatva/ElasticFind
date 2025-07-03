@@ -17,6 +17,10 @@
       "PackagePath": "staticwebassets\\css\\site.css"
     },
     {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\docs\\test.docx",
+      "PackagePath": "staticwebassets\\docs\\test.docx"
+    },
+    {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\favicon.ico",
       "PackagePath": "staticwebassets\\favicon.ico"
     },
@@ -31,6 +35,14 @@
     {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\images\\elasticsearch-logo.png",
       "PackagePath": "staticwebassets\\images\\elasticsearch-logo.png"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\images\\export-icon.png",
+      "PackagePath": "staticwebassets\\images\\export-icon.png"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\images\\export-white.png",
+      "PackagePath": "staticwebassets\\images\\export-white.png"
     },
     {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\images\\search-icon.svg",
@@ -285,8 +297,16 @@
       "PackagePath": "staticwebassets\\uploads\\062c52d7-cf39-49b0-8197-00e67b7ffbcb.png"
     },
     {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\07a0bbb4-40c7-46c3-be86-867423c1840b.png",
+      "PackagePath": "staticwebassets\\uploads\\07a0bbb4-40c7-46c3-be86-867423c1840b.png"
+    },
+    {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\14d17432-1db4-4d8e-a6b4-c655d43cf8dc.png",
       "PackagePath": "staticwebassets\\uploads\\14d17432-1db4-4d8e-a6b4-c655d43cf8dc.png"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\1aa18eb9-97d9-47c8-8671-26b920aa6dee.png",
+      "PackagePath": "staticwebassets\\uploads\\1aa18eb9-97d9-47c8-8671-26b920aa6dee.png"
     },
     {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\2025 Trainees Allocation PM-20250609112953451.pdf",
@@ -305,6 +325,14 @@
       "PackagePath": "staticwebassets\\uploads\\261c1160-d32c-4e52-b241-91c2a85fb804.png"
     },
     {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\2b9f1a10-704f-4629-ba71-b0ea9f7a47c2.png",
+      "PackagePath": "staticwebassets\\uploads\\2b9f1a10-704f-4629-ba71-b0ea9f7a47c2.png"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\2c422168-ddb3-40a3-bccb-c4de4fd54494.png",
+      "PackagePath": "staticwebassets\\uploads\\2c422168-ddb3-40a3-bccb-c4de4fd54494.png"
+    },
+    {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\3d692799-6959-4b49-82b9-a5c6ee2f2953.png",
       "PackagePath": "staticwebassets\\uploads\\3d692799-6959-4b49-82b9-a5c6ee2f2953.png"
     },
@@ -313,8 +341,16 @@
       "PackagePath": "staticwebassets\\uploads\\4e071f7e-887b-4d17-b8d5-9f19aa751813.png"
     },
     {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\591cf003-669c-4996-bb17-416372b41fc7.png",
+      "PackagePath": "staticwebassets\\uploads\\591cf003-669c-4996-bb17-416372b41fc7.png"
+    },
+    {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\5e5dace9-0c15-47ba-95f4-5f907cdf72de.png",
       "PackagePath": "staticwebassets\\uploads\\5e5dace9-0c15-47ba-95f4-5f907cdf72de.png"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\6bc58d82-dc69-47d1-93e2-3811756dff3b.png",
+      "PackagePath": "staticwebassets\\uploads\\6bc58d82-dc69-47d1-93e2-3811756dff3b.png"
     },
     {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\6d68c3b3-60e9-43bf-9cf8-5881fdd4f018.png",
@@ -425,12 +461,24 @@
       "PackagePath": "staticwebassets\\uploads\\PizzaShop_SRS (1)-20250613143645248.docx"
     },
     {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\af80c839-5e7a-4536-b0ad-cbf4e741edb2.png",
+      "PackagePath": "staticwebassets\\uploads\\af80c839-5e7a-4536-b0ad-cbf4e741edb2.png"
+    },
+    {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\d7987907-c2dd-4d53-a75c-849c5e7bff1e.png",
       "PackagePath": "staticwebassets\\uploads\\d7987907-c2dd-4d53-a75c-849c5e7bff1e.png"
     },
     {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\dc3d5fee-dfba-4359-afee-db4c03944d06.png",
+      "PackagePath": "staticwebassets\\uploads\\dc3d5fee-dfba-4359-afee-db4c03944d06.png"
+    },
+    {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\e7414912-2330-433a-9774-d672bb373855.png",
       "PackagePath": "staticwebassets\\uploads\\e7414912-2330-433a-9774-d672bb373855.png"
+    },
+    {
+      "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\e8321f36-a15e-45f4-8880-bfc999418104.png",
+      "PackagePath": "staticwebassets\\uploads\\e8321f36-a15e-45f4-8880-bfc999418104.png"
     },
     {
       "Id": "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\wwwroot\\uploads\\e8e25f63-755b-4052-b6a2-49fa030db269.png",

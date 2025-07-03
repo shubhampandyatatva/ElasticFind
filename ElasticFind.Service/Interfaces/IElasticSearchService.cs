@@ -12,4 +12,6 @@ public interface IElasticSearchService
     Task<bool> DeleteAsync(string id);
     Task<List<GroupedSearchResults>> SearchDocumentsAsync(string searchType, bool matchAllTerms, string keyword, string? fileTypeFilter = null, DateTime? startDate = null, DateTime? endDate = null, string? sortBy = null, string? searchInput = null);
     Task<DisplayFilesViewModel> GetFilesAsync(PaginationViewModel paginationViewModel);
+    Task<List<string>> GetAllFileIdsAsync();
+    Task<bool> DeleteMultipleFilesAsync(string id);
 }

@@ -80,6 +80,13 @@ public class ElasticSearchService : IElasticSearchService
         return response.IsValid;
     }
 
+    public async Task<bool> DeleteMultipleFilesAsync(string id)
+    {
+        var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index("documents"));
+        Console.WriteLine($"Delete response: {response.DebugInformation}");
+        return response.IsValid;
+    }
+
     public async Task<List<GroupedSearchResults>> SearchDocumentsAsync(
     string searchType, bool matchAllTerms, string keyword, string? fileTypeFilter = null, DateTime? startDate = null,
     DateTime? endDate = null, string? sortBy = null, string? searchInput = null)
@@ -209,49 +216,49 @@ public class ElasticSearchService : IElasticSearchService
             }
 
             // var keywords = keyword.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-                // Console.WriteLine("Keywords: " + string.Join(", ", keywords));
-                // Console.WriteLine("Keywords Count: " + keywords.Length);
-                // foreach (var term in keywords)
-                // {
-                //     var fuzzinessValue = term.Length switch
-                //     {
-                //         <= 2 => 0,
-                //         <= 5 => 1,
-                //         <= 10 => 2,
-                //         _ => 3,
-                //     };
+            // Console.WriteLine("Keywords: " + string.Join(", ", keywords));
+            // Console.WriteLine("Keywords Count: " + keywords.Length);
+            // foreach (var term in keywords)
+            // {
+            //     var fuzzinessValue = term.Length switch
+            //     {
+            //         <= 2 => 0,
+            //         <= 5 => 1,
+            //         <= 10 => 2,
+            //         _ => 3,
+            //     };
 
-                //     mustQueries.Add(q => q.Fuzzy(m => m
-                //         .Field(f => f.Attachment.Content)
-                //         .Value(term)
-                //         .Fuzziness(Fuzziness.EditDistance(fuzzinessValue))
-                //     ));
-                // }
-            }
-            else    // Synonym search
+            //     mustQueries.Add(q => q.Fuzzy(m => m
+            //         .Field(f => f.Attachment.Content)
+            //         .Value(term)
+            //         .Fuzziness(Fuzziness.EditDistance(fuzzinessValue))
+            //     ));
+            // }
+        }
+        else    // Synonym search
+        {
+            var terms = keyword.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
+            var allTermsWithSynonyms = new List<string>(terms);
+
+            foreach (var term in terms)
             {
-                var terms = keyword.Split(' ', StringSplitOptions.RemoveEmptyEntries).ToList();
-                var allTermsWithSynonyms = new List<string>(terms);
-
-                foreach (var term in terms)
-                {
-                    var synonyms = await GetSynonymsAsync(term);
-                    allTermsWithSynonyms.AddRange(synonyms);
-                }
-                foreach (var term in allTermsWithSynonyms)
-                {
-                    Console.WriteLine("Term with Synonym: " + term);
-                }
-
-                mustQueries.Add(q => q.Bool(b => b
-                    .Should(allTermsWithSynonyms.Select(t => (Func<QueryContainerDescriptor<DocumentViewModel>, QueryContainer>)(m =>
-                        m.Match(mm => mm
-                            .Field(f => f.Attachment.Content)
-                            .Query(t)
-                        ))).ToArray())
-                    .MinimumShouldMatch(1)
-                ));
+                var synonyms = await GetSynonymsAsync(term);
+                allTermsWithSynonyms.AddRange(synonyms);
             }
+            foreach (var term in allTermsWithSynonyms)
+            {
+                Console.WriteLine("Term with Synonym: " + term);
+            }
+
+            mustQueries.Add(q => q.Bool(b => b
+                .Should(allTermsWithSynonyms.Select(t => (Func<QueryContainerDescriptor<DocumentViewModel>, QueryContainer>)(m =>
+                    m.Match(mm => mm
+                        .Field(f => f.Attachment.Content)
+                        .Query(t)
+                    ))).ToArray())
+                .MinimumShouldMatch(1)
+            ));
+        }
 
         // Filter by file type
         if (!string.IsNullOrWhiteSpace(fileTypeFilter) && fileTypeFilter != "File Type" && fileTypeFilter != "Other")
@@ -297,7 +304,7 @@ public class ElasticSearchService : IElasticSearchService
 
         // Sorting
         Func<SortDescriptor<DocumentViewModel>, IPromise<IList<ISort>>>? sort = null;
-        if (!string.IsNullOrWhiteSpace(sortBy) && sortBy != "Sort By")
+        if (!string.IsNullOrWhiteSpace(sortBy))
         {
             sort = s =>
             {
@@ -324,7 +331,7 @@ public class ElasticSearchService : IElasticSearchService
                     .PostTags("</mark>")
                     .FragmentSize(200)
                     .NumberOfFragments(50)
-                    // .NoMatchSize(150)
+                    .NoMatchSize(150)
                 )
             )
             .Sort(sort)
@@ -365,8 +372,8 @@ public class ElasticSearchService : IElasticSearchService
                     .Field(f => f.FileName.Suffix("keyword"))
                     .Value($"*{paginationViewModel.SearchString.ToLowerInvariant()}*")
                 ))
-            .Sort(st => st.Field(f => f.FileName.Suffix("keyword"), SortOrder.Descending))
-            // .Sort(st => string.IsNullOrEmpty(paginationViewModel.SortOrder) ? null : st.Field(f => f.FileName, paginationViewModel.SortOrder == "Asc" ? SortOrder.Ascending : SortOrder.Descending))
+            .Sort(st => st.Field(f => f.UploadedDate, SortOrder.Descending))
+        // .Sort(st => string.IsNullOrEmpty(paginationViewModel.SortOrder) ? null : st.Field(f => f.FileName, paginationViewModel.SortOrder == "Asc" ? SortOrder.Ascending : SortOrder.Descending))
         );
 
         List<FileViewModel> files = new();
@@ -403,7 +410,7 @@ public class ElasticSearchService : IElasticSearchService
     public async Task<List<string>?> GetSynonymsAsync(string word)
     {
         if (_cache.TryGetValue(word, out List<string>? cachedSynonyms))
-        return cachedSynonyms;
+            return cachedSynonyms;
 
         using var httpClient = new HttpClient();
         var url = $"https://api.datamuse.com/words?rel_syn={word}&max=10";
@@ -421,7 +428,7 @@ public class ElasticSearchService : IElasticSearchService
         {
             PropertyNameCaseInsensitive = true
         });
-        
+
         var synonyms = json?
             .Select(w => w.Word)
             .Where(w => !string.IsNullOrWhiteSpace(w))
@@ -432,5 +439,17 @@ public class ElasticSearchService : IElasticSearchService
         _cache.Set(word, synonyms, TimeSpan.FromHours(8)); // Cache for 8 hours
 
         return synonyms;
+    }
+
+    public async Task<List<string>> GetAllFileIdsAsync()
+    {
+        var searchResponse = await _elasticClient.SearchAsync<FileViewModel>(s => s
+            .Index("documents")  
+            .Size(10000)  // Elasticsearch default limit is 10,000
+            .Source(src => src.Includes(f => f.Field(fm => fm.Id))) 
+            .Query(q => q.MatchAll())
+        );
+
+        return searchResponse.Documents.Select(d => d.Id).ToList();
     }
 }

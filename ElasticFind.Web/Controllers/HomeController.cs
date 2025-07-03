@@ -60,6 +60,9 @@ public class HomeController : Controller
 
         DisplayFilesViewModel displayFilesViewModel = await _elasticSearchService.GetFilesAsync(pagination);
 
+        var allFileIds = await _elasticSearchService.GetAllFileIdsAsync();
+        ViewBag.AllFileIds = allFileIds;
+
         if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
         {
             return PartialView("_FilesPartial", displayFilesViewModel);
@@ -539,6 +542,35 @@ public class HomeController : Controller
         byte[] fileBytes = _exportService.ExportSearchResultsToExcel(results, keyword, fileType, startDate, endDate, sortBy, searchString, results.Count);
 
         return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ElasticFind_Results.xlsx");
+    }
+
+    public async Task<JsonResult> DeleteMultipleFiles(List<string> ids)
+    {
+        if (ids == null || !ids.Any())
+        {
+            return Json(new { success = false, message = "No files selected for deletion." });
+        }
+
+        foreach (var id in ids)
+        {
+            bool result = await _elasticSearchService.DeleteMultipleFilesAsync(id);
+            if (!result)
+            {
+                return Json(new { success = false, message = "Some error occured in deleting the files!" });
+            }
+        }
+
+        // Refresh the index once after all deletions
+        var refreshResponse = await _elasticClient.Indices.RefreshAsync("documents");
+        Console.WriteLine($"Refresh response: {refreshResponse.DebugInformation}");
+
+        if(!refreshResponse.IsValid)
+        {
+            Console.WriteLine("Error refreshing index: " + refreshResponse.ServerError?.ToString());
+            return Json(new { success = false, warning = true, message = "Deletion completed successfully but there was some error refreshing the index!" });
+        }
+
+        return Json(new { success = true, message = "Selected files were deleted successfully!" });
     }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]

@@ -40,7 +40,7 @@
     <div class="d-flex align-items-center mb-4">
         <h3 class="results-text me-3" style="color: #3f629b;">Your Results Go Here</h3>
         <h4 class="matching-docs-count d-none" style="color: #3f629b;">Found <span id="matchingDocsCountSpan"> matching
-                documents</span></h4> 
+                documents</span></h4>
     </div>
 
     @* <button type="button" class="btn btn-primary" id="createDocumentBtn">Create Document</button> *@ 
@@ -124,8 +124,7 @@
                 <div class="fs-5" style="font-weight: 500;">Sort By: </div>
                 <select class="select-sorter form-select form-select-sm ms-2 pointer" style="width: 125px;"
                     id="sortBySelect">
-                    <option selected>Sort By</option>
-                    <option value="1">Date</option>
+                    <option value="1" selected>Date</option>
                     <option value="2">File Type</option>
                 </select>
             </div>
@@ -198,8 +197,9 @@
                 <div class="mb-3">
                     <label for="endDate" class="form-label">End Date</label>
                     <input type="date" class="form-control pointer" id="endDate" onclick="this.showPicker();">
-                    <div id="endDateError" class="ms-2"></div>
+                    @* <div id="endDateError" class="ms-2"></div> *@
                 </div>
+                <div id="endDateError" class="ms-2"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="applyCustomDateBtn">Apply</button>
@@ -235,6 +235,13 @@
     let latestSearchResults = [];
     var startDate = "";
     var endDate = "";
+
+    $(document).ready(function () {
+        const today = new Date().toISOString().split('T')[0];
+        $("#endDate").attr("max", today);
+        $("#startDate").attr("max", today);
+        @* $("#endDate").val(today); *@
+    });
 
     function searchDocumentContent() {
         var keyword = $("#searchKeywordInput").val().trim();
@@ -319,6 +326,12 @@
 
                 $("#searchResults").html(html);
 
+                $("#searchResults").scrollTop(0); 
+                @* document.getElementById("searchResults").scrollTo({
+                    top: 0,
+                    behavior: "smooth"
+                }); *@
+
                 latestSearchResults = data;
 
                 if (data.length > 0) {
@@ -374,10 +387,19 @@
         });
     });
 
+    $(document).on("keypress", "#searchKeywordInput", function (e) {
+        if (e.key === "Enter") {
+            startDate = $("#startDate").val();
+            endDate = $("#endDate").val();
+            searchDocumentContent();
+        }
+    });
+
     $("#searchKeywordBtn").on("click", function () {
         startDate = $("#startDate").val();
         endDate = $("#endDate").val();
         searchDocumentContent();
+        clearFilters();
     });
 
     $(document).on("change", "#fileTypeFilter", function () {
@@ -413,9 +435,10 @@
         endDate = $("#endDate").val();
 
         if (!startDate && !endDate) {
-            $("#startDateError").text("Please select a start date.").addClass("text-danger");
-            $("#endDateError").text("Please select an end date.").addClass("text-danger");
-            return; 
+            @* $("#startDateError").text("Please select a start date.").addClass("text-danger"); *@
+                @* $("#endDateError").text("Please select an end date.").addClass("text-danger"); *@
+                $("#endDateError").text("Please select either a start date or an end date.").addClass("text-danger");
+            return;
         }
         @* if (!startDate) {
             $("#startDateError").text("Please select a start date.").addClass("text-danger");
@@ -429,14 +452,55 @@
         } else {
             $("#endDateError").text("").removeClass("text-danger");
         } *@
-        @* validateDateInputs(); *@
+            @* validateDateInputs(); *@
+
+        if (!startDate) {
+            startDate = new Date(Date.UTC(2000, 0, 1)).toISOString().split('T')[0];
+        }
+        if (!endDate) {
+            endDate = new Date().toISOString().split('T')[0].toString("dd-MM-yyyy");
+            console.log("End date is not selected, setting to today:", endDate);
+        }
 
         searchDocumentContent();
+        $("#startDate").val(startDate);
+        $("#endDate").val(endDate);
         $("#datePickerModal").modal("hide");
-        $("#startDate").text("");
-        $("#endDate").text("");
-        $("#selectDateButton").text(startDate && endDate ? `${new Date(startDate).toLocaleDateString('en-GB')} - ${new Date(endDate).toLocaleDateString('en-GB')}` : "Select Date");
+        $("#selectDateButton").text(startDate && endDate ? `${new Date(startDate).toLocaleDateString('en-GB')} - ${new Date(endDate).toLocaleDateString('en-GB')}` : "Select Uploaded Date");
     });
+
+    @* $("#startDate, #endDate").on("change", validateDateInputs); *@
+        $(document).on("change", "#startDate, #endDate", function () {
+            @* const StartDate = $("#startDate").val();
+        const EndDate = $("#endDate").val(); *@
+                startDate = $("#startDate").val();
+            endDate = $("#endDate").val();
+            console.log("Start Date: ", startDate);
+            console.log("End Date: ", endDate);
+            @* console.log("Today's date: ", new Date().toISOString().split('T')[0].toString("dd-MM-yyyy")); *@
+
+        if (!startDate && !endDate) {
+                $("#endDateError").text("Please select either a start date or an end date.").addClass("text-danger");
+                return;
+            } else {
+                $("#endDateError").text("").removeClass("text-danger");
+                return;
+            }
+
+            if (!startDate) {
+                startDate = "01-01-2000";
+                $("#startDate").val(startDate);
+                console.log("start date: ", startDate);
+            }
+
+            if (!endDate || endDate == undefined || endDate == null || endDate == "") {
+                @* endDate = new Date().toISOString().split('T')[0]; *@
+                    @* endDate = new Date().toISOString().split('T')[0].toString("dd-MM-yyyy"); *@
+                    endDate = new Date().toLocaleDateString('en-GB');
+                $("#endDate").val(endDate);
+                console.log("end date: ", endDate);
+            }
+        });
 
     function validateDateInputs() {
         const startDate = $("#startDate").val();
@@ -462,8 +526,6 @@
             $("#endDateError").text("").removeClass("text-danger");
         }
     }
-
-    $("#startDate, #endDate").on("change", validateDateInputs);
 
     $("#datePickerCloseBtn").on("click", function () {
         $("#startDateError").text("");
@@ -495,10 +557,12 @@
         endDate = "";
         $("#startDateError").text("");
         $("#endDateError").text("");
-        $("#startDate").removeAttr("min max");
-        $("#endDate").removeAttr("min max");
+        $("#startDate").removeAttr("min");
+        $("#endDate").removeAttr("min");
+        $("#startDate").attr("max", new Date().toISOString().split('T')[0]);
+        $("#endDate").attr("max", new Date().toISOString().split('T')[0]);
         $("#datePickerModal").modal("hide");
-        $("#selectDateButton").text("Select Date");
+        $("#selectDateButton").text("Select Uploaded Date");
         searchDocumentContent();
     });
 
@@ -534,11 +598,11 @@
         $("#fileTypeFilter").val("File Type");
         $("#startDate").val("");
         $("#endDate").val("");
-        $("#sortBySelect").val("Sort By");
+        $("#sortBySelect").val("1");
         $("#searchInput").val("");
         startDate = "";
         endDate = "";
-        $("#selectDateButton").text("Select Date");
+        $("#selectDateButton").text("Select Uploaded Date");
     }
 
     // Clear Button
@@ -786,7 +850,7 @@
     });
 
     $("#clearFiltersBtn").on("click", function () {
-        if ($("#fileTypeFilter").val() === "File Type" && startDate === "" && endDate === "" && $("#sortBySelect").val() === "Sort By" && $("#searchInput").val() === "") {
+        if ($("#fileTypeFilter").val() === "File Type" && startDate === "" && endDate === "" && $("#sortBySelect").val() === "1" && $("#searchInput").val() === "") {
             console.log("Filters: ", {
                 fileType: $("#fileTypeFilter").val(),
                 startDate: startDate,
@@ -794,6 +858,8 @@
                 sortBy: $("#sortBySelect").val(),
                 searchInput: $("#searchInput").val()
             });
+            @* alert("Filters are already set to their default values."); *@
+                alert("No filters to clear!");
             return; // No need to clear if already set to default
         }
         clearFilters();
@@ -814,7 +880,7 @@
             $(".info-text").text("Note: Enter more than two characters for best results").removeClass("d-none");
         } else {
             $(".match-all-checkbox-container").addClass("d-none");
-            $(".info-text").addClass("d-none"); 
+            $(".info-text").addClass("d-none");
         }
     });
 
