@@ -78,6 +78,10 @@
 </div>
 
 <script>
+    if ($("#allFileIdsJson")) {
+        $("#allFileIdsJson").val('@Html.Raw(Json.Serialize(ViewBag.AllFileIds))');
+    }
+
     function loadPrevPage() {
         const searchString = $("#searchInput").val();
         if (currentPage > 1) {

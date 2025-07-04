@@ -102,19 +102,17 @@
                         id="fileTypeFilter">
                         <option selected>File Type</option>
                         <option value=".pdf">pdf</option>
-                        <option value=".docx">docx</option>
-                        <option value=".xlsx">xlsx</option>
-                        <option value=".xls">xls</option>
-                        <option value=".doc">doc</option>
+                        <option value=".docx/.doc">docx/doc</option>
+                        <option value=".xlsx/.xls">xlsx/xls</option>
                         <option value=".txt">txt</option>
-                        <option value=".pptx">pptx</option>
-                        <option value=".ppt">ppt</option>
+                        <option value=".pptx/.ppt">pptx/ppt</option>
                         <option value=".rtf">rtf</option>
                         <option value="Other">Other</option>
                     </select>
                     <button type="button" class="btn btn-sm" id="selectDateButton" data-bs-toggle="modal"
                         data-bs-target="#datePickerModal"
-                        style="min-width: 100px; border: 1px solid rgb(206, 206, 206); background-color: #fff;">
+                        style="min-width: 100px; border: 1px solid rgb(206, 206, 206); background-color: #fff;"
+                        title="Select Uploaded Date Range">
                         Select Uploaded Date
                     </button>
                 </div>
@@ -140,8 +138,38 @@
         </div>
     </div>
 
-    <div id="searchResults" class="mt-4" style="max-height: 50vh; overflow-y: auto;">
+    <div id="searchResults" class="mt-4" style="max-height: 45vh; overflow-y: auto;">
 
+    </div>
+
+    <div class="pagination-container d-flex justify-content-between align-items-center d-none mt-3">
+        <div class="items-per-page d-flex align-items-center">
+            <label for="itemsPerPageSelect" class="me-2">Items per page:</label>
+            <select id="itemsPerPageSelect" class="form-select form-select-sm pointer" style="width: 100px;">
+                <option value="5" selected>5</option>
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="50">50</option>
+            </select>
+        </div>
+        <div class="pagination-buttons d-flex align-items-center">
+            @* <span class="me-2">Showing ${currentPageSize * (currentPage - 1) + 1)} - ${((currentPageSize * currentPage) > TotalDocuments ? TotalDocuments : (currentPageSize * currentPage))} of ${TotalDocuments}</span> *@
+            <span class="me-2">Showing <span id="startPage"></span> - <span id="endPage"></span> of <span
+                    id="totalDocuments"></span></span>
+            <button type="button" class="btn btn-sm btn-outline-primary me-2" id="firstPageButton" title="First Page">
+                <i class="bi bi-chevron-double-left"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-primary me-2" id="previousPageButton"
+                title="Previous Page">
+                <i class="bi bi-chevron-left"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-primary me-2" id="nextPageButton" title="Next Page">
+                <i class="bi bi-chevron-right"></i>
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-primary" id="lastPageButton" title="Last Page">
+                <i class="bi bi-chevron-double-right"></i>
+            </button>
+        </div>
     </div>
 
     @* <div id="exportSection" class="mt-3 d-none">
@@ -211,7 +239,7 @@
     </div>
 </div>
 
-<!-- Search loader -->
+<!-- Loader -->
 
 <div id="loader"
     class="position-fixed top-0 start-0 w-100 h-100 justify-content-center align-items-center bg-white bg-opacity-75"
@@ -236,6 +264,9 @@
     var startDate = "";
     var endDate = "";
 
+    currentPage = 1;
+    currentPageSize = 10;
+
     $(document).ready(function () {
         const today = new Date().toISOString().split('T')[0];
         $("#endDate").attr("max", today);
@@ -254,7 +285,9 @@
         var fileTypeFitler = $("#fileTypeFilter").val().trim();
         var sortBy = $("#sortBySelect").val().trim();
         var searchInput = $("#searchInput").val().trim();
-        console.log("Searching with parameters:", { searchType: searchType, matchAllTerms: matchAllTerms, keyword: keyword, fileTypeFilter: fileTypeFitler, startDate: startDate, endDate: endDate, sortBy: sortBy, searchInput: searchInput });
+        var paginationViewModel = [];
+        currentPageSize = $("#itemsPerPageSelect").val();
+        console.log("Searching with parameters:", { searchType: searchType, matchAllTerms: matchAllTerms, keyword: keyword, fileTypeFilter: fileTypeFitler, startDate: startDate, endDate: endDate, sortBy: sortBy, searchInput: searchInput, currentPage: currentPage, currentPageSize: currentPageSize });
 
         $("#loader").find(".spinner-border").removeClass("text-success").addClass("text-primary");
         @* $("#loader").show(); *@
@@ -263,16 +296,16 @@
         $.ajax({
             url: "/Home/SearchDocumentContent",
             type: "POST",
-            data: { searchType: searchType, matchAllTerms: matchAllTerms, keyword: keyword, fileTypeFilter: fileTypeFitler, startDate: startDate, endDate: endDate, sortBy: sortBy, searchInput: searchInput },
+            data: { searchType: searchType, matchAllTerms: matchAllTerms, keyword: keyword, fileTypeFilter: fileTypeFitler, startDate: startDate, endDate: endDate, sortBy: sortBy, searchInput: searchInput, currentPage: currentPage, currentPageSize: currentPageSize },
             success: function (data) {
                 var html = "";
                 console.log("Search results:", data);
-                console.log("Data length:", data.length);
+                console.log("Data length:", data.searchResults.searchResults.length);
 
-                if (data.length === 0) {
+                if (data.searchResults.searchResults.length === 0) {
                     html = "<div class='alert alert-warning'>No results found.</div>";
                 } else {
-                    data.forEach(function (doc, index) {
+                    data.searchResults.searchResults.forEach(function (doc, index) {
                         let totalHighlights = 0;
                         doc.snippets.forEach(snippet => {
                             totalHighlights += (snippet.match(/<mark>/g) || []).length;
@@ -285,6 +318,8 @@
                                         <strong>${doc.fileName}</strong>
                                         <span class="text-muted"> - Found ${totalHighlights} match${totalHighlights === 1 ? '' : 'es'}</span>
                                     </div>
+                                    <div class="d-flex align-items-center">
+                                    <div class="uploaded-date-text me-3">Uploaded at - <span class="uploaded-date">${new Date(doc.uploadedDate).toLocaleDateString('en-GB')}</span></div>
                                     <div class="pdf-exclude">
                                         <span class="d-flex align-items-center">
                                         <button class="btn btn-sm btn-outline-primary single-export-btn me-2"" data-id="${doc.id}" title="Export this search result">
@@ -297,6 +332,7 @@
                                             <i class="bi bi-eye"></i>
                                         </button>
                                         </span>
+                                    </div>
                                     </div>
                                 </div>
                                 <div class="card-body">
@@ -326,24 +362,43 @@
 
                 $("#searchResults").html(html);
 
-                $("#searchResults").scrollTop(0); 
+                $("#searchResults").scrollTop(0);
                 @* document.getElementById("searchResults").scrollTo({
                     top: 0,
                     behavior: "smooth"
                 }); *@
 
-                latestSearchResults = data;
+                    latestSearchResults = data.searchResults.searchResults;
 
-                if (data.length > 0) {
+                if (data.searchResults.searchResults.length > 0) {
                     $("#exportSection").removeClass("d-none");
+                    $(".pagination-container").removeClass("d-none");
                 } else {
                     $("#exportSection").addClass("d-none");
+                    $(".pagination-container").addClass("d-none");
                 }
 
                 $("#filtersSortersContainer").removeClass("d-none");
                 $(".matching-docs-count").removeClass("d-none");
-                $("#matchingDocsCountSpan").text(`${data.length} matching document${data.length === 1 ? '' : 's'}`);
+                $("#matchingDocsCountSpan").text(`${data.searchResults.searchResults.length} matching document${data.searchResults.searchResults.length === 1 ? '' : 's'}`);
                 $(".results-text").addClass("d-none");
+                $("#startPage").text((currentPage - 1) * currentPageSize + 1);
+                $("#endPage").text(Math.min(currentPage * currentPageSize, data.searchResults.totalDocuments));
+                $("#totalDocuments").text(data.searchResults.totalDocuments);
+                if (currentPage === 1) {
+                    $("#previousPageButton").prop("disabled", true);
+                    $("#firstPageButton").prop("disabled", true);
+                } else {
+                    $("#previousPageButton").prop("disabled", false);
+                    $("#firstPageButton").prop("disabled", false);
+                }
+                if (currentPage * currentPageSize >= data.searchResults.totalDocuments) {
+                    $("#nextPageButton").prop("disabled", true);
+                    $("#lastPageButton").prop("disabled", true);
+                } else {
+                    $("#nextPageButton").prop("disabled", false);
+                    $("#lastPageButton").prop("disabled", false);
+                }
             },
             error: function (xhr) {
                 $("#searchResults").html("<div class='alert alert-danger'>An error occurred while searching.</div>");
@@ -389,28 +444,30 @@
 
     $(document).on("keypress", "#searchKeywordInput", function (e) {
         if (e.key === "Enter") {
-            startDate = $("#startDate").val();
-            endDate = $("#endDate").val();
-            searchDocumentContent();
+            @* startDate = $("#startDate").val();
+            endDate = $("#endDate").val(); *@
+                searchDocumentContent();
         }
     });
 
     $("#searchKeywordBtn").on("click", function () {
-        startDate = $("#startDate").val();
-        endDate = $("#endDate").val();
-        searchDocumentContent();
+        @* startDate = $("#startDate").val();
+        endDate = $("#endDate").val(); *@
+            searchDocumentContent();
         clearFilters();
     });
 
     $(document).on("change", "#fileTypeFilter", function () {
-        startDate = $("#startDate").val();
-        endDate = $("#endDate").val();
+        @* startDate = $("#startDate").val();
+        endDate = $("#endDate").val(); *@
+            currentPage = 1;
         searchDocumentContent();
     });
 
     $(document).on("change", "#sortBySelect", function () {
-        startDate = $("#startDate").val();
-        endDate = $("#endDate").val();
+        @* startDate = $("#startDate").val();
+        endDate = $("#endDate").val(); *@
+            currentPage = 1;
         searchDocumentContent();
     });
 
@@ -425,6 +482,7 @@
     const debounceSearch = debounce(function () {
         startDate = $("#startDate").val();
         endDate = $("#endDate").val();
+        currentPage = 1;
         searchDocumentContent();
     }, 500);
 
@@ -461,7 +519,7 @@
             endDate = new Date().toISOString().split('T')[0].toString("dd-MM-yyyy");
             console.log("End date is not selected, setting to today:", endDate);
         }
-
+        currentPage = 1;
         searchDocumentContent();
         $("#startDate").val(startDate);
         $("#endDate").val(endDate);
@@ -914,4 +972,34 @@
             }
         });
     }
+
+    $("#itemsPerPageSelect").on("change", function () {
+        currentPageSize = $(this).val();
+        searchDocumentContent();
+    });
+
+    $("#firstPageButton").on("click", function () {
+        currentPage = 1;
+        searchDocumentContent();
+    });
+
+    $("#previousPageButton").on("click", function () {
+        if (currentPage > 1) {
+            currentPage--;
+            console.log("Current page:", currentPage);
+            searchDocumentContent();
+        }
+    });
+
+    $("#nextPageButton").on("click", function () {
+        currentPage++;
+        console.log("Current page:", currentPage);
+        searchDocumentContent();
+    });
+
+    $("#lastPageButton").on("click", function () {
+        currentPage = Math.ceil($("#totalDocuments").text() / currentPageSize);
+        console.log("Current page on lastpagebutton click: ", currentPage);
+        searchDocumentContent();
+    });
 </script>

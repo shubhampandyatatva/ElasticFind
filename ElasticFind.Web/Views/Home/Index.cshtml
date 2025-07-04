@@ -24,7 +24,7 @@
         <div id="uploadProgressContainer" class="mt-3 d-none">
             <div class="progress">
                 <div id="uploadProgressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
-                    role="progressbar" style="width: 0%">0%</div>
+                    role="progressbar" style="width: 100%">Uploading...</div>
             </div>
         </div>
     </form>
@@ -249,6 +249,12 @@
 
             $("#filesPartialView").html(data);
 
+            @* allFileIds = JSON.parse($("#allFileIdsJson").val() || "[]"); *@
+                @* allFileIds = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.AllFileIds))' || "[]"); *@
+                    allFileIds = JSON.parse($("#allFileIdsJson").val() || "[]");
+
+            console.log("Updated allFileIds: ", allFileIds);
+            @* $("#allFileIdsJson").val(allFileIds); *@
             // Update state variables
             currentPage = page;
             currentPageSize = pageSize;
@@ -286,28 +292,24 @@
     }
 
     function updateMasterCheckboxState() {
-        const visibleCheckboxes = $(".slaveCheckbox");
-        const totalVisible = visibleCheckboxes.length;
-        const totalChecked = $(".slaveCheckbox:checked").length;
-
         const masterCheckbox = $("#masterCheckbox").get(0);
 
-        if (totalVisible === 0) {
+        const totalIds = allFileIds.length;
+        const selectedIdsCount = selectedFileIds.size;
+
+        if (selectedIdsCount === 0) {
             masterCheckbox.indeterminate = false;
             masterCheckbox.checked = false;
-        } else if (totalChecked === totalVisible) {
+        } else if (selectedIdsCount === totalIds) {
             masterCheckbox.indeterminate = false;
             masterCheckbox.checked = true;
-        } else if (totalChecked > 0) {
-            masterCheckbox.indeterminate = true;
-            masterCheckbox.checked = false;
         } else {
-            masterCheckbox.indeterminate = false;
+            masterCheckbox.indeterminate = true;
             masterCheckbox.checked = false;
         }
     }
 
-    @* $("#uploadForm").on("submit", function (e) {
+    $("#uploadForm").on("submit", function (e) {
         e.preventDefault();
 
         if (allFiles.length === 0) {
@@ -325,47 +327,29 @@
         var pageSize = $("#itemsPerPage").val();
         var searchString = $("#searchInput").val();
 
+        $("#uploadProgressContainer").removeClass("d-none");
+
         $.ajax({
             url: "/Home/UploadDocuments",
             type: "POST",
             data: formData,
             processData: false,
             contentType: false,
-            xhr: function () {
-                var xhr = new window.XMLHttpRequest();
-
-                xhr.upload.addEventListener("progress", function (evt) {
-                    if (evt.lengthComputable) {
-                        var percentComplete = Math.round((evt.loaded / evt.total) * 100);
-
-                        // Show and update progress bar
-                        $("#uploadProgressContainer").removeClass("d-none");
-                        $("#uploadProgressBar")
-                            .css("width", percentComplete + "%")
-                            .text(percentComplete + "%");
-                    }
-                }, false);
-
-                return xhr;
-            },
             success: function (response) {
                 loadPage(1, pageSize, searchString, SortOrder);
                 toastr.success(response, "Success");
                 allFiles = []; // reset after successful upload
                 updateFileNameDisplay([]);
-
-                // Reset progress bar
                 $("#uploadProgressContainer").addClass("d-none");
-                $("#uploadProgressBar").css("width", "0%").text("0%");
             },
             error: function (xhr) {
                 toastr.error(response.message, "Error");
                 $("#uploadProgressContainer").addClass("d-none");
             }
         });
-    }); *@
+    });
 
-        async function uploadFilesSequentially(files) {
+    @* async function uploadFilesSequentially(files) {
             let totalFiles = files.length;
 
             for (let i = 0; i < totalFiles; i++) {
@@ -382,9 +366,11 @@
                         let percent = Math.round(((i + 1) / totalFiles) * 100);
                         $("#uploadProgressContainer").removeClass("d-none");
                         $("#uploadProgressBar").css("width", percent + "%").text(percent + "%");
+                        loadPage(1, $("#itemsPerPage").val(), $("#searchInput").val(), SortOrder);
                     },
                     error: function () {
                         toastr.error("Error uploading file: " + files[i].name);
+                        loadPage(1, $("#itemsPerPage").val(), $("#searchInput").val(), SortOrder);
                     }
                 });
             }
@@ -394,7 +380,6 @@
             $("#uploadProgressBar").css("width", "0%").text("0%");
             allFiles = [];
             updateFileNameDisplay([]);
-            loadPage(1, $("#itemsPerPage").val(), $("#searchInput").val(), SortOrder);
         }
 
     $("#uploadForm").on("submit", function (e) {
@@ -404,14 +389,14 @@
             return;
         }
         uploadFilesSequentially(allFiles);
-    });
+    }); *@
 
 
-    function changePageSize() {
-        var pageSize = $("#itemsPerPage").val();
-        var searchString = $("#searchInput").val();
-        loadPage(1, pageSize, searchString, SortOrder);
-    }
+        function changePageSize() {
+            var pageSize = $("#itemsPerPage").val();
+            var searchString = $("#searchInput").val();
+            loadPage(1, pageSize, searchString, SortOrder);
+        }
 
     $("#searchInput").on("input", function () {
         var searchString = $(this).val();
@@ -494,7 +479,7 @@
             toastr.warning("Please select some files to delete");
             return;
         }
-
+        console.log("Checked files: ", checkedFiles);
         $("#delete_multiple_file_modal").modal("show");
     });
 
@@ -506,42 +491,6 @@
         });
         console.log("File IDs to delete: ", fileIdsToDelete);
 
-        @* $("#deleteModalContent").addClass("d-none");
-        $("#deleteModalSpinner").removeClass("d-none");
-
-        $.ajax({
-            url: "/Home/DeleteMultipleFiles",
-            type: "POST",
-            data: { ids: fileIdsToDelete },
-            success: function (response) {
-                if (response.success) {
-                    toastr.success(response.message, "Success");
-                    loadPage(1, $("#itemsPerPage").val(), $("#searchInput").val(), SortOrder);
-                    allFileIds.clear();
-                    selectedFileIds.clear();
-                    // Restore modal content
-                    $("#delete_multiple_file_modal").modal("hide");
-                    $("#deleteModalContent").removeClass("d-none");
-                    $("#deleteModalSpinner").addClass("d-none");
-                } else if (response.warning) {
-                    toastr.warning(response.message, "Warning");
-                    // Restore modal content
-                    $("#delete_multiple_file_modal").modal("hide");
-                    $("#deleteModalContent").removeClass("d-none");
-                    $("#deleteModalSpinner").addClass("d-none");
-                } else {
-                    toastr.error(response.message, "Error");
-                    // Restore modal content
-                    $("#delete_multiple_file_modal").modal("hide");
-                    $("#deleteModalContent").removeClass("d-none");
-                    $("#deleteModalSpinner").addClass("d-none");
-                }
-            },
-            error: function () {
-                toastr.error("An error occurred while deleting files.", "Error");
-            }
-        }); *@
-
         $("#deleteMultipleFilesModalContent").addClass("d-none");
         $("#deleteMultipleFilesModalSpinner").removeClass("d-none");
 
@@ -549,14 +498,14 @@
             const response = await $.ajax({
                 url: "/Home/DeleteMultipleFiles",
                 type: "POST",
-                data: { ids: fileIdsToDelete }
+                data: { ids: Array.from(selectedFileIds) }
             });
 
             if (response.success) {
                 toastr.success(response.message, "Success");
                 loadPage(1, $("#itemsPerPage").val(), $("#searchInput").val(), SortOrder);
-                allFileIds = [];
                 selectedFileIds.clear();
+                console.log("All File Ids after delete files: ", allFileIds);
                 // Restore modal content
                 $("#delete_multiple_file_modal").modal("hide");
             } else if (response.warning) {
@@ -577,5 +526,5 @@
             $("#deleteMultipleFilesModalContent").removeClass("d-none");
             $("#deleteMultipleFilesModalSpinner").addClass("d-none");
         }
-    })
+    });
 </script>
