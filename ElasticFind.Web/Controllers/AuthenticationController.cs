@@ -2,6 +2,7 @@ using System.Security.Claims;
 using System.Threading.Tasks;
 using ElasticFind.Repository.Data;
 using ElasticFind.Repository.ViewModels;
+using ElasticFind.Service.Constants;
 using ElasticFind.Service.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 
@@ -24,7 +25,7 @@ public class AuthenticationController : Controller
     [HttpGet]
     public async Task<IActionResult> Login()
     {
-        Console.WriteLine(HttpContext.Connection.RemoteIpAddress?.ToString());
+        Console.WriteLine("IP Address: " + HttpContext.Connection.RemoteIpAddress?.ToString());
         string? jwtToken = Request.Cookies["JwtToken"];
         if (jwtToken == null)
         {
@@ -43,10 +44,9 @@ public class AuthenticationController : Controller
             return View();
         }
 
-        string? roleId = _jwtService.GetClaimValue(jwtToken, ClaimTypes.Role);
-        if (roleId == null)
+        string? roleName = _jwtService.GetClaimValue(jwtToken, ClaimTypes.Role);
+        if (roleName == null)
         {
-            Console.WriteLine("Error: Cannot read roleId from JWTToken!");
             return View();
         }
 
@@ -61,7 +61,7 @@ public class AuthenticationController : Controller
             };
             Response.Cookies.Append("ProfileImagePath", existingUser.ProfileImage, cookieOptions);
         }
-        return roleId == "1" ? RedirectToAction("Index", "Home") : RedirectToAction("Search", "Home");
+        return roleName == Roles.Admin ? RedirectToAction("Index", "Home") : RedirectToAction("Search", "Home");
     }
 
     [HttpPost]
@@ -118,7 +118,7 @@ public class AuthenticationController : Controller
 
                 TempData["SuccessMessage"] = response.Message;
 
-                return user.RoleId == 1 ? RedirectToAction("Index", "Home") : RedirectToAction("Search", "Home");
+                return user.Role.RoleName == Roles.Admin ? RedirectToAction("Index", "Home") : RedirectToAction("Search", "Home");
             }
             else
             {

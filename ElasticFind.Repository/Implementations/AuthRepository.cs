@@ -66,6 +66,6 @@ public class AuthRepository : IAuthRepository
 
     public async Task<User?> GetUserByEmail(string email)
     {
-        return await _dbcontext.Users.FirstOrDefaultAsync(u => u.Email == email && u.Isdeleted != true);
+        return await _dbcontext.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Email == email && u.Isdeleted != true);
     }
 }

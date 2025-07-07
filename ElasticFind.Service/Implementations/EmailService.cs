@@ -10,16 +10,14 @@ namespace ElasticFind.Service.Implementations;
 public class EmailService : IEmailService
 {
     private readonly SmtpSettings _smtpSettings;
-    private readonly IWebHostEnvironment _env;
 
-    public EmailService(IOptions<SmtpSettings> smtpSettings, IWebHostEnvironment env)
+    public EmailService(IOptions<SmtpSettings> smtpSettings)
     {
         if (smtpSettings?.Value == null)
         {
             throw new ArgumentNullException(nameof(smtpSettings), "SmtpSettings configuration is missing or invalid.");
         }
         _smtpSettings = smtpSettings.Value;
-        _env = env;
     }
     public async Task<bool> SendResetPasswordEmail(string email, string? resetPasswordLink)
     {
@@ -35,8 +33,7 @@ public class EmailService : IEmailService
         };
 
         string subject = "Reset Your Password";
-        // string templatePath = "D:\\Tatva\\ElasticFind\\ElasticFind.Web\\Views\\Authentication\\ResetPasswordTemplate.cshtml";
-        string templatePath = Path.Combine(_env.ContentRootPath, "Views", "Authentication", "ResetPasswordTemplate.cshtml");
+        string templatePath = ".\\Views\\Authentication\\ResetPasswordTemplate.cshtml";
         Console.WriteLine($"Template path: {templatePath}");
         string message = await File.ReadAllTextAsync(templatePath);
 

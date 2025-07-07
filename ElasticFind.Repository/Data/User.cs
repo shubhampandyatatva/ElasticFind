@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace ElasticFind.Repository.Data;
 
+[Table("users")]
 public partial class User
 {
     public int Id { get; set; }

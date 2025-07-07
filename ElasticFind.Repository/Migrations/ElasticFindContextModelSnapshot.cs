@@ -26,128 +26,93 @@ namespace ElasticFind.Repository.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
+                        .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("FileName")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("file_name");
+                        .HasColumnType("text");
 
                     b.Property<string>("FileType")
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("file_type");
+                        .HasColumnType("text");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
 
                     b.Property<DateTime?>("UploadDate")
-                        .HasColumnType("timestamp without time zone")
-                        .HasColumnName("upload_date");
+                        .HasColumnType("timestamp with time zone");
 
-                    b.HasKey("Id")
-                        .HasName("files_pkey");
+                    b.HasKey("Id");
 
-                    b.ToTable("files", (string)null);
+                    b.ToTable("files");
                 });
 
             modelBuilder.Entity("ElasticFind.Repository.Data.Role", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
+                        .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("RoleName")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("character varying(20)")
-                        .HasColumnName("role_name");
+                        .HasColumnType("text");
 
-                    b.HasKey("Id")
-                        .HasName("roles_pkey");
+                    b.HasKey("Id");
 
-                    b.ToTable("roles", (string)null);
+                    b.ToTable("roles");
                 });
 
             modelBuilder.Entity("ElasticFind.Repository.Data.User", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("integer")
-                        .HasColumnName("id");
+                        .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("email");
+                        .HasColumnType("text");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("first_name");
+                        .HasColumnType("text");
 
                     b.Property<bool?>("Isactive")
-                        .HasColumnType("boolean")
-                        .HasColumnName("isactive");
+                        .HasColumnType("boolean");
 
                     b.Property<bool?>("Isdeleted")
-                        .HasColumnType("boolean")
-                        .HasColumnName("isdeleted");
+                        .HasColumnType("boolean");
 
                     b.Property<string>("LastName")
-                        .HasMaxLength(255)
-                        .HasColumnType("character varying(255)")
-                        .HasColumnName("last_name");
+                        .HasColumnType("text");
 
                     b.Property<string>("Password")
                         .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("character varying(100)")
-                        .HasColumnName("password");
+                        .HasColumnType("text");
 
                     b.Property<string>("Phone")
                         .IsRequired()
-                        .HasMaxLength(15)
-                        .HasColumnType("character varying(15)")
-                        .HasColumnName("phone");
+                        .HasColumnType("text");
 
                     b.Property<string>("ProfileImage")
-                        .HasColumnType("text")
-                        .HasColumnName("profile_image");
+                        .HasColumnType("text");
 
                     b.Property<int?>("RoleId")
-                        .HasColumnType("integer")
-                        .HasColumnName("role_id");
+                        .HasColumnType("integer");
 
                     b.Property<string>("Username")
                         .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("character varying(50)")
-                        .HasColumnName("username");
+                        .HasColumnType("text");
 
-                    b.HasKey("Id")
-                        .HasName("users_pkey");
+                    b.HasKey("Id");
 
                     b.HasIndex("RoleId");
 
-                    b.HasIndex(new[] { "Email" }, "users_email_key");
-
-                    b.HasIndex(new[] { "Phone" }, "users_phone_key");
-
-                    b.HasIndex(new[] { "Username" }, "users_username_key");
-
-                    b.ToTable("users", (string)null);
+                    b.ToTable("users");
                 });
 
             modelBuilder.Entity("ElasticFind.Repository.Data.User", b =>
@@ -155,7 +120,7 @@ namespace ElasticFind.Repository.Migrations
                     b.HasOne("ElasticFind.Repository.Data.Role", "Role")
                         .WithMany("Users")
                         .HasForeignKey("RoleId")
-                        .HasConstraintName("users_role_id_fkey");
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Role");
                 });

@@ -17,6 +17,7 @@ using System.Net.Http.Json;
 using System.Text;
 using Jose;
 using Newtonsoft.Json;
+using ElasticFind.Service.Constants;
 
 namespace ElasticFind.Web.Controllers;
 
@@ -43,7 +44,7 @@ public class HomeController : Controller
         _config = config;
     }
 
-    [Authorize(Roles = "1")]
+    [Authorize(Roles = Roles.Admin)]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public async Task<IActionResult> Index(int page = 1, int pageSize = 5, string? searchString = null, string? sortOrder = null)
     {
@@ -72,6 +73,7 @@ public class HomeController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> UploadFiles(List<IFormFile> files)
     {
         if (files == null || files.Count == 0)
@@ -109,7 +111,7 @@ public class HomeController : Controller
         return RedirectToAction("Index");
     }
 
-    [Authorize(Roles = "1")]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> Users(int page = 1, int pageSize = 5, string? searchString = null, string sortOrder = "Asc")
     {
         DisplayUsersViewModel listOfUsers = await _userService.GetUserList(page, pageSize, searchString, sortOrder);
@@ -122,6 +124,7 @@ public class HomeController : Controller
         return View(listOfUsers);
     }
 
+    [Authorize(Roles = Roles.Admin)]
     public async Task<JsonResult> DeleteUser(int id)
     {
         bool result = await _userService.DeleteUser(id);
@@ -135,6 +138,7 @@ public class HomeController : Controller
         }
     }
 
+    [Authorize(Roles = Roles.Admin)]
     public async Task<JsonResult> ToggleUserStatus(int id)
     {
         bool result = await _userService.ToggleUserStatus(id);
@@ -164,6 +168,7 @@ public class HomeController : Controller
     [HttpPost]
     [RequestSizeLimit(100_000_000)] // 100 MB
     [RequestFormLimits(MultipartBodyLengthLimit = 100_000_000)]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> UploadDocuments(List<IFormFile> files)
     {
         if (files == null || !files.Any())
@@ -238,6 +243,7 @@ public class HomeController : Controller
     }
 
     [HttpPost]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> CreateDocumentIndex(string indexName = "documents")
     {
         var created = await _elasticSearchService.CreateDocumentIndexAsync(indexName);
@@ -255,13 +261,15 @@ public class HomeController : Controller
     }
 
     [HttpPost]
+    [Authorize]
     public async Task<IActionResult> SearchDocumentContent(string searchType, bool matchAllTerms, string keyword, string? fileTypeFilter = null, DateTime? startDate = null, DateTime? endDate = null, string? sortBy = null, string? searchInput = null, int currentPage = 1, int currentPageSize = 5)
     {
         SearchResultsViewModel results = await _elasticSearchService.SearchDocumentsAsync(searchType, matchAllTerms, keyword, fileTypeFilter, startDate, endDate, sortBy, searchInput, currentPage, currentPageSize);
-        return Json(results); 
+        return Json(results);
     }
 
     [HttpGet]
+    [Authorize]
     public async Task<IActionResult> Download(string id)
     {
         var response = await _elasticClient.GetAsync<DocumentViewModel>(id, x => x.Index("documents"));
@@ -286,6 +294,7 @@ public class HomeController : Controller
     }
 
     [HttpGet]
+    [Authorize]
     public async Task<IActionResult> Preview(string id)
     {
         var response = await _elasticClient.GetAsync<DocumentViewModel>(id, x => x.Index("documents"));
@@ -315,6 +324,7 @@ public class HomeController : Controller
         return File(fileBytes, contentType);
     }
 
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> DeleteFile(string id)
     {
         bool result = await _elasticSearchService.DeleteAsync(id);
@@ -478,6 +488,7 @@ public class HomeController : Controller
     }
 
     [HttpPost]
+    [Authorize]
     public IActionResult ExportToPdf([FromBody] ExportResultViewModel model)
     {
         // Return Razor view as PDF using Rotativa
@@ -529,6 +540,7 @@ public class HomeController : Controller
         return File(fileBytes, mimeType, file.FileName);
     }
 
+    [Authorize]
     public async Task<IActionResult> ExportResultsToExcel(string searchType, bool matchAllTerms, string keyword, string fileType, DateTime? startDate, DateTime? endDate, string sortBy, string searchString)
     {
         SearchResultsViewModel results = await _elasticSearchService.SearchDocumentsAsync(searchType, matchAllTerms, keyword, fileType, startDate, endDate, sortBy, searchString);
@@ -544,6 +556,7 @@ public class HomeController : Controller
         return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ElasticFind_Results.xlsx");
     }
 
+    [Authorize(Roles = Roles.Admin)]
     public async Task<JsonResult> DeleteMultipleFiles(List<string> ids)
     {
         if (ids == null || !ids.Any())
@@ -564,7 +577,7 @@ public class HomeController : Controller
         var refreshResponse = await _elasticClient.Indices.RefreshAsync("documents");
         Console.WriteLine($"Refresh response: {refreshResponse.DebugInformation}");
 
-        if(!refreshResponse.IsValid)
+        if (!refreshResponse.IsValid)
         {
             Console.WriteLine("Error refreshing index: " + refreshResponse.ServerError?.ToString());
             return Json(new { success = false, warning = true, message = "Deletion completed successfully but there was some error refreshing the index!" });
