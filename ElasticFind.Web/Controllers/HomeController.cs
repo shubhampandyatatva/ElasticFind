@@ -258,10 +258,10 @@ public class HomeController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> SearchDocumentContent(string searchType, bool matchAllTerms, string keyword, string? fileTypeFilter = null, DateTime? startDate = null, DateTime? endDate = null, string? sortBy = null, string? searchInput = null)
+    public async Task<IActionResult> SearchDocumentContent(string searchType, bool matchAllTerms, string keyword, string? fileTypeFilter = null, DateTime? startDate = null, DateTime? endDate = null, string? sortBy = null, string? searchInput = null, int currentPage = 1, int currentPageSize = 5)
     {
-        List<GroupedSearchResults> results = await _elasticSearchService.SearchDocumentsAsync(searchType, matchAllTerms, keyword, fileTypeFilter, startDate, endDate, sortBy, searchInput);
-        return Json(results);
+        SearchResultsViewModel results = await _elasticSearchService.SearchDocumentsAsync(searchType, matchAllTerms, keyword, fileTypeFilter, startDate, endDate, sortBy, searchInput, currentPage, currentPageSize);
+        return Json(results); 
     }
 
     [HttpGet]
@@ -534,12 +534,15 @@ public class HomeController : Controller
 
     public async Task<IActionResult> ExportResultsToExcel(string searchType, bool matchAllTerms, string keyword, string fileType, DateTime? startDate, DateTime? endDate, string sortBy, string searchString)
     {
-        List<GroupedSearchResults> results = await _elasticSearchService.SearchDocumentsAsync(searchType, matchAllTerms, keyword, fileType, startDate, endDate, sortBy, searchString);
-        if (results == null || !results.Any())
+        SearchResultsViewModel results = await _elasticSearchService.SearchDocumentsAsync(searchType, matchAllTerms, keyword, fileType, startDate, endDate, sortBy, searchString);
+        if (results == null)
         {
             return NotFound("No results found for the given criteria.");
         }
-        byte[] fileBytes = _exportService.ExportSearchResultsToExcel(results, keyword, fileType, startDate, endDate, sortBy, searchString, results.Count);
+
+        List<GroupedSearchResults> searchResults = results.SearchResults;
+
+        byte[] fileBytes = _exportService.ExportSearchResultsToExcel(searchResults, keyword, fileType, startDate, endDate, sortBy, searchString, searchResults.Count);
 
         return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ElasticFind_Results.xlsx");
     }

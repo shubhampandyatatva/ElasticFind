@@ -120,9 +120,10 @@
 
             <div class="sorter-container d-flex align-items-center">
                 <div class="fs-5" style="font-weight: 500;">Sort By: </div>
-                <select class="select-sorter form-select form-select-sm ms-2 pointer" style="width: 125px;"
+                <select class="select-sorter form-select form-select-sm ms-2 pointer" style="width: 160px;"
                     id="sortBySelect">
-                    <option value="1" selected>Date</option>
+                    <option value="1" selected>Date (Descending)</option>
+                    <option value="3">Date (Ascending)</option>
                     <option value="2">File Type</option>
                 </select>
             </div>
@@ -265,7 +266,7 @@
     var endDate = "";
 
     currentPage = 1;
-    currentPageSize = 10;
+    currentPageSize = 5;
 
     $(document).ready(function () {
         const today = new Date().toISOString().split('T')[0];
@@ -300,12 +301,12 @@
             success: function (data) {
                 var html = "";
                 console.log("Search results:", data);
-                console.log("Data length:", data.searchResults.searchResults.length);
+                console.log("Data length:", data.searchResults.length);
 
-                if (data.searchResults.searchResults.length === 0) {
+                if (data.searchResults.length === 0) {
                     html = "<div class='alert alert-warning'>No results found.</div>";
                 } else {
-                    data.searchResults.searchResults.forEach(function (doc, index) {
+                    data.searchResults.forEach(function (doc, index) {
                         let totalHighlights = 0;
                         doc.snippets.forEach(snippet => {
                             totalHighlights += (snippet.match(/<mark>/g) || []).length;
@@ -368,9 +369,9 @@
                     behavior: "smooth"
                 }); *@
 
-                    latestSearchResults = data.searchResults.searchResults;
+                    latestSearchResults = data.searchResults;
 
-                if (data.searchResults.searchResults.length > 0) {
+                if (data.searchResults.length > 0) {
                     $("#exportSection").removeClass("d-none");
                     $(".pagination-container").removeClass("d-none");
                 } else {
@@ -380,11 +381,11 @@
 
                 $("#filtersSortersContainer").removeClass("d-none");
                 $(".matching-docs-count").removeClass("d-none");
-                $("#matchingDocsCountSpan").text(`${data.searchResults.searchResults.length} matching document${data.searchResults.searchResults.length === 1 ? '' : 's'}`);
+                $("#matchingDocsCountSpan").text(`${data.totalDocuments} matching document${data.totalDocuments === 1 ? '' : 's'}`);
                 $(".results-text").addClass("d-none");
                 $("#startPage").text((currentPage - 1) * currentPageSize + 1);
-                $("#endPage").text(Math.min(currentPage * currentPageSize, data.searchResults.totalDocuments));
-                $("#totalDocuments").text(data.searchResults.totalDocuments);
+                $("#endPage").text(Math.min(currentPage * currentPageSize, data.totalDocuments));
+                $("#totalDocuments").text(data.totalDocuments);
                 if (currentPage === 1) {
                     $("#previousPageButton").prop("disabled", true);
                     $("#firstPageButton").prop("disabled", true);
@@ -446,28 +447,31 @@
         if (e.key === "Enter") {
             @* startDate = $("#startDate").val();
             endDate = $("#endDate").val(); *@
-                searchDocumentContent();
+            @* currentPage = 1; *@
+            clearFilters();
+            searchDocumentContent();
         }
     });
 
     $("#searchKeywordBtn").on("click", function () {
         @* startDate = $("#startDate").val();
         endDate = $("#endDate").val(); *@
-            searchDocumentContent();
+        @* currentPage = 1; *@
         clearFilters();
+        searchDocumentContent();
     });
 
     $(document).on("change", "#fileTypeFilter", function () {
         @* startDate = $("#startDate").val();
         endDate = $("#endDate").val(); *@
-            currentPage = 1;
+        currentPage = 1;
         searchDocumentContent();
     });
 
     $(document).on("change", "#sortBySelect", function () {
         @* startDate = $("#startDate").val();
         endDate = $("#endDate").val(); *@
-            currentPage = 1;
+        currentPage = 1;
         searchDocumentContent();
     });
 
@@ -531,7 +535,7 @@
         $(document).on("change", "#startDate, #endDate", function () {
             @* const StartDate = $("#startDate").val();
         const EndDate = $("#endDate").val(); *@
-                startDate = $("#startDate").val();
+            startDate = $("#startDate").val();
             endDate = $("#endDate").val();
             console.log("Start Date: ", startDate);
             console.log("End Date: ", endDate);
@@ -546,7 +550,7 @@
             }
 
             if (!startDate) {
-                startDate = "01-01-2000";
+                startDate = "01-01-2020";
                 $("#startDate").val(startDate);
                 console.log("start date: ", startDate);
             }
@@ -592,19 +596,25 @@
 
     // Restrict endDate based on startDate and vice versa
     $("#startDate").on("change", function () {
-        const startDate = $(this).val();
-        if (startDate) {
-            $("#endDate").attr("min", startDate);
+        const innerStartDate = $(this).val();
+        if (innerStartDate) {
+            $("#endDate").attr("min", innerStartDate);
         } else {
             $("#endDate").removeAttr("min");
         }
+        if(!endDate) {
+            $("#endDate").val(new Date().toISOString().split('T')[0]);
+        }
     });
     $("#endDate").on("change", function () {
-        const endDate = $(this).val();
-        if (endDate) {
-            $("#startDate").attr("max", endDate);
+        const innerEndDate = $(this).val();
+        if (innerEndDate) {
+            $("#startDate").attr("max", innerEndDate);
         } else {
             $("#startDate").removeAttr("max");
+        }
+        if(!startDate) {
+            $("#startDate").val("2020-01-01");
         }
     });
 
@@ -653,9 +663,11 @@
     });
 
     function clearFilters() {
+        currentPage = 1;
         $("#fileTypeFilter").val("File Type");
         $("#startDate").val("");
         $("#endDate").val("");
+        $("#endDate").removeAttr("min");
         $("#sortBySelect").val("1");
         $("#searchInput").val("");
         startDate = "";
@@ -748,9 +760,11 @@
         const fileType = $("#fileTypeFilter").val().replace(".", "");
         var sortBy = $("#sortBySelect").val();
         if (sortBy == "1") {
-            sortBy = "Date";
+            sortBy = "Date (Descending)";
         } else if (sortBy == "2") {
             sortBy = "File Type";
+        } else if (sortBy == "3") {
+            sortBy = "Date (Ascending)";
         } else {
             sortBy = "No sorting";
         }
@@ -828,9 +842,11 @@
         const fileType = $("#fileTypeFilter").val().replace(".", "");
         var sortBy = $("#sortBySelect").val();
         if (sortBy == "1") {
-            sortBy = "Date";
+            sortBy = "Date (Ascending)";
         } else if (sortBy == "2") {
             sortBy = "File Type";
+        } else if (sortBy == "3") {
+            sortBy = "Date (Ascending)";
         } else {
             sortBy = "No sorting";
         }
@@ -974,6 +990,7 @@
     }
 
     $("#itemsPerPageSelect").on("change", function () {
+        currentPage = 1;
         currentPageSize = $(this).val();
         searchDocumentContent();
     });

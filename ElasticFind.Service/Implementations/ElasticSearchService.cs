@@ -87,22 +87,15 @@ public class ElasticSearchService : IElasticSearchService
         return response.IsValid;
     }
 
-    public async Task<List<GroupedSearchResults>> SearchDocumentsAsync(
+    public async Task<SearchResultsViewModel> SearchDocumentsAsync(
     string searchType, bool matchAllTerms, string keyword, string? fileTypeFilter = null, DateTime? startDate = null,
-    DateTime? endDate = null, string? sortBy = null, string? searchInput = null)
+    DateTime? endDate = null, string? sortBy = null, string? searchInput = null, int currentPage = 1, int currentPageSize = 5)
     {
         if (string.IsNullOrEmpty(keyword) || string.IsNullOrWhiteSpace(keyword))
         {
             Console.WriteLine("Error: Keyword is null or empty, returning empty results.");
-            return new List<GroupedSearchResults>();
+            return new SearchResultsViewModel();
         }
-        // var mustQueries = new List<Func<QueryContainerDescriptor<DocumentViewModel>, QueryContainer>>
-        // {
-        //     q => q.Match(m => m
-        //         .Field(f => f.Attachment.Content)
-        //         .Query(keyword)
-        //     )
-        // };
 
         var mustQueries = new List<Func<QueryContainerDescriptor<DocumentViewModel>, QueryContainer>>();
 
@@ -123,18 +116,6 @@ public class ElasticSearchService : IElasticSearchService
                     .Value($"*{keyword.ToLowerInvariant()}*")
                 ));
             }
-            // mustQueries.Add(q => q.Wildcard(w => w
-            //     .Field(f => f.Attachment.Content)
-            //     .Value($"*{keyword}*")
-            // ));
-            // mustQueries.Add(q => q.QueryString(qs => qs
-            //     .Fields(f => f.Field(ff => ff.Attachment.Content))
-            //     .Query($"*{keyword.ToLowerInvariant()}*")
-            // ));
-            // mustQueries.Add(q => q.MatchPhrase(w => w
-            //     .Field(f => f.Attachment.Content)
-            //     .Query($"*{keyword}*")
-            // ));
         }
 
         else if (searchType == "2")
@@ -263,10 +244,26 @@ public class ElasticSearchService : IElasticSearchService
         // Filter by file type
         if (!string.IsNullOrWhiteSpace(fileTypeFilter) && fileTypeFilter != "File Type" && fileTypeFilter != "Other")
         {
-            mustQueries.Add(q => q.Term(t => t
-                .Field(f => f.FileType.Suffix("keyword"))  // keyword for exact match
-                .Value(fileTypeFilter)
-            ));
+            if (fileTypeFilter.Contains('/'))
+            {
+                // Multiple file types selected, split by '/'
+                var extensions = fileTypeFilter.Split('/', StringSplitOptions.RemoveEmptyEntries)
+                                               .Select(ext => ext.Trim())
+                                               .ToList();
+
+                mustQueries.Add(q => q.Terms(t => t
+                    .Field(f => f.FileType.Suffix("keyword"))
+                    .Terms(extensions)
+                ));
+            }
+            else
+            {
+                // Single file type
+                mustQueries.Add(q => q.Term(t => t
+                    .Field(f => f.FileType.Suffix("keyword"))
+                    .Value(fileTypeFilter.Trim())
+                ));
+            }
         }
         else if (fileTypeFilter == "Other")
         {
@@ -316,10 +313,19 @@ public class ElasticSearchService : IElasticSearchService
                     case "2": // Sort by file type
                         s.Ascending(f => f.FileType.Suffix("keyword"));
                         break;
+                    case "3": // Sort by file name
+                        s.Ascending(f => f.UploadedDate);
+                        break;
                 }
                 return s;
             };
         }
+
+        var countResponse = await _elasticClient.CountAsync<DocumentViewModel>(c => c
+            .Index("documents")
+            .Query(q => q.Bool(b => b.Must(mustQueries)))
+        );
+        Console.WriteLine("Total documents matching criteria: " + countResponse.Count);
 
         var response = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
             .Index("documents")
@@ -335,6 +341,8 @@ public class ElasticSearchService : IElasticSearchService
                 )
             )
             .Sort(sort)
+            .Skip((currentPage - 1) * currentPageSize)
+            .Take(currentPageSize)
         );
 
         var decoded = Encoding.UTF8.GetString(response.ApiCall.RequestBodyInBytes);
@@ -350,12 +358,19 @@ public class ElasticSearchService : IElasticSearchService
                 {
                     Id = hit.Id,
                     FileName = hit.Source.FileName,
+                    UploadedDate = hit.Source.UploadedDate,
                     Snippets = highlights.ToList()
                 });
             }
         }
 
-        return results;
+        SearchResultsViewModel searchResults = new()
+        {
+            TotalDocuments = (int)countResponse.Count,
+            SearchResults = results,
+        };
+
+        return searchResults;
     }
 
 
@@ -444,9 +459,9 @@ public class ElasticSearchService : IElasticSearchService
     public async Task<List<string>> GetAllFileIdsAsync()
     {
         var searchResponse = await _elasticClient.SearchAsync<FileViewModel>(s => s
-            .Index("documents")  
+            .Index("documents")
             .Size(10000)  // Elasticsearch default limit is 10,000
-            .Source(src => src.Includes(f => f.Field(fm => fm.Id))) 
+            .Source(src => src.Includes(f => f.Field(fm => fm.Id)))
             .Query(q => q.MatchAll())
         );
 

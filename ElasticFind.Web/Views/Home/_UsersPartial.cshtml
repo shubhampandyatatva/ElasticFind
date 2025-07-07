@@ -51,17 +51,25 @@
                         <span class="ms-2">Showing @(Model.PaginationViewModel.PageSize * (Model.PaginationViewModel.Page - 1) + 1) -
                             @((Model.PaginationViewModel.PageSize * Model.PaginationViewModel.Page) > Model.PaginationViewModel.TotalRecords ? Model.PaginationViewModel.TotalRecords :
                                                         (Model.PaginationViewModel.PageSize * Model.PaginationViewModel.Page)) of @Model.PaginationViewModel.TotalRecords</span>
+                        <button type="button"
+                                class="btn btn-sm btn-outline-secondary ms-2 @(Model.PaginationViewModel.Page > 1 ? "" : "disabled")"
+                                id="firstPageButton" title="First Page" onclick="loadFirstPage()"><i
+                                    class="bi bi-chevron-double-left"></i></button>
 
-                        <button class="btn btn-outline-secondary ms-2 @(Model.PaginationViewModel.Page > 1 ? "" : "disabled")"
+                        <button class="btn btn-sm btn-outline-secondary ms-2 @(Model.PaginationViewModel.Page > 1 ? "" : "disabled")"
                             onclick="loadPrevPage()">
-                            &lt;
+                            <i class="bi bi-chevron-left"></i>
                         </button>
 
                         <button
-                            class="btn btn-outline-secondary ms-2 @(Model.PaginationViewModel.Page* Model.PaginationViewModel.PageSize < Model.PaginationViewModel.TotalRecords ? "" : "disabled")"
+                            class="btn btn-sm btn-outline-secondary ms-2 @(Model.PaginationViewModel.Page* Model.PaginationViewModel.PageSize < Model.PaginationViewModel.TotalRecords ? "" : "disabled")"
                             onclick="loadNextPage()">
-                            &gt;
+                            <i class="bi bi-chevron-right"></i>
                         </button>
+                        <button type="button"
+                                class="btn btn-sm btn-outline-secondary ms-2 @((Model.PaginationViewModel.Page * Model.PaginationViewModel.PageSize < Model.PaginationViewModel.TotalRecords) ? "" : "disabled")"
+                                id="lastPageButton" title="Last Page" onclick="loadLastPage()"><i
+                                    class="bi bi-chevron-double-right"></i></button>
                     </div>
                 </td>
             </tr>
@@ -80,6 +88,12 @@
         });
     });
 
+    function loadFirstPage() {
+        const searchString = $("#searchInput").val();
+        const currentPageSize = parseInt($("#itemsPerPage").val());
+        loadPage(1, currentPageSize, searchString, null);
+    }
+
     function loadPrevPage() {
         var page = @Model.PaginationViewModel.Page - 1;
         var pageSize = @Model.PaginationViewModel.PageSize;
@@ -94,6 +108,14 @@
         var searchString = $("#searchInput").val();
         var sortOrder = $(this).data("order");
         loadPage(page, pageSize, searchString, sortOrder);
+    }
+
+    function loadLastPage() {
+        const searchString = $("#searchInput").val();
+        const totalRecords = @Model.PaginationViewModel.TotalRecords;
+        const currentPageSize = parseInt($("#itemsPerPage").val());
+        currentPage = Math.ceil(totalRecords / currentPageSize);
+        loadPage(currentPage, currentPageSize, searchString, null);
     }
 
     function sortTable(order) {

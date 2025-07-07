@@ -17,7 +17,7 @@
             {
                 <tr style="width: 100%; table-layout: fixed;">
                     <td><input type="checkbox" class="slaveCheckbox form-check pointer" data-id="@Model.Files[i].Id"></td>
-                    <td>@(i + 1)</td>
+                    <td>@(((Model.Pagination.Page - 1) * Model.Pagination.PageSize) + i + 1)</td>
                     <td class="fw-medium">@Model.Files[i].FileName</td>
                     <td class="fw-medium">@Model.Files[i].UploadedBy</td>
                     <td class="fw-medium">@Model.Files[i].UploadedDate</td>
@@ -60,15 +60,26 @@
                                 @((Model.Pagination.PageSize * Model.Pagination.Page) >
                                                                 Model.Pagination.TotalRecords ? Model.Pagination.TotalRecords :
                                                                 (Model.Pagination.PageSize * Model.Pagination.Page))
-                                of @Model.Pagination.TotalRecords
+                                of <span id="totalRecords">@Model.Pagination.TotalRecords</span>
                             </span>
 
-                            <button class="btn btn-outline-primary @(Model.Pagination.Page > 1 ? "" : "disabled")"
-                                style="border-radius: 5px;" onclick="loadPrevPage()">&lt;</button>
+                            <button type="button"
+                                class="btn btn-sm btn-outline-primary @(Model.Pagination.Page > 1 ? "" : "disabled")"
+                                id="firstPageButton" title="First Page" onclick="loadFirstPage()"><i
+                                    class="bi bi-chevron-double-left"></i></button>
+                            <button
+                                class="btn btn-sm btn-outline-primary @(Model.Pagination.Page > 1 ? "" : "disabled")"
+                                style="border-radius: 5px;" onclick="loadPrevPage()" title="Previous Page"><i
+                                    class="bi bi-chevron-left"></i></button>
 
                             <button
-                                class="btn btn-outline-primary @((Model.Pagination.Page * Model.Pagination.PageSize < Model.Pagination.TotalRecords) ? "" : "disabled")"
-                                onclick="loadNextPage()" style="border-radius: 5px;">&gt;</button>
+                                class="btn btn-sm btn-outline-primary @((Model.Pagination.Page * Model.Pagination.PageSize < Model.Pagination.TotalRecords) ? "" : "disabled")"
+                                onclick="loadNextPage()" style="border-radius: 5px;" title="Next Page"><i
+                                    class="bi bi-chevron-right"></i></button>
+                            <button type="button"
+                                class="btn btn-sm btn-outline-primary @((Model.Pagination.Page * Model.Pagination.PageSize < Model.Pagination.TotalRecords) ? "" : "disabled")"
+                                id="lastPageButton" title="Last Page" onclick="loadLastPage()"><i
+                                    class="bi bi-chevron-double-right"></i></button>
                         </div>
                     </div>
                 </td>
@@ -82,6 +93,11 @@
         $("#allFileIdsJson").val('@Html.Raw(Json.Serialize(ViewBag.AllFileIds))');
     }
 
+    function loadFirstPage() {
+        const searchString = $("#searchInput").val();
+        loadPage(1, currentPageSize, searchString, null);
+    }
+
     function loadPrevPage() {
         const searchString = $("#searchInput").val();
         if (currentPage > 1) {
@@ -92,6 +108,14 @@
     function loadNextPage() {
         const searchString = $("#searchInput").val();
         loadPage(currentPage + 1, currentPageSize, searchString, null);
+    }
+
+    function loadLastPage() {
+        const searchString = $("#searchInput").val();
+        const totalRecords = @Model.Pagination.TotalRecords;
+        const currentPageSize = parseInt($("#itemsPerPage").val());
+        currentPage = Math.ceil(totalRecords / currentPageSize);
+        loadPage(currentPage, currentPageSize, searchString, null);
     }
 
     $(function () {

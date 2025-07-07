@@ -343,7 +343,7 @@
                 $("#uploadProgressContainer").addClass("d-none");
             },
             error: function (xhr) {
-                toastr.error(response.message, "Error");
+                toastr.error(xhr.responseText, "Error");
                 $("#uploadProgressContainer").addClass("d-none");
             }
         });
@@ -476,7 +476,7 @@
     $("#deleteMultipleFilesBtn").on("click", function () {
         const checkedFiles = $(".slaveCheckbox:checked");
         if (checkedFiles.length === 0) {
-            toastr.warning("Please select some files to delete");
+            toastr.warning("Please select some files to delete", "Warning");
             return;
         }
         console.log("Checked files: ", checkedFiles);

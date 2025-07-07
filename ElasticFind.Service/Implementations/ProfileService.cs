@@ -23,14 +23,14 @@ public class ProfileService : IProfileService
         {
             return new JsonResponse { Success = false, Message = "User with this ID was not found!" };
         }
-
-        if (user.Password != viewModel.CurrentPassword)
+        var hasher = new PasswordHasher<User>();
+        var result = hasher.VerifyHashedPassword(user, user.Password, viewModel.CurrentPassword);
+        if (result  != PasswordVerificationResult.Success)
         {
             return new JsonResponse { Success = false, Message = "Your current passwords do not match! Please enter correct current password!" };
         }
 
         //Change User Password
-        var hasher = new PasswordHasher<User>();
         string hashedPassword = hasher.HashPassword(user, viewModel.NewPassword);
         user.Password = hashedPassword;
 
