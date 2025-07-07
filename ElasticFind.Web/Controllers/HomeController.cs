@@ -6,7 +6,6 @@ using Nest;
 using ElasticFind.Repository.ViewModels;
 using ElasticFind.Repository.Interfaces;
 using ElasticFind.Service.Interfaces;
-using ElasticFind.Web.Connector;
 using System.Threading.Tasks;
 using ElasticFind.Service.Implementations;
 using Elastic.Clients.Elasticsearch;
@@ -25,7 +24,6 @@ public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
     private readonly IUserService _userService;
-    private readonly ConnectionToEs _connectionToEs;
     private readonly IElasticSearchService _elasticSearchService;
     private readonly IElasticClient _elasticClient;
     private readonly IPreviewFileService _previewFileService;
@@ -37,7 +35,6 @@ public class HomeController : Controller
     {
         _logger = logger;
         _userService = userService;
-        _connectionToEs = new ConnectionToEs();
         _elasticSearchService = elasticSearchService;
         _elasticClient = elasticClient;
         _previewFileService = previewFileService;
