@@ -5,6 +5,7 @@ using ElasticFind.Service.Interfaces;
 using Elasticsearch.Net;
 using Microsoft.Extensions.Caching.Memory;
 using Nest;
+using Newtonsoft.Json.Linq;
 
 namespace ElasticFind.Service.Implementations;
 
@@ -89,8 +90,63 @@ public class ElasticSearchService : IElasticSearchService
 
     public async Task<SearchResultsViewModel> SearchDocumentsAsync(
     string searchType, bool matchAllTerms, string keyword, string? fileTypeFilter = null, DateTime? startDate = null,
-    DateTime? endDate = null, string? sortBy = null, string? searchInput = null, int currentPage = 1, int currentPageSize = 5)
+    DateTime? endDate = null, string? sortBy = null, string? searchInput = null, int currentPage = 1, int currentPageSize = 5, string? esBoolQuery = null)
     {
+        Console.WriteLine("ES Bool Query: " + esBoolQuery);
+        if (!string.IsNullOrEmpty(esBoolQuery) && esBoolQuery != "{}")
+        {
+            var rawQuery = new RawQuery(esBoolQuery);
+
+            var countResponse1 = await _elasticClient.CountAsync<DocumentViewModel>(c => c
+            .Index("documents")
+            .Query(q => rawQuery)
+            );
+            Console.WriteLine("Total documents matching criteria: " + countResponse1.Count);
+
+            var response1 = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
+                .Index("documents")
+                .Query(q => q.Bool(b => b.Must(rawQuery)))
+                .Highlight(h => h
+                    .Fields(f => f
+                        .Field("attachment.content")
+                        .PreTags("<mark>")
+                        .PostTags("</mark>")
+                        .FragmentSize(200)
+                        .NumberOfFragments(50)
+                        .NoMatchSize(150)
+                    )
+                )
+                .Skip((currentPage - 1) * currentPageSize)
+                .Take(currentPageSize)
+            );
+
+            var decoded1 = Encoding.UTF8.GetString(response1.ApiCall.RequestBodyInBytes);
+            Console.WriteLine("ElasticClient Response Decoded: " + decoded1);   
+
+            var results1 = new List<GroupedSearchResults>();
+
+            foreach (var hit in response1.Hits)
+            {
+                if (hit.Highlight.TryGetValue("attachment.content", out var highlights))
+                {
+                    results1.Add(new GroupedSearchResults
+                    {
+                        Id = hit.Id,
+                        FileName = hit.Source.FileName,
+                        UploadedDate = hit.Source.UploadedDate,
+                        Snippets = highlights.ToList()
+                    });
+                }
+            }
+
+            SearchResultsViewModel searchResults1 = new()
+            {
+                TotalDocuments = (int)countResponse1.Count,
+                SearchResults = results1,
+            };
+
+            return searchResults1;
+        }
         if (string.IsNullOrEmpty(keyword) || string.IsNullOrWhiteSpace(keyword))
         {
             Console.WriteLine("Error: Keyword is null or empty, returning empty results.");
@@ -467,4 +523,109 @@ public class ElasticSearchService : IElasticSearchService
 
         return searchResponse.Documents.Select(d => d.Id).ToList();
     }
+
+    public QueryContainer ConvertRulesToElasticsearchQuery(QueryBuilderRule rules)
+    {
+        throw new NotImplementedException();
+    }
+
+    // public async Task<SearchResultsViewModel> QueryBuilderSearch(QueryBuilderRule rules)
+    // {
+    //     QueryContainer query = new();
+
+    //     if (rules == null || rules.Rules == null)
+    //         return new SearchResultsViewModel();
+
+    //     foreach (var rule in rules.Rules)
+    //     {
+    //         if (rule.Value == null || string.IsNullOrEmpty(rule.Operator))
+    //             continue;
+
+    //         var field = rule.Field;
+    //         var op = rule.Operator;
+    //         var val = rule.Value;
+
+    //         switch (op)
+    //         {
+    //             case "equal":
+    //                 query &= new TermQuery { Field = field, Value = val };
+    //                 break;
+
+    //             case "not_equal":
+    //                 query &= !new TermQuery { Field = field, Value = val };
+    //                 break;
+
+    //             case "in":
+    //                 query &= new TermsQuery { Field = field, Terms = ((IEnumerable<object>)val).Select(v => v.ToString()) };
+    //                 break;
+
+    //             case "not_in":
+    //                 query &= !new TermsQuery { Field = field, Terms = ((IEnumerable<object>)val).Select(v => v.ToString()) };
+    //                 break;
+
+    //             case "less":
+    //                 query &= new RangeQuery { Field = field, LessThan = val };
+    //                 break;
+
+    //             case "less_or_equal":
+    //                 if (val is DateTime || DateTime.TryParse(val.ToString(), out _))
+    //                 {
+    //                     query = new DateRangeQuery
+    //                     {
+    //                         Field = field,
+    //                         GreaterThanOrEqualTo = (DateMath)val,
+    //                         LessThanOrEqualTo = (DateMath)val // example – adjust as needed
+    //                     };
+    //                 }
+    //                 else if (double.TryParse(val.ToString(), out _))
+    //                 {
+    //                     query = new NumericRangeQuery
+    //                     {
+    //                         Field = field,
+    //                         GreaterThanOrEqualTo = (double?)val,
+    //                         LessThanOrEqualTo = (double?)val // example – adjust as needed
+    //                     };
+    //                 }
+    //                 break;
+
+    //             case "greater":
+    //                 query &= new RangeQuery { Field = field, GreaterThan = val };
+    //                 break;
+
+    //             case "greater_or_equal":
+    //                 query &= new RangeQuery { Field = field, GreaterThanOrEqualTo = val };
+    //                 break;
+
+    //             case "between":
+    //                 var rangeValues = ((JArray)val).ToObject<List<object>>();
+    //                 if (rangeValues.Count == 2)
+    //                 {
+    //                     query &= new RangeQuery
+    //                     {
+    //                         Field = field,
+    //                         GreaterThanOrEqualTo = rangeValues[0],
+    //                         LessThanOrEqualTo = rangeValues[1]
+    //                     };
+    //                 }
+    //                 break;
+
+    //             case "not_between":
+    //                 var notRange = ((JArray)val).ToObject<List<object>>();
+    //                 if (notRange.Count == 2)
+    //                 {
+    //                     query &= !new RangeQuery
+    //                     {
+    //                         Field = field,
+    //                         GreaterThanOrEqualTo = notRange[0],
+    //                         LessThanOrEqualTo = notRange[1]
+    //                     };
+    //                 }
+    //                 break;
+
+    //             case "contains":
+    //                 query &= new MatchQuery { Field = field, Query = val.ToString() };
+    //                 break;
+    //         }
+    //     }
+    // }
 }

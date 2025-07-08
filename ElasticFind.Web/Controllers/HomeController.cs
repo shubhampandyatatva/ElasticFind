@@ -262,9 +262,9 @@ public class HomeController : Controller
 
     [HttpPost]
     [Authorize]
-    public async Task<IActionResult> SearchDocumentContent(string searchType, bool matchAllTerms, string keyword, string? fileTypeFilter = null, DateTime? startDate = null, DateTime? endDate = null, string? sortBy = null, string? searchInput = null, int currentPage = 1, int currentPageSize = 5)
+    public async Task<IActionResult> SearchDocumentContent(string searchType, bool matchAllTerms, string keyword, string? fileTypeFilter = null, DateTime? startDate = null, DateTime? endDate = null, string? sortBy = null, string? searchInput = null, int currentPage = 1, int currentPageSize = 5, string? esBoolQuery = null)
     {
-        SearchResultsViewModel results = await _elasticSearchService.SearchDocumentsAsync(searchType, matchAllTerms, keyword, fileTypeFilter, startDate, endDate, sortBy, searchInput, currentPage, currentPageSize);
+        SearchResultsViewModel results = await _elasticSearchService.SearchDocumentsAsync(searchType, matchAllTerms, keyword, fileTypeFilter, startDate, endDate, sortBy, searchInput, currentPage, currentPageSize, esBoolQuery);
         return Json(results);
     }
 
@@ -585,6 +585,14 @@ public class HomeController : Controller
 
         return Json(new { success = true, message = "Selected files were deleted successfully!" });
     }
+
+    // [HttpPost]
+    // public async Task<IActionResult> Search([FromBody] QueryBuilderRule rules)
+    // {
+    //     // var query = ConvertRulesToElasticsearchQuery(rules);
+    //     SearchResultsViewModel results = await _elasticSearchService.QueryBuilderSearch(rules);
+    //     return Json(results);
+    // } 
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
