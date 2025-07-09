@@ -2,9 +2,12 @@
     ViewData["Title"] = "Search";
     Layout = "_Layout";
 }
+
 <head>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/css/query-builder.default.min.css">
+    <link rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/css/query-builder.default.min.css">
 </head>
+
 <body>
     <h3 class="mb-4" style="color: #305796;">Search Documents</h3>
 
@@ -150,8 +153,6 @@
         </button>
     </div>
 
-    <script src="~/js/jquery-extendext.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/js/query-builder.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js"></script>
     <script src="~/js/query-builder-elasticsearch.js"></script>
 </body>
@@ -254,7 +255,7 @@
         var paginationViewModel = [];
         currentPageSize = $("#itemsPerPageSelect").val();
         @* var esBoolQuery = $('#builder').queryBuilder('getESBool') || {}; *@
-        console.log("Searching with parameters:", { searchType: searchType, matchAllTerms: matchAllTerms, keyword: keyword, fileTypeFilter: fileTypeFitler, startDate: startDate, endDate: endDate, sortBy: sortBy, searchInput: searchInput, currentPage: currentPage, currentPageSize: currentPageSize, esBoolQuery: JSON.stringify(esBoolQuery) });
+            console.log("Searching with parameters:", { searchType: searchType, matchAllTerms: matchAllTerms, keyword: keyword, fileTypeFilter: fileTypeFitler, startDate: startDate, endDate: endDate, sortBy: sortBy, searchInput: searchInput, currentPage: currentPage, currentPageSize: currentPageSize, esBoolQuery: JSON.stringify(esBoolQuery) });
 
         $("#loader").find(".spinner-border").removeClass("text-success").addClass("text-primary");
         @* $("#loader").show(); *@
@@ -986,13 +987,123 @@
         searchDocumentContent();
     });
 
+    $.fn.queryBuilder.defaults({
+        operators: [
+            {
+                type: 'equal',
+                label: 'Equal',
+                nb_inputs: 1,
+                apply_to: ['string', 'number', 'datetime', 'boolean']
+            },
+            {
+                type: 'not_equal',
+                label: 'Not equal',
+                nb_inputs: 1,
+                apply_to: ['string', 'number', 'datetime', 'boolean']
+            },
+            {
+                type: 'contains',
+                label: 'Contains',
+                nb_inputs: 1,
+                apply_to: ['string']
+            },
+            {
+                type: 'not_contains',
+                label: 'Does not contain',
+                nb_inputs: 1,
+                apply_to: ['string']
+            },
+            {
+                type: 'begins_with',
+                label: 'Begins with',
+                nb_inputs: 1,
+                apply_to: ['string']
+            },
+            {
+                type: 'not_begins_with',
+                label: 'Does not begin with',
+                nb_inputs: 1,
+                apply_to: ['string']
+            },
+            {
+                type: 'ends_with',
+                label: 'Ends with',
+                nb_inputs: 1,
+                apply_to: ['string']
+            },
+            {
+                type: 'not_ends_with',
+                label: 'Does not end with',
+                nb_inputs: 1,
+                apply_to: ['string']
+            },
+            {
+                type: 'in',
+                label: 'In',
+                nb_inputs: 1,
+                apply_to: ['string', 'number']
+            },
+            {
+                type: 'not_in',
+                label: 'Not in',
+                nb_inputs: 1,
+                apply_to: ['string', 'number']
+            },
+            {
+                type: 'fuzzy',
+                label: 'Fuzzy Search',
+                nb_inputs: 1,
+                apply_to: ['string'],
+                @* optgroup: 'Custom' *@
+            },
+            {
+                type: 'daterange',
+                label: 'Date Range',
+                nb_inputs: 2,
+                apply_to: ['datetime']
+            },
+        ]
+    });
+
     $('#builder').queryBuilder({
         filters: [
-            @* { id: 'fileName', label: 'File Name', type: 'string' }, *@
-            { id: 'attachment.content', label: 'Content', type: 'string' }
-            @* { id: 'fileType', label: 'File Type', type: 'string' }, *@
-            @* { id: 'uploadDate', label: 'Upload Date', type: 'date' } *@
-        ]
+            {
+                id: 'attachment.content',
+                label: 'Content',
+                type: 'string',
+                operators: [
+                    'equal', 'not_equal', 'contains', 'not_contains',
+                    'begins_with', 'not_begins_with',
+                    'ends_with', 'not_ends_with',
+                    'in', 'not_in', 'fuzzy'
+                ]
+            },
+            {
+                id: 'fileName',
+                label: 'File Name',
+                type: 'string',
+                operators: [
+                    'equal', 'not_equal', 'contains', 'not_contains',
+                    'begins_with', 'not_begins_with',
+                    'ends_with', 'not_ends_with',
+                    'in', 'not_in'
+                ]
+            },
+            {
+                id: 'fileType',
+                label: 'File Type',
+                type: 'string',
+                operators: ['equal', 'not_equal', 'in', 'not_in']
+            },
+            {
+                id: 'uploadedDate',
+                label: 'Uploaded Date',
+                type: 'datetime',
+                operators: ['daterange']
+            }
+        ],
+        default_filter: 'attachment.content',  // Set field by default
+        allow_empty: true
     });
 
     $('#btnSearch').on('click', function () {
@@ -1000,7 +1111,7 @@
         console.log("Rules: ", rules);
         var esQuery = $('#builder').queryBuilder('getESBool');
         console.log("ES Query: ", esQuery);
-        if(esQuery && Object.keys(esQuery).length > 0) {
+        if (esQuery && Object.keys(esQuery).length > 0) {
             esBoolQuery = esQuery;
         }
         searchDocumentContent();

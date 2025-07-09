@@ -38,7 +38,8 @@
             in: function (v) { return v.split(',').map(function (e) { return e.trim(); }); },
             not_in: function (v) { return v.split(',').map(function (e) { return e.trim(); }); },
             is_null: function (v) { return v; },
-            is_not_null: function (v) { return v; }
+            is_not_null: function (v) { return v; },
+            fuzzy: function (v) { return { query: v, fuzziness: 'AUTO' }; }
         },
         ESQueryStringQueryOperators: {
             is_not_null: function () { return "_exists_:"; },
@@ -249,6 +250,7 @@
         const wildcard = /^(contains|not_contains|begins_with|not_begins_with|ends_with|not_ends_with)$/.exec(rule.operator);
         const terms = /^(in|not_in)$/.exec(rule.operator);
         const range = /^(less|less_or_equal|greater|greater_or_equal|between)$/.exec(rule.operator);
+        const fuzzy = /^(fuzzy)$/.exec(rule.operator);
     
         if (wildcard !== null) {
             return 'wildcard';
@@ -259,8 +261,11 @@
         if (range !== null) {
             return 'range';
         }
+        if (fuzzy !== null) {
+            return 'match';
+        }
     
-        // Default all "equal", "not_equal", etc. to match
+        // Default all "equal" or other operators to match
         return 'match';
     }
 
@@ -268,9 +273,8 @@
     * Get the right type of clause in the bool query
     */
     function getClauseWord(condition, operator) {
-        if (condition === 'AND' && (operator !== 'not_equal' && operator !== 'not_in' && operator !== 'is_null')) { return 'must' }
-        if (condition === 'AND' && (operator === 'not_equal' || operator == 'not_in' || operator === 'is_null')) { return 'must_not' }
+        if (condition === 'AND' && (operator !== 'not_equal' && operator !== 'not_in' && operator !== 'not_contains' && operator !== 'not_begins_with' && operator !== 'not_ends_with')) { return 'must' }
+        if (condition === 'AND' && (operator === 'not_equal' || operator == 'not_in' || operator === 'not_contains' || operator === 'not_begins_with' || operator === 'not_ends_with')) { return 'must_not' }
         if (condition === 'OR') { return 'should' }
     }
-
 }));

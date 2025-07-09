@@ -121,7 +121,7 @@ public class ElasticSearchService : IElasticSearchService
             );
 
             var decoded1 = Encoding.UTF8.GetString(response1.ApiCall.RequestBodyInBytes);
-            Console.WriteLine("ElasticClient Response Decoded: " + decoded1);   
+            Console.WriteLine("ElasticClient Response Decoded: " + decoded1);
 
             var results1 = new List<GroupedSearchResults>();
 
@@ -383,23 +383,57 @@ public class ElasticSearchService : IElasticSearchService
         );
         Console.WriteLine("Total documents matching criteria: " + countResponse.Count);
 
+        var countResponse2 = await _elasticClient.CountAsync<DocumentViewModel>(c => c
+            .Index("documents")
+            .Query(q => q.Bool(b => b.Must(mustQueries)))
+            .RequestConfiguration(r => r
+                .DisableDirectStreaming()
+            )
+        );
+
+        string request = countResponse2.DebugInformation;
+        Console.WriteLine("Request Info: ");
+        Console.WriteLine(request);
+
         var response = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
             .Index("documents")
             .Query(q => q.Bool(b => b.Must(mustQueries)))
             .Highlight(h => h
-                .Fields(f => f
+            .Fields(
+                f => f
                     .Field("attachment.content")
                     .PreTags("<mark>")
                     .PostTags("</mark>")
                     .FragmentSize(200)
                     .NumberOfFragments(50)
+                    .NoMatchSize(150),
+                f => f
+                    .Field("fileName")
+                    .PreTags("<mark>")
+                    .PostTags("</mark>")
+                    .FragmentSize(100)
+                    .NumberOfFragments(50)
+                    .NoMatchSize(150),
+                f => f
+                    .Field("fileType")
+                    .PreTags("<mark>")
+                    .PostTags("</mark>")
+                    .FragmentSize(100)
+                    .NumberOfFragments(50)
+                    .NoMatchSize(150),
+                f => f
+                    .Field("uploadedDate")
+                    .PreTags("<mark>")
+                    .PostTags("</mark>")
+                    .FragmentSize(100)
+                    .NumberOfFragments(50)
                     .NoMatchSize(150)
-                )
             )
+)
             .Sort(sort)
             .Skip((currentPage - 1) * currentPageSize)
             .Take(currentPageSize)
-        );
+        ); 
 
         var decoded = Encoding.UTF8.GetString(response.ApiCall.RequestBodyInBytes);
         Console.WriteLine("ElasticClient Response Decoded: " + decoded);
