@@ -35,8 +35,10 @@
             ends_with: function (v) { return `*${v}`; },
             not_ends_with: function (v) { return `*${v}`; },
             between: function (v) { return { 'gte': v[0], 'lte': v[1] }; },
-            in: function (v) { return v.split(',').map(function (e) { return e.trim(); }); },
-            not_in: function (v) { return v.split(',').map(function (e) { return e.trim(); }); },
+            // in: function (v) { return v.split(',').map(function (e) { return e.trim(); }); },
+            // not_in: function (v) { return v.split(',').map(function (e) { return e.trim(); }); },
+            in: function (v) { return Array.isArray(v) ? v : String(v).split(',').map(e => e.trim()); },
+            not_in: function (v) { return Array.isArray(v) ? v : String(v).split(',').map(e => e.trim()); },
             is_null: function (v) { return v; },
             is_not_null: function (v) { return v; },
             fuzzy: function (v) { return { query: v, fuzziness: 'AUTO' }; }

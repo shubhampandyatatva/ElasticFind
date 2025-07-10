@@ -97,6 +97,11 @@ public class ElasticSearchService : IElasticSearchService
         {
             var rawQuery = new RawQuery(esBoolQuery);
 
+            var queryJson = _elasticClient.RequestResponseSerializer
+.SerializeToString(rawQuery);
+
+            Console.WriteLine("Raw Query JSON:\n" + queryJson);
+
             var countResponse1 = await _elasticClient.CountAsync<DocumentViewModel>(c => c
             .Index("documents")
             .Query(q => rawQuery)
@@ -107,13 +112,14 @@ public class ElasticSearchService : IElasticSearchService
                 .Index("documents")
                 .Query(q => q.Bool(b => b.Must(rawQuery)))
                 .Highlight(h => h
-                    .Fields(f => f
-                        .Field("attachment.content")
-                        .PreTags("<mark>")
-                        .PostTags("</mark>")
-                        .FragmentSize(200)
-                        .NumberOfFragments(50)
-                        .NoMatchSize(150)
+                    .PreTags("<mark>")
+                    .PostTags("</mark>")
+                    .Fields(
+                        f => f
+                            .Field("attachment.content")
+                            .FragmentSize(200)
+                            .NumberOfFragments(50)
+                            .NoMatchSize(150)
                     )
                 )
                 .Skip((currentPage - 1) * currentPageSize)
@@ -134,7 +140,8 @@ public class ElasticSearchService : IElasticSearchService
                         Id = hit.Id,
                         FileName = hit.Source.FileName,
                         UploadedDate = hit.Source.UploadedDate,
-                        Snippets = highlights.ToList()
+                        Snippets = highlights.ToList(),
+                        
                     });
                 }
             }
@@ -429,11 +436,11 @@ public class ElasticSearchService : IElasticSearchService
                     .NumberOfFragments(50)
                     .NoMatchSize(150)
             )
-)
+            )
             .Sort(sort)
             .Skip((currentPage - 1) * currentPageSize)
             .Take(currentPageSize)
-        ); 
+        );
 
         var decoded = Encoding.UTF8.GetString(response.ApiCall.RequestBodyInBytes);
         Console.WriteLine("ElasticClient Response Decoded: " + decoded);

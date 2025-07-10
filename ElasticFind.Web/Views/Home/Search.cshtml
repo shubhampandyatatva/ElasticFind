@@ -6,6 +6,7 @@
 <head>
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/css/query-builder.default.min.css">
+    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
 </head>
 
 <body>
@@ -153,6 +154,7 @@
         </button>
     </div>
 
+    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js"></script>
     <script src="~/js/query-builder-elasticsearch.js"></script>
 </body>
@@ -1056,12 +1058,12 @@
                 apply_to: ['string'],
                 @* optgroup: 'Custom' *@
             },
-            {
-                type: 'daterange',
-                label: 'Date Range',
-                nb_inputs: 2,
-                apply_to: ['datetime']
-            },
+        {
+            type: 'daterange',
+            label: 'Date Range',
+            nb_inputs: 2,
+            apply_to: ['datetime']
+        },
         ]
     });
 
@@ -1079,28 +1081,45 @@
                 ]
             },
             {
-                id: 'fileName',
+                id: 'fileName.keyword',
                 label: 'File Name',
                 type: 'string',
                 operators: [
-                    'equal', 'not_equal', 'contains', 'not_contains',
+                    'contains', 'not_contains',
                     'begins_with', 'not_begins_with',
-                    'ends_with', 'not_ends_with',
-                    'in', 'not_in'
+                    'ends_with', 'not_ends_with'
                 ]
             },
             {
                 id: 'fileType',
                 label: 'File Type',
                 type: 'string',
-                operators: ['equal', 'not_equal', 'in', 'not_in']
+                input: 'select',
+                @* multiple: true, *@
+            values: {
+                '.pdf': 'pdf',
+                '.docx/.doc': 'docx/dox',
+                '.xlsx/.xls': 'xlsx/xls',
+                '.txt': 'txt',
+                '.pptx/.ppt': 'pptx/ppt',
+                '.rtf': 'rtf',
+                'Other': 'Other'
             },
-            {
-                id: 'uploadedDate',
-                label: 'Uploaded Date',
-                type: 'datetime',
-                operators: ['daterange']
-            }
+            operators: ['equal', 'not_equal', 'in', 'not_in'] //   - include this feature when we use multiple select
+            },
+        {
+            id: 'uploadedDate',
+            label: 'Upload Date',
+            type: 'date',
+            input: 'text',
+            plugin: 'datepicker',
+            plugin_config: {
+                dateFormat: 'dd-mm-yyyy',
+                changeMonth: true,
+                changeYear: true
+            },
+            operators: ['equal', 'not_equal', 'less', 'greater', 'between']
+        }
         ],
         default_filter: 'attachment.content',  // Set field by default
         allow_empty: true
