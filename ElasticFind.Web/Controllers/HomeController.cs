@@ -262,9 +262,9 @@ public class HomeController : Controller
 
     [HttpPost]
     [Authorize]
-    public async Task<IActionResult> SearchDocumentContent(string searchType, bool matchAllTerms, string keyword, string? fileTypeFilter = null, DateTime? startDate = null, DateTime? endDate = null, string? sortBy = null, string? searchInput = null, int currentPage = 1, int currentPageSize = 5, string? esBoolQuery = null)
+    public async Task<IActionResult> SearchDocumentContent(string? sortBy = null, int currentPage = 1, int currentPageSize = 5, string? esBoolQuery = null)
     {
-        SearchResultsViewModel results = await _elasticSearchService.SearchDocumentsAsync(searchType, matchAllTerms, keyword, fileTypeFilter, startDate, endDate, sortBy, searchInput, currentPage, currentPageSize, esBoolQuery);
+        SearchResultsViewModel results = await _elasticSearchService.SearchDocumentsAsync(sortBy, currentPage, currentPageSize, esBoolQuery);
         return Json(results);
     }
 
@@ -541,9 +541,9 @@ public class HomeController : Controller
     }
 
     [Authorize]
-    public async Task<IActionResult> ExportResultsToExcel(string searchType, bool matchAllTerms, string keyword, string fileType, DateTime? startDate, DateTime? endDate, string sortBy, string searchString)
+    public async Task<IActionResult> ExportResultsToExcel(string? sortBy = null, int currentPage = 1, int pageSize = 5, string? esBoolQuery = null)
     {
-        SearchResultsViewModel results = await _elasticSearchService.SearchDocumentsAsync(searchType, matchAllTerms, keyword, fileType, startDate, endDate, sortBy, searchString);
+        SearchResultsViewModel results = await _elasticSearchService.SearchDocumentsAsync(sortBy, currentPage, pageSize, esBoolQuery);
         if (results == null)
         {
             return NotFound("No results found for the given criteria.");
@@ -551,9 +551,10 @@ public class HomeController : Controller
 
         List<GroupedSearchResults> searchResults = results.SearchResults;
 
-        byte[] fileBytes = _exportService.ExportSearchResultsToExcel(searchResults, keyword, fileType, startDate, endDate, sortBy, searchString, searchResults.Count);
+        // byte[] fileBytes = _exportService.ExportSearchResultsToExcel(searchResults, keyword, fileType, startDate, endDate, sortBy, searchString, searchResults.Count);
 
-        return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ElasticFind_Results.xlsx");
+        // return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ElasticFind_Results.xlsx");
+        return Ok("Export to Excel is not implemented yet.");
     }
 
     [Authorize(Roles = Roles.Admin)]

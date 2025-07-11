@@ -12,92 +12,23 @@
 <body>
     <h3 class="mb-4" style="color: #305796;">Search Documents</h3>
 
-    <div class="search-type d-flex align-items-center mb-4">
-        <div class="fs-5 me-3" style="font-weight: 450; color: rgb(61, 58, 58)">Select Search Type: </div>
-        <select class="form-select pointer" aria-label="Default select example"
-            style="max-width: 300px; margin-right: 56px;" id="searchTypeSelect">
-            <option value="1" class="pointer" title="Normal keyword search" selected>Normal Search</option>
-            <option value="2" class="pointer" title="Search by multiple words separeted by space">Multiple-Text Search
-            </option>
-            <option value="3" class="pointer" title="Search with minor spelling errors or typos in keywords">Fuzzy
-                Search</option>
-            <option value="4" class="pointer" title="Search words with similar meanings">Synonym
-                Search</option>
-        </select>
-        <div class="match-all-checkbox-container form-check form-check-lg d-none">
-            <input class="form-check-input pointer" type="checkbox" id="matchAllCheckbox">
-            <label class="match-all-terms-label form-check-label ms-1" for="matchAllCheckbox">
-                Match All Terms
-            </label>
-        </div>
-    </div>
-
-    <div class="d-flex flex-column flex-md-row align-items-start gap-3 mb-4">
-        <input type="text" class="form-control flex-grow-1" id="searchKeywordInput" placeholder="Enter keyword...">
-        <div class="buttons d-flex align-items-center">
-            <button type="button" class="btn btn-primary me-2" id="searchKeywordBtn">Search</button>
-            <button type="button" class="btn btn-outline-primary" id="clearButton">Clear</button>
-        </div>
-    </div>
-
     <div id="builder" class="mb-3"></div>
-    <button id="btnSearch" class="btn btn-primary mb-3">Query Search</button>
+    <button id="btnSearch" class="btn btn-primary mb-3 pointer">Query Search</button>
 
-    <div class="info-text mb-4 d-none" style="color: rgb(128, 128, 0);">Enter more than two characters for best results
-    </div>
-
-    <div class="d-flex align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
         <h3 class="results-text me-3" style="color: #3f629b;">Your Results Go Here</h3>
         <h4 class="matching-docs-count d-none" style="color: #3f629b;">Found <span id="matchingDocsCountSpan"> matching
                 documents</span></h4>
-    </div>
-
-    @* <button type="button" class="btn btn-primary" id="createDocumentBtn">Create Document</button> *@ 
-
-    <div class="filters-sorters-container d-flex justify-content-between align-items-center d-none flex-wrap"
-        id="filtersSortersContainer">
-        <div class="filters-sorters d-flex align-items-center flex-wrap">
-            <div class="filter-container d-flex align-items-center me-3 flex-wrap">
-                <div class="fs-5 me-2" style="font-weight: 500;">Filters: </div>
-                <div class="filters d-flex align-items-center flex-wrap">
-                    <select class="select-filter form-select form-select-sm pointer me-2" style="width: 125px;"
-                        id="fileTypeFilter">
-                        <option selected>File Type</option>
-                        <option value=".pdf">pdf</option>
-                        <option value=".docx/.doc">docx/doc</option>
-                        <option value=".xlsx/.xls">xlsx/xls</option>
-                        <option value=".txt">txt</option>
-                        <option value=".pptx/.ppt">pptx/ppt</option>
-                        <option value=".rtf">rtf</option>
-                        <option value="Other">Other</option>
-                    </select>
-                    <button type="button" class="btn btn-sm" id="selectDateButton" data-bs-toggle="modal"
-                        data-bs-target="#datePickerModal"
-                        style="min-width: 100px; border: 1px solid rgb(206, 206, 206); background-color: #fff;"
-                        title="Select Uploaded Date Range">
-                        Select Uploaded Date
-                    </button>
-                </div>
-            </div>
-
-            <div class="sorter-container d-flex align-items-center">
-                <div class="fs-5" style="font-weight: 500;">Sort By: </div>
-                <select class="select-sorter form-select form-select-sm ms-2 pointer" style="width: 160px;"
-                    id="sortBySelect">
-                    <option value="1" selected>Date (Descending)</option>
-                    <option value="3">Date (Ascending)</option>
-                    <option value="2">File Type</option>
-                </select>
-            </div>
         </div>
-
-        <div class="d-flex align-items-center flex-wrap">
-            <div class="search d-flex align-items-center">
-                <input type="text" id="searchInput" placeholder="Search by file name..."
-                    class="form-control form-control-sm" style="width: 190px;">
-                <img src="~/images/search-icon.svg" alt="Search Icon" class="search-icon">
-            </div>
-            <button type="button" class="btn btn-sm ms-2 mt-2 mt-sm-0" id="clearFiltersBtn">Clear Filters</button>
+        <div class="sorter-container d-flex align-items-center">
+            <div class="fs-5" style="font-weight: 500;">Sort By: </div>
+            <select class="select-sorter form-select form-select-sm ms-2 pointer" style="width: 160px;"
+                id="sortBySelect">
+                <option value="1" selected>Date (Descending)</option>
+                <option value="3">Date (Ascending)</option>
+                <option value="2">File Type</option>
+            </select>
         </div>
     </div>
 
@@ -116,7 +47,6 @@
             </select>
         </div>
         <div class="pagination-buttons d-flex align-items-center">
-            @* <span class="me-2">Showing ${currentPageSize * (currentPage - 1) + 1)} - ${((currentPageSize * currentPage) > TotalDocuments ? TotalDocuments : (currentPageSize * currentPage))} of ${TotalDocuments}</span> *@
             <span class="me-2">Showing <span id="startPage"></span> - <span id="endPage"></span> of <span
                     id="totalDocuments"></span></span>
             <button type="button" class="btn btn-sm btn-outline-primary me-2" id="firstPageButton" title="First Page">
@@ -135,18 +65,6 @@
         </div>
     </div>
 
-    @* <div id="exportSection" class="mt-3 d-none">
-        <div class="dropdown">
-            <button class="btn btn-primary dropdown-toggle" type="button" id="exportDropdown" data-bs-toggle="dropdown"
-                aria-expanded="false">
-                Export Results
-            </button>
-            <ul class="dropdown-menu" aria-labelledby="exportDropdown">
-                <li><a class="dropdown-item pointer" id="exportToPdfBtn">Export as PDF</a></li>
-                <li><a class="dropdown-item pointer" id="exportToExcelBtn">Export as Excel</a></li>
-            </ul>
-        </div>
-    </div> *@
     <div id="exportSection" class="mt-3 d-none">
         <button class="btn btn-primary" type="button" id="exportToPdfBtn" aria-expanded="false">
             Export Results
@@ -174,38 +92,6 @@
     </div>
 </div>
 
-<!-- Date Picker Modal -->
-
-<div class="modal fade" id="datePickerModal" tabindex="-1" aria-labelledby="datePickerModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="datePickerModalLabel">Select Date Range</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="startDate" class="form-label">Start Date</label>
-                    <input type="date" class="form-control pointer" id="startDate" onclick="this.showPicker();">
-                    <div id="startDateError" class="ms-2"></div>
-                </div>
-                <div class="mb-3">
-                    <label for="endDate" class="form-label">End Date</label>
-                    <input type="date" class="form-control pointer" id="endDate" onclick="this.showPicker();">
-                    @* <div id="endDateError" class="ms-2"></div> *@
-                </div>
-                <div id="endDateError" class="ms-2"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-primary" id="applyCustomDateBtn">Apply</button>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
-                    id="datePickerCloseBtn">Close</button>
-                <button type="button" class="btn btn-secondary" id="datePickerClearBtn">Clear Filter</button>
-            </div>
-        </div>
-    </div>
-</div>
-
 <!-- Loader -->
 
 <div id="loader"
@@ -216,48 +102,16 @@
     </div>
 </div>
 
-<!-- Export loader -->
-
-@* <div id="exportLoader"
-    class="position-fixed top-0 start-0 w-100 h-100 justify-content-center align-items-center bg-white bg-opacity-75"
-    style="display: none; z-index: 9999;">
-    <div class="spinner-border text-success" role="status">
-        <span class="visually-hidden">Exporting...</span>
-    </div>
-</div> *@
-
 <script>
-    let latestSearchResults = [];
-    var startDate = "";
-    var endDate = "";
-
     currentPage = 1;
     currentPageSize = 5;
 
     var esBoolQuery = {};
 
-    $(document).ready(function () {
-        const today = new Date().toISOString().split('T')[0];
-        $("#endDate").attr("max", today);
-        $("#startDate").attr("max", today);
-        @* $("#endDate").val(today); *@
-    });
-
     function searchDocumentContent() {
-        var keyword = $("#searchKeywordInput").val().trim();
-        @* if (!keyword) {
-            alert("Please enter a keyword to search.");
-            return;
-        } *@
-        var searchType = $("#searchTypeSelect").val().trim();
-        var matchAllTerms = $("#matchAllCheckbox").is(":checked") ? true : false;
-        var fileTypeFitler = $("#fileTypeFilter").val().trim();
         var sortBy = $("#sortBySelect").val().trim();
-        var searchInput = $("#searchInput").val().trim();
-        var paginationViewModel = [];
         currentPageSize = $("#itemsPerPageSelect").val();
-        @* var esBoolQuery = $('#builder').queryBuilder('getESBool') || {}; *@
-            console.log("Searching with parameters:", { searchType: searchType, matchAllTerms: matchAllTerms, keyword: keyword, fileTypeFilter: fileTypeFitler, startDate: startDate, endDate: endDate, sortBy: sortBy, searchInput: searchInput, currentPage: currentPage, currentPageSize: currentPageSize, esBoolQuery: JSON.stringify(esBoolQuery) });
+        console.log("Searching with parameters:", { sortBy: sortBy, currentPage: currentPage, currentPageSize: currentPageSize, esBoolQuery: JSON.stringify(esBoolQuery) });
 
         $("#loader").find(".spinner-border").removeClass("text-success").addClass("text-primary");
         @* $("#loader").show(); *@
@@ -266,7 +120,7 @@
         $.ajax({
             url: "/Home/SearchDocumentContent",
             type: "POST",
-            data: { searchType: searchType, matchAllTerms: matchAllTerms, keyword: keyword, fileTypeFilter: fileTypeFitler, startDate: startDate, endDate: endDate, sortBy: sortBy, searchInput: searchInput, currentPage: currentPage, currentPageSize: currentPageSize, esBoolQuery: JSON.stringify(esBoolQuery) },
+            data: { sortBy: sortBy, currentPage: currentPage, currentPageSize: currentPageSize, esBoolQuery: JSON.stringify(esBoolQuery) },
             success: function (data) {
                 var html = "";
                 console.log("Search results:", data);
@@ -286,8 +140,8 @@
                                 <div class="card-header d-flex justify-content-between align-items-center">
                                     <div>
                                         <strong>${doc.fileName}</strong>
-                                        <span class="text-muted"> - Found ${totalHighlights} match${totalHighlights === 1 ? '' : 'es'}</span>
-                                    </div>
+                                        <span class="total-doc-count text-muted ${totalHighlights == 0 ? 'd-none' : ''}"> - Found ${totalHighlights} match${totalHighlights === 1 ? '' : 'es'}</span>
+                                    </div> 
                                     <div class="d-flex align-items-center">
                                     <div class="uploaded-date-text me-3">Uploaded at - <span class="uploaded-date">${new Date(doc.uploadedDate).toLocaleDateString('en-GB')}</span></div>
                                     <div class="pdf-exclude">
@@ -338,8 +192,6 @@
                     behavior: "smooth"
                 }); *@
 
-                    latestSearchResults = data.searchResults;
-
                 if (data.searchResults.length > 0) {
                     $("#exportSection").removeClass("d-none");
                     $(".pagination-container").removeClass("d-none");
@@ -362,7 +214,7 @@
                     $("#previousPageButton").prop("disabled", false);
                     $("#firstPageButton").prop("disabled", false);
                 }
-                if (currentPage * currentPageSize >= data.searchResults.totalDocuments) {
+                if (currentPage * currentPageSize >= data.totalDocuments) {
                     $("#nextPageButton").prop("disabled", true);
                     $("#lastPageButton").prop("disabled", true);
                 } else {
@@ -380,226 +232,22 @@
         });
     }
 
-    $(document).ready(function () {
-        $('#uploadForm').submit(function (e) {
-            e.preventDefault();
-
-            var formData = new FormData();
-            var fileInput = $('#file')[0];
-
-            if (fileInput.files.length === 0) {
-                alert("Please select a file.");
-                return;
-            }
-
-            formData.append("file", fileInput.files[0]);
-
-            $.ajax({
-                url: '@Url.Action("UploadDocument", "Home")',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                success: function (response) {
-                    alert("File uploaded successfully!");
-                    console.log(response);
-                },
-                error: function (xhr, status, error) {
-                    alert("Upload failed.");
-                    console.error(xhr.responseText);
-                }
-            });
-        });
-    });
-
-    $(document).on("keypress", "#searchKeywordInput", function (e) {
+    $(document).on("keypress", ".rule-value-container", function (e) {
         if (e.key === "Enter") {
-            @* startDate = $("#startDate").val();
-            endDate = $("#endDate").val(); *@
-                @* currentPage = 1; *@
-                clearFilters();
+            currentPage = 1;
+            var rules = $('#builder').queryBuilder('getRules');
+            console.log("Rules: ", rules);
+            var esQuery = $('#builder').queryBuilder('getESBool');
+            console.log("ES Query: ", esQuery);
+            if (esQuery && Object.keys(esQuery).length > 0) {
+                esBoolQuery = esQuery;
+            }
             searchDocumentContent();
         }
     });
 
-    $("#searchKeywordBtn").on("click", function () {
-        @* startDate = $("#startDate").val();
-        endDate = $("#endDate").val(); *@
-            @* currentPage = 1; *@
-            clearFilters();
-        searchDocumentContent();
-    });
-
-    $(document).on("change", "#fileTypeFilter", function () {
-        @* startDate = $("#startDate").val();
-        endDate = $("#endDate").val(); *@
-            currentPage = 1;
-        searchDocumentContent();
-    });
-
     $(document).on("change", "#sortBySelect", function () {
-        @* startDate = $("#startDate").val();
-        endDate = $("#endDate").val(); *@
-            currentPage = 1;
-        searchDocumentContent();
-    });
-
-    // Debounce function to wait for user search
-    function debounce(func, delay) {
-        let timeoutId;
-        return function (...args) {
-            clearTimeout(timeoutId);
-            timeoutId = setTimeout(() => func.apply(this, args), delay);
-        };
-    }
-    const debounceSearch = debounce(function () {
-        startDate = $("#startDate").val();
-        endDate = $("#endDate").val();
         currentPage = 1;
-        searchDocumentContent();
-    }, 500);
-
-    $(document).on("input", "#searchInput", debounceSearch);
-
-    $("#applyCustomDateBtn").on("click", function () {
-        startDate = $("#startDate").val();
-        endDate = $("#endDate").val();
-
-        if (!startDate && !endDate) {
-            @* $("#startDateError").text("Please select a start date.").addClass("text-danger"); *@
-                @* $("#endDateError").text("Please select an end date.").addClass("text-danger"); *@
-                $("#endDateError").text("Please select either a start date or an end date.").addClass("text-danger");
-            return;
-        }
-        @* if (!startDate) {
-            $("#startDateError").text("Please select a start date.").addClass("text-danger");
-            return;
-        } else {
-            $("#startDateError").text("").removeClass("text-danger");
-        }
-        if (!endDate) {
-            $("#endDateError").text("Please select an end date.").addClass("text-danger");
-            return;
-        } else {
-            $("#endDateError").text("").removeClass("text-danger");
-        } *@
-            @* validateDateInputs(); *@
-
-        if (!startDate) {
-            startDate = new Date(Date.UTC(2000, 0, 1)).toISOString().split('T')[0];
-        }
-        if (!endDate) {
-            endDate = new Date().toISOString().split('T')[0].toString("dd-MM-yyyy");
-            console.log("End date is not selected, setting to today:", endDate);
-        }
-        currentPage = 1;
-        searchDocumentContent();
-        $("#startDate").val(startDate);
-        $("#endDate").val(endDate);
-        $("#datePickerModal").modal("hide");
-        $("#selectDateButton").text(startDate && endDate ? `${new Date(startDate).toLocaleDateString('en-GB')} - ${new Date(endDate).toLocaleDateString('en-GB')}` : "Select Uploaded Date");
-    });
-
-    @* $("#startDate, #endDate").on("change", validateDateInputs); *@
-        $(document).on("change", "#startDate, #endDate", function () {
-            @* const StartDate = $("#startDate").val();
-        const EndDate = $("#endDate").val(); *@
-                startDate = $("#startDate").val();
-            endDate = $("#endDate").val();
-            console.log("Start Date: ", startDate);
-            console.log("End Date: ", endDate);
-            @* console.log("Today's date: ", new Date().toISOString().split('T')[0].toString("dd-MM-yyyy")); *@
-
-        if (!startDate && !endDate) {
-                $("#endDateError").text("Please select either a start date or an end date.").addClass("text-danger");
-                return;
-            } else {
-                $("#endDateError").text("").removeClass("text-danger");
-                return;
-            }
-
-            if (!startDate) {
-                startDate = "01-01-2020";
-                $("#startDate").val(startDate);
-                console.log("start date: ", startDate);
-            }
-
-            if (!endDate || endDate == undefined || endDate == null || endDate == "") {
-                @* endDate = new Date().toISOString().split('T')[0]; *@
-                    @* endDate = new Date().toISOString().split('T')[0].toString("dd-MM-yyyy"); *@
-                    endDate = new Date().toLocaleDateString('en-GB');
-                $("#endDate").val(endDate);
-                console.log("end date: ", endDate);
-            }
-        });
-
-    function validateDateInputs() {
-        const startDate = $("#startDate").val();
-        const endDate = $("#endDate").val();
-
-        @* if (startDate) {
-            $("#startDateError").text("").removeClass("text-danger");
-        } else {
-            $("#startDateError").text("Please select a start date.").addClass("text-danger");
-        }
-
-        if (endDate) {
-            $("#endDateError").text("").removeClass("text-danger");
-        } else {
-            $("#endDateError").text("Please select an end date.").addClass("text-danger");
-        } *@
-
-        if (startDate) {
-            $("#startDateError").text("").removeClass("text-danger");
-        }
-
-        if (endDate) {
-            $("#endDateError").text("").removeClass("text-danger");
-        }
-    }
-
-    $("#datePickerCloseBtn").on("click", function () {
-        $("#startDateError").text("");
-        $("#endDateError").text("");
-    });
-
-    // Restrict endDate based on startDate and vice versa
-    $("#startDate").on("change", function () {
-        const innerStartDate = $(this).val();
-        if (innerStartDate) {
-            $("#endDate").attr("min", innerStartDate);
-        } else {
-            $("#endDate").removeAttr("min");
-        }
-        if (!endDate) {
-            $("#endDate").val(new Date().toISOString().split('T')[0]);
-        }
-    });
-    $("#endDate").on("change", function () {
-        const innerEndDate = $(this).val();
-        if (innerEndDate) {
-            $("#startDate").attr("max", innerEndDate);
-        } else {
-            $("#startDate").removeAttr("max");
-        }
-        if (!startDate) {
-            $("#startDate").val("2020-01-01");
-        }
-    });
-
-    $("#datePickerClearBtn").on("click", function () {
-        $("#startDate").val("");
-        $("#endDate").val("");
-        startDate = "";
-        endDate = "";
-        $("#startDateError").text("");
-        $("#endDateError").text("");
-        $("#startDate").removeAttr("min");
-        $("#endDate").removeAttr("min");
-        $("#startDate").attr("max", new Date().toISOString().split('T')[0]);
-        $("#endDate").attr("max", new Date().toISOString().split('T')[0]);
-        $("#datePickerModal").modal("hide");
-        $("#selectDateButton").text("Select Uploaded Date");
         searchDocumentContent();
     });
 
@@ -631,30 +279,6 @@
         @* $("#previewModal").modal("show"); *@
     });
 
-    function clearFilters() {
-        currentPage = 1;
-        $("#fileTypeFilter").val("File Type");
-        $("#startDate").val("");
-        $("#endDate").val("");
-        $("#endDate").removeAttr("min");
-        $("#sortBySelect").val("1");
-        $("#searchInput").val("");
-        startDate = "";
-        endDate = "";
-        $("#selectDateButton").text("Select Uploaded Date");
-    }
-
-    // Clear Button
-    $("#clearButton").on("click", function () {
-        $("#searchKeywordInput").val("");
-        $("#searchResults").empty();
-        $("#exportSection").addClass("d-none");
-        $("#filtersSortersContainer").addClass("d-none");
-        $(".matching-docs-count").addClass("d-none");
-        $(".results-text").removeClass("d-none");
-        clearFilters();
-    });
-
     function exportToCSV(data) {
         let csvContent = "data:text/csv;charset=utf-8,";
         csvContent += "File Name,Match Count,Snippets\n";
@@ -673,42 +297,6 @@
         link.click();
         document.body.removeChild(link);
     }
-
-    $("#exportToExcelBtn").on("click", function (e) {
-        e.preventDefault();
-        $("#loader").find(".spinner-border").removeClass("text-primary").addClass("text-success");
-        $("#loader").show();
-
-        const keyword = $("#searchKeywordInput").val();
-        const fileType = $("#fileTypeFilter").val();
-        const sortBy = $("#sortBySelect").val();
-        const searchInput = $("#searchInput").val() || null;
-        const searchType = $("#searchTypeSelect").val();
-        const matchAllTerms = $("#matchAllCheckbox").is(":checked");
-
-        const url = `/Home/ExportResultsToExcel?keyword=${keyword}&fileType=${fileType}&startDate=${startDate}&endDate=${endDate}&sortBy=${sortBy}&searchInput=${searchInput}&searchType=${searchType}&matchAllTerms=${matchAllTerms}`;
-
-        $.ajax({
-            url: url,
-            method: 'GET',
-            xhrFields: {
-                responseType: 'blob'
-            },
-            success: function (blob) {
-                const a = document.createElement('a');
-                a.href = window.URL.createObjectURL(blob);
-                a.download = "ElasticFind_Results.xlsx";
-                a.click();
-            },
-            error: function () {
-                alert("Failed to export Excel");
-            },
-            complete: function () {
-                $("#loader").hide();
-            }
-        });
-    });
-
 
     $("#exportToPdfBtn").on("click", function () {
         $("#loader").find(".spinner-border").removeClass("text-primary").addClass("text-success");
@@ -876,57 +464,6 @@
         });
     });
 
-    $("#createDocumentBtn").on("click", function () {
-        $.ajax({
-            url: "/Home/CreateDocumentIndex",
-            type: "POST",
-            data: { indexName: "documents3" },
-            success: function (response) {
-                alert("Document index created successfully!");
-                console.log(response);
-            },
-            error: function (xhr, status, error) {
-                alert("Failed to create document index.");
-                console.error(xhr.responseText);
-            }
-        });
-    });
-
-    $("#clearFiltersBtn").on("click", function () {
-        if ($("#fileTypeFilter").val() === "File Type" && startDate === "" && endDate === "" && $("#sortBySelect").val() === "1" && $("#searchInput").val() === "") {
-            console.log("Filters: ", {
-                fileType: $("#fileTypeFilter").val(),
-                startDate: startDate,
-                endDate: endDate,
-                sortBy: $("#sortBySelect").val(),
-                searchInput: $("#searchInput").val()
-            });
-            @* alert("Filters are already set to their default values."); *@
-                alert("No filters to clear!");
-            return; // No need to clear if already set to default
-        }
-        clearFilters();
-        searchDocumentContent();
-    });
-
-    $("#searchTypeSelect").on("change", function () {
-        const searchType = $(this).val();
-        if (searchType == "1") {
-            $(".match-all-checkbox-container").addClass("d-none");
-            $(".info-text").addClass("d-none");
-        } else if (searchType == "2") {
-            $(".match-all-checkbox-container").removeClass("d-none");
-            $("#matchAllCheckbox").prop("checked", false);
-            $(".info-text").text("Note: Enter multiple keywords separated by spaces. Check \"Match All Terms\" checkbox to display only those documents which contain all the keywords.").removeClass("d-none");
-        } else if (searchType == "3") {
-            $(".match-all-checkbox-container").removeClass("d-none");
-            $(".info-text").text("Note: Enter more than two characters for best results").removeClass("d-none");
-        } else {
-            $(".match-all-checkbox-container").addClass("d-none");
-            $(".info-text").addClass("d-none");
-        }
-    });
-
     function downloadFile(fileId, fileName) {
         $("#loader").find(".spinner-border").removeClass("text-success").addClass("text-primary");
         $("#loader").show();
@@ -1052,6 +589,18 @@
                 apply_to: ['string', 'number']
             },
             {
+                type: 'is_in',
+                label: 'Is In',
+                nb_inputs: 1,
+                apply_to: ['string', 'number', 'datetime', 'boolean']
+            },
+            {
+                type: 'is_not_in',
+                label: 'Is Not In',
+                nb_inputs: 1,
+                apply_to: ['string', 'number', 'datetime', 'boolean']
+            },
+            {
                 type: 'fuzzy',
                 label: 'Fuzzy Search',
                 nb_inputs: 1,
@@ -1059,11 +608,23 @@
                 @* optgroup: 'Custom' *@
             },
         {
-            type: 'daterange',
-            label: 'Date Range',
-            nb_inputs: 2,
-            apply_to: ['datetime']
+            type: 'less',
+            label: 'Less than',
+            nb_inputs: 1,
+            apply_to: ['number', 'date', 'datetime']
         },
+        {
+            type: 'greater',
+            label: 'Greater than',
+            nb_inputs: 1,
+            apply_to: ['number', 'date', 'datetime']
+        },
+        {
+            type: 'between',
+            label: 'Between',
+            nb_inputs: 2,
+            apply_to: ['number', 'date', 'datetime']
+        }
         ]
     });
 
@@ -1091,21 +652,21 @@
                 ]
             },
             {
-                id: 'fileType',
+                id: 'fileType.keyword',
                 label: 'File Type',
                 type: 'string',
                 input: 'select',
                 @* multiple: true, *@
             values: {
                 '.pdf': 'pdf',
-                '.docx/.doc': 'docx/dox',
-                '.xlsx/.xls': 'xlsx/xls',
+                '.docx,.doc': 'docx/dox',
+                '.xlsx,.xls': 'xlsx/xls',
                 '.txt': 'txt',
-                '.pptx/.ppt': 'pptx/ppt',
+                '.pptx,.ppt': 'pptx/ppt',
                 '.rtf': 'rtf',
                 'Other': 'Other'
             },
-            operators: ['equal', 'not_equal', 'in', 'not_in'] //   - include this feature when we use multiple select
+            operators: ['in', 'not_in'] // - include this feature when we use multiple select
             },
         {
             id: 'uploadedDate',
@@ -1114,7 +675,7 @@
             input: 'text',
             plugin: 'datepicker',
             plugin_config: {
-                dateFormat: 'dd-mm-yyyy',
+                dateFormat: 'yy-mm-dd',
                 changeMonth: true,
                 changeYear: true
             },
@@ -1125,7 +686,54 @@
         allow_empty: true
     });
 
+    $('#builder').on('afterCreateRuleInput.queryBuilder', function (e, rule) {
+        if (rule.filter?.id === 'uploadedDate' && ['equal', 'less', 'greater'].includes(rule.operator.type)) {
+            const $input = rule.$el.find('.rule-value-container input');
+            const minDate = new Date('2020-01-01');
+            const maxDate = new Date(); // today
+
+            // Apply min/max limits
+            $input.datepicker('option', 'minDate', minDate);
+            $input.datepicker('option', 'maxDate', maxDate);
+
+            $input.datepicker('setDate', maxDate); // default to today's date
+        }
+
+        if (rule.filter?.id === 'uploadedDate' && rule.operator.type === 'between') {
+            const $inputs = rule.$el.find('.rule-value-container input');
+
+            const $start = $inputs.eq(0);
+            const $end = $inputs.eq(1);
+
+            const minStart = new Date('2020-01-01');
+            const maxEnd = new Date(); // today
+
+            // Set min/max and default
+            $start.datepicker('option', 'minDate', minStart);
+            $start.datepicker('option', 'maxDate', maxEnd);
+            $end.datepicker('option', 'maxDate', maxEnd);
+
+            $start.datepicker('setDate', minStart); // default to 01-01-2000
+            $end.datepicker('setDate', maxEnd); // default to today's date
+
+            $start.on('change', function () {
+                const startDate = $start.datepicker('getDate');
+                if (startDate) {
+                    $end.datepicker('option', 'minDate', startDate);
+                }
+            });
+
+            $end.on('change', function () {
+                const endDate = $end.datepicker('getDate');
+                if (endDate) {
+                    $start.datepicker('option', 'maxDate', endDate);
+                }
+            });
+        }
+    });
+
     $('#btnSearch').on('click', function () {
+        currentPage = 1;
         var rules = $('#builder').queryBuilder('getRules');
         console.log("Rules: ", rules);
         var esQuery = $('#builder').queryBuilder('getESBool');
@@ -1134,17 +742,5 @@
             esBoolQuery = esQuery;
         }
         searchDocumentContent();
-        @* if (!$.isEmptyObject(rules)) {
-            $.ajax({
-                url: '/Home/QueryBuilderSearch',
-                type: 'POST',
-                contentType: 'application/json',
-                data: JSON.stringify(rules),
-                success: function (data) {
-                    // handle results, e.g., update a div with results
-                    $('#resultsContainer').html(data);
-                }
-            });
-        } *@
     });
 </script>

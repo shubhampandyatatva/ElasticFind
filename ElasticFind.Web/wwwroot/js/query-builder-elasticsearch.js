@@ -22,7 +22,7 @@
     // ===============================
     QueryBuilder.defaults({
         ESBoolOperators: {
-            equal: function (v) { return v; },
+            equal: function (v) { return v; }, 
             not_equal: function (v) { return v; },
             less: function (v) { return { 'lt': v }; },
             less_or_equal: function (v) { return { 'lte': v }; },
@@ -37,11 +37,45 @@
             between: function (v) { return { 'gte': v[0], 'lte': v[1] }; },
             // in: function (v) { return v.split(',').map(function (e) { return e.trim(); }); },
             // not_in: function (v) { return v.split(',').map(function (e) { return e.trim(); }); },
-            in: function (v) { return Array.isArray(v) ? v : String(v).split(',').map(e => e.trim()); },
-            not_in: function (v) { return Array.isArray(v) ? v : String(v).split(',').map(e => e.trim()); },
+            // is_in: function (v) { return Array.isArray(v) ? v : String(v).split(',').map(e => e.trim()); },
+            // is_not_in: function (v) { return Array.isArray(v) ? v : String(v).split(',').map(e => e.trim()); },
+            in: function (v) {
+                const allTypes = ['.pdf', '.docx', '.doc', '.xlsx', '.xls', '.txt', '.pptx', '.ppt', '.rtf'];
+
+                if (v === 'Other') {
+                    return allTypes;
+                }
+
+                return Array.isArray(v) ? v : String(v).split(',').map(e => e.trim());
+            },
+            not_in: function (v) {
+                const allTypes = ['.pdf', '.docx', '.doc', '.xlsx', '.xls', '.txt', '.pptx', '.ppt', '.rtf'];
+
+                if (v === 'Other') {
+                    return allTypes;
+                }
+
+                return Array.isArray(v) ? v : String(v).split(',').map(e => e.trim());
+            },
             is_null: function (v) { return v; },
             is_not_null: function (v) { return v; },
-            fuzzy: function (v) { return { query: v, fuzziness: 'AUTO' }; }
+            fuzzy: function (v) {
+                console.log("Fuzzy search ES query: ", v);
+                return { query: v, fuzziness: 'AUTO' };
+            }
+            // equal: function (v) {
+            //     const allTypes = ['.pdf', '.docx', '.doc', '.xlsx', '.xls', '.txt', '.pptx', '.ppt', '.rtf'];
+
+            //     if (v === 'Other') {
+            //         return allTypes;
+            //     }
+
+            //     // return v;
+            //     const values = v.split(/[\/|]/).map(x => x.trim());
+            //     console.log("Values in equal operator: ", values);
+            //     return values.length > 1 ? values : values[0];
+            //     // return values;
+            // }
         },
         ESQueryStringQueryOperators: {
             is_not_null: function () { return "_exists_:"; },
@@ -128,7 +162,7 @@
                         }
                     }
 
-                    var clause = getClauseWord(data.condition, rule.operator);
+                    var clause = getClauseWord(data.condition, rule.operator, rule.value);
 
                     if (rule.rules && rule.rules.length > 0) {
                         parts.add(clause, parse(rule));
@@ -252,8 +286,9 @@
         const wildcard = /^(contains|not_contains|begins_with|not_begins_with|ends_with|not_ends_with)$/.exec(rule.operator);
         const terms = /^(in|not_in)$/.exec(rule.operator);
         const range = /^(less|less_or_equal|greater|greater_or_equal|between)$/.exec(rule.operator);
-        const fuzzy = /^(fuzzy)$/.exec(rule.operator);
-    
+        const is_in = /^(is_in|is_not_in)$/.exec(rule.operator);
+        // const fuzzy = /^(fuzzy)$/.exec(rule.operator);
+
         if (wildcard !== null) {
             return 'wildcard';
         }
@@ -263,10 +298,14 @@
         if (range !== null) {
             return 'range';
         }
-        if (fuzzy !== null) {
-            return 'match';
+        if( is_in !== null) {
+            return 'terms';
         }
-    
+        // if (fuzzy !== null) {
+        //     return 'match';
+        // }
+        // if (rule.value === 'Other') return 'terms';
+
         // Default all "equal" or other operators to match
         return 'match';
     }
@@ -274,7 +313,9 @@
     /**
     * Get the right type of clause in the bool query
     */
-    function getClauseWord(condition, operator) {
+    function getClauseWord(condition, operator, value) {
+        if (operator === 'in' && value == "Other") return 'must_not'; // Special case for "Other" file type
+        if (operator === 'not_in' && value == "Other") return 'must'; 
         if (condition === 'AND' && (operator !== 'not_equal' && operator !== 'not_in' && operator !== 'not_contains' && operator !== 'not_begins_with' && operator !== 'not_ends_with')) { return 'must' }
         if (condition === 'AND' && (operator === 'not_equal' || operator == 'not_in' || operator === 'not_contains' || operator === 'not_begins_with' || operator === 'not_ends_with')) { return 'must_not' }
         if (condition === 'OR') { return 'should' }
