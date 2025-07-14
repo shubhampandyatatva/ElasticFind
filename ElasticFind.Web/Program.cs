@@ -97,31 +97,68 @@ var settings = new ConnectionSettings(pool)
     // .BasicAuthentication("elastic", "xU0dIO7RHrWFwVl-cgb*")
     .DisableDirectStreaming()
     .EnableDebugMode()
-    .DefaultIndex("documents"); 
+    .DefaultIndex("documents");
 
-var client = new ElasticClient(settings); 
+var client = new ElasticClient(settings);
 
 // Optional: Register for DI so you can inject IElasticClient later
 builder.Services.AddSingleton<IElasticClient>(client);
 
-// Check if index exists and create if not
-// var indexExists = client.Indices.Exists("jobs");
+try
+{
+    await ValidateAndInitializeElasticsearchAsync(client);
+}
+catch (Exception ex)
+{
+    StartupDiagnostics.ElasticsearchError = ex.Message;
+}
+
+// // Check if index exists and create if not
+// var indexExists = client.Indices.Exists("documents3");
 // if (!indexExists.Exists)
 // {
-//     var createIndexResponse = client.Indices.Create("jobs", c => c
-//         .Map<Humanresources>(m => m.AutoMap())
+//     var createIndexResponse = client.Indices.Create("documents3", c => c
+//         .Map<DocumentViewModel>(m => m.AutoMap())
 //     );
 
 //     if (!createIndexResponse.IsValid)
 //     {
-//         Console.WriteLine("Failed to create index.");
+//         Console.WriteLine("Failed to create index!");
 //         Console.WriteLine($"Debug Info: {createIndexResponse.DebugInformation}");
 //         Console.WriteLine($"Server Error: {createIndexResponse.ServerError}");
 //     }
 //     else
 //     {
-//         Console.WriteLine("'jobs' index created.");
+//         Console.WriteLine("'Documents3' index created.");
 //     }
+// }
+
+// var getPipelineResponse = client.Ingest.GetPipeline(g => g.Id("attachment"));
+
+// if (!getPipelineResponse.IsValid || !getPipelineResponse.Pipelines.ContainsKey("attachment"))
+// {
+//     var putPipelineResponse = client.Ingest.PutPipeline("attachment", p => p
+//         .Description("Extract attachment information")
+//         .Processors(pr => pr
+//             .Attachment<DocumentViewModel>(a => a
+//                 .Field(f => f.Data)
+//                 .TargetField(f => f.Attachment)
+//             )
+//         )
+//     );
+
+//     if (!putPipelineResponse.IsValid)
+//     {
+//         Console.WriteLine($"Failed to create pipeline: {putPipelineResponse.ServerError}");
+//     }
+//     else
+//     {
+//         Console.WriteLine("Attachment pipeline created.");
+//     }
+// }
+// else
+// {
+//     Console.WriteLine("Attachment pipeline already exists.");
 // }
 
 // var hrRecord = new Humanresources
@@ -147,15 +184,15 @@ builder.Services.AddSingleton<IElasticClient>(client);
 // var searchResponse = client.Search<Humanresources>(s => s
 //     .Query(q => q
 //         .Match(m => m
-//             .Field(f => f.Jobtitle)
-//             .Query("software")
+//             .Field(f => f.FileName)
+//             .Query("Resume")
 //         )
 //     )
 // );
 
 // foreach (var doc in searchResponse.Documents)
 // {
-//     Console.WriteLine($"Found: {doc.Jobtitle} - {doc.Nationalidnumber}");
+//     Console.WriteLine($"Found: {doc.FileName} - {doc.Id}");
 // }
 
 builder.Services.AddCors(options =>
@@ -176,7 +213,7 @@ app.Use(async (context, next) =>
     context.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0";
     context.Response.Headers["Pragma"] = "no-cache";
     context.Response.Headers["Expires"] = "-1";
- 
+
     await next();
 });
 
@@ -207,3 +244,67 @@ app.MapControllerRoute(
     pattern: "{controller=Authentication}/{action=Login}/{id?}");
 
 app.Run();
+
+static async Task ValidateAndInitializeElasticsearchAsync(IElasticClient client)
+{
+    var pingResponse = await client.PingAsync();
+    if (!pingResponse.IsValid)
+        throw new Exception("Elasticsearch service is not reachable! Try restarting the service.");
+
+    var health = await client.Cluster.HealthAsync();
+    if (health.Status.ToString().Equals("red", StringComparison.OrdinalIgnoreCase))
+        throw new Exception("Elasticsearch is not ready to be used. Try restarting the service.");
+
+    var indexExists = await client.Indices.ExistsAsync("documents");
+    if (!indexExists.Exists)
+    {
+        var createIndexResponse = await client.Indices.CreateAsync("documents", c => c
+            .Map<DocumentViewModel>(m => m.AutoMap())
+        );
+
+        if (!createIndexResponse.IsValid)
+            throw new Exception("Failed to initialize elasticsearch properly!");
+        else
+            Console.WriteLine("'Documents' index created.");
+    }
+    else
+    {
+        Console.WriteLine("'Documents' index already exists.");
+    }
+
+    var info = await client.RootNodeInfoAsync();
+    var version = info.Version.Number;
+
+    if (string.Compare(version, "8.0.0") < 0)
+    {
+        // On versions older than 8, we can optionally check plugin
+        var pluginResponse = await client.Cat.PluginsAsync();
+        bool hasAttachmentPlugin = pluginResponse.Records.Any(r => r.Component.Contains("ingest-attachment"));
+
+        if (!hasAttachmentPlugin)
+            throw new Exception("Failed to initialize elasticsearch properly!");
+    }
+
+    var pipelineResponse = await client.Ingest.GetPipelineAsync(p => p.Id("attachment"));
+    if (!pipelineResponse.IsValid || !pipelineResponse.Pipelines.ContainsKey("attachment"))
+    {
+        var putPipelineResponse = await client.Ingest.PutPipelineAsync("attachment", p => p
+            .Description("Extract attachment information")
+            .Processors(pr => pr
+                .Attachment<DocumentViewModel>(a => a
+                    .Field(f => f.Data)
+                    .TargetField(f => f.Attachment)
+                )
+            )
+        );
+
+        if (!putPipelineResponse.IsValid)
+            throw new Exception("Failed to initialize elasticsearch properly!");
+        else
+            Console.WriteLine("Attachment pipeline created.");
+    }
+    else
+    {
+        Console.WriteLine("Attachment pipeline already exists.");
+    }
+}

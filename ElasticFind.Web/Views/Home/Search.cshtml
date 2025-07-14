@@ -21,7 +21,7 @@
         <h4 class="matching-docs-count d-none" style="color: #3f629b;">Found <span id="matchingDocsCountSpan"> matching
                 documents</span></h4>
         </div>
-        <div class="sorter-container d-flex align-items-center">
+        <div class="sorter-container d-flex align-items-center d-none">
             <div class="fs-5" style="font-weight: 500;">Sort By: </div>
             <select class="select-sorter form-select form-select-sm ms-2 pointer" style="width: 160px;"
                 id="sortBySelect">
@@ -195,9 +195,11 @@
                 if (data.searchResults.length > 0) {
                     $("#exportSection").removeClass("d-none");
                     $(".pagination-container").removeClass("d-none");
+                    $(".sorter-container").removeClass("d-none");
                 } else {
                     $("#exportSection").addClass("d-none");
                     $(".pagination-container").addClass("d-none");
+                    $(".sorter-container").addClass("d-none");
                 }
 
                 $("#filtersSortersContainer").removeClass("d-none");

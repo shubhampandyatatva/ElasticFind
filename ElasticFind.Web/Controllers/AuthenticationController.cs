@@ -25,7 +25,13 @@ public class AuthenticationController : Controller
     [HttpGet]
     public async Task<IActionResult> Login()
     {
-        Console.WriteLine("IP Address: " + HttpContext.Connection.RemoteIpAddress?.ToString());
+        if (!string.IsNullOrEmpty(StartupDiagnostics.ElasticsearchError))
+        {
+            Console.WriteLine("Elasticsearch Error: " + StartupDiagnostics.ElasticsearchError);
+            TempData["ErrorMessage"] = StartupDiagnostics.ElasticsearchError;
+            return View();
+        }
+
         string? jwtToken = Request.Cookies["JwtToken"];
         if (jwtToken == null)
         {
@@ -67,6 +73,13 @@ public class AuthenticationController : Controller
     [HttpPost]
     public async Task<IActionResult> Login([FromForm] LoginViewModel loginViewModel)
     {
+        if (!string.IsNullOrEmpty(StartupDiagnostics.ElasticsearchError))
+        {
+            Console.WriteLine("Elasticsearch Error: " + StartupDiagnostics.ElasticsearchError);
+            TempData["ErrorMessage"] = StartupDiagnostics.ElasticsearchError;
+            return View();
+        }
+        
         if (ModelState.IsValid)
         {
             JsonResponse response = await _authService.ValidateUser(loginViewModel.Email, loginViewModel.Password);
@@ -234,7 +247,7 @@ public class AuthenticationController : Controller
 
         if (resetPasswordResult.Success)
         {
-            TempData["Token"] = token;            
+            TempData["Token"] = token;
             string? email = resetPasswordResult.Anonymous;
             if (string.IsNullOrEmpty(email))
             {
