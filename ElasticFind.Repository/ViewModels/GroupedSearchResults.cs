@@ -6,4 +6,7 @@ public class GroupedSearchResults
     public string? FileName { get; set; }
     public DateTime? UploadedDate { get; set; }
     public List<string>? Snippets { get; set; }
+    public string? HighlightedFileName { get; set; }
+    public string? HighlightedFileType { get; set; }
+    public bool HighlightedUploadedDate { get; set; }
 }

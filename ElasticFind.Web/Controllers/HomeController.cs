@@ -211,7 +211,6 @@ public class HomeController : Controller
                     Id = customId,
                     FileName = file.FileName.ToLowerInvariant(),
                     FileType = Path.GetExtension(file.FileName).ToLowerInvariant(),
-                    // UploadedBy = User.Identity?.Name ?? "Anonymous",
                     UploadedBy = user.Id.ToString(),
                     UploadedDate = DateTime.UtcNow,
                     Data = base64Data

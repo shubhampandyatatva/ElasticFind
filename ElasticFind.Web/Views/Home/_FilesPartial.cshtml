@@ -56,7 +56,7 @@
                         <div class="d-flex align-items-center gap-2">
                             <span class="d-none d-lg-block">
                                 Showing
-                                @(Model.Pagination.PageSize * (Model.Pagination.Page - 1) + 1) -
+                                @(Model.Pagination.TotalRecords == 0 ? 0 : (Model.Pagination.PageSize * (Model.Pagination.Page - 1) + 1)) -
                                 @((Model.Pagination.PageSize * Model.Pagination.Page) >
                                                                 Model.Pagination.TotalRecords ? Model.Pagination.TotalRecords :
                                                                 (Model.Pagination.PageSize * Model.Pagination.Page))

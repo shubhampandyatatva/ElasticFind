@@ -343,7 +343,7 @@
                 $("#uploadProgressContainer").addClass("d-none");
             },
             error: function (xhr) {
-                toastr.error(xhr.responseText, "Error");
+                toastr.error(xhr.responseText.length > 50 ? "Try again after some time" : xhr.responseText, "Error");
                 $("#uploadProgressContainer").addClass("d-none");
             }
         });

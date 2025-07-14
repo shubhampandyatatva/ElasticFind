@@ -15,6 +15,4 @@ public interface IElasticSearchService
     Task<DisplayFilesViewModel> GetFilesAsync(PaginationViewModel paginationViewModel);
     Task<List<string>> GetAllFileIdsAsync();
     Task<bool> DeleteMultipleFilesAsync(string id);
-    QueryContainer ConvertRulesToElasticsearchQuery(QueryBuilderRule rules);
-    // Task<SearchResultsViewModel> QueryBuilderSearch(QueryBuilderRule rules);
 }
