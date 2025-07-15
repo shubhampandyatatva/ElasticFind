@@ -6,6 +6,7 @@ using Elasticsearch.Net;
 using Microsoft.Extensions.Caching.Memory;
 using Nest;
 using Newtonsoft.Json.Linq;
+using System;
 
 namespace ElasticFind.Service.Implementations;
 
@@ -98,20 +99,8 @@ public class ElasticSearchService : IElasticSearchService
 
             // Detect fields used in query
             var usedFields = new HashSet<string>();
-            using (JsonDocument doc = JsonDocument.Parse(esBoolQuery))
-            {
-                var mustClauses = doc.RootElement.GetProperty("bool").GetProperty("should");
-
-                foreach (var clause in mustClauses.EnumerateArray())
-                {
-                    foreach (var property in clause.EnumerateObject())
-                    {
-                        var fieldName = property.Value.EnumerateObject().First().Name;
-                        usedFields.Add(fieldName);
-                    }
-                }
-            }
-
+            using var doc = JsonDocument.Parse(esBoolQuery);
+            CollectFields(doc.RootElement, usedFields);
             Console.WriteLine("Used Fields: " + string.Join(", ", usedFields));
 
             // Prepare highlighting dynamically
@@ -119,32 +108,39 @@ public class ElasticSearchService : IElasticSearchService
             {
                 h.PreTags("<mark>").PostTags("</mark>");
 
-                return h.Fields(fs =>
+                var highlightFields = new List<Func<HighlightFieldDescriptor<DocumentViewModel>, IHighlightField>>
                 {
-                    fs.Field("attachment.content")
-                    //   .Field(usedFields.Contains("fileName.keyword") ? "fileName" : null)
-                    //   .Field(usedFields.Contains("fileType.keyword") ? "fileType" : null)
-                      .FragmentSize(200)
-                      .NumberOfFragments(50)
-                      .NoMatchSize(150);
+                    // Always include attachment.content
+                    f => f
+                        .Field("attachment.content")
+                        .FragmentSize(200)
+                        .NumberOfFragments(50)
+                        .NoMatchSize(150)
+                };
 
-                    // if (usedFields.Contains("fileName.keyword"))
-                    // {
-                    //     fs.Field("fileName")
-                    //       .FragmentSize(200)
-                    //       .NumberOfFragments(50)
-                    //       .NoMatchSize(150);
-                    // }
-                    // if (usedFields.Contains("fileType.keyword"))
-                    // {
-                    //     fs.Field("fileType")
-                    //       .FragmentSize(50)
-                    //       .NumberOfFragments(1)
-                    //       .NoMatchSize(20);
-                    // }
-                    
-                    return fs;
-                });
+                if (usedFields.Contains("fileName.keyword"))
+                {
+                    Console.WriteLine("Highlighting fileName field");
+                    highlightFields.Add(f => f
+                        .Field("fileName")
+                    .FragmentSize(200)
+                    .NumberOfFragments(50)
+                    .NoMatchSize(150)
+                    );
+                }
+
+                if (usedFields.Contains("fileType.keyword"))
+                {
+                    Console.WriteLine("Highlighting fileType field");
+                    highlightFields.Add(f => f
+                        .Field("fileType")
+                    .FragmentSize(50)
+                    .NumberOfFragments(1)
+                    .NoMatchSize(20)
+                    );
+                }
+
+                return h.Fields(highlightFields.ToArray());
             }
 
             // Sorting
@@ -172,44 +168,64 @@ public class ElasticSearchService : IElasticSearchService
             // Search
             var response = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
                 .Index("documents")
-                .Query(q => q.Bool(b => b.Must(rawQuery)))
+                .Query(q => rawQuery)
                 .Highlight(highlightBuilder)
                 .Sort(sort)
                 .Skip((currentPage - 1) * currentPageSize)
                 .Take(currentPageSize)
             );
 
-            var decoded = Encoding.UTF8.GetString(response.ApiCall.RequestBodyInBytes);
-            Console.WriteLine("ElasticClient Response Decoded: " + decoded);
+            var decodedRequest = Encoding.UTF8.GetString(response.ApiCall.RequestBodyInBytes);
+            // var decodedResponse = Encoding.UTF8.GetString(response.ApiCall.ResponseBodyInBytes);
+            Console.WriteLine("ElasticClient Request Decoded: " + decodedRequest);
+            // Console.WriteLine("ElasticClient Response Decoded: " + decodedResponse);
+
 
             // Process results
             var results = new List<GroupedSearchResults>();
             foreach (var hit in response.Hits)
             {
-                // Console.WriteLine($"Document ID: {hit.Id}");
+                Console.WriteLine($"Document ID: {hit.Id}");
 
-                // foreach (var highlight in hit.Highlight)
-                // {
-                //     Console.WriteLine($"Highlighted Field: {highlight.Key}");
-                //     foreach (var fragment in highlight.Value)
-                //     {
-                //         Console.WriteLine($" - {fragment}");
-                //     }
-                // }
+                foreach (var highlight1 in hit.Highlight)
+                {
+                    Console.WriteLine($"Highlighted Field: {highlight1.Key}");
+                    // foreach (var fragment in highlight1.Value)
+                    // {
+                    //     Console.WriteLine($" - {fragment}");
+                    // }
+                }
 
                 var snippets = new List<string>();
                 var highlightedFileNames = new List<string>();
                 var highlightedFileTypes = new List<string>();
-                var highlightedUploadedDates = new List<string>();
+                // var highlightedUploadedDates = new List<string>();
 
                 if (hit.Highlight.TryGetValue("attachment.content", out var contentHighlights))
+                {
+                    Console.WriteLine("Content Highlights Found");
                     snippets.AddRange(contentHighlights);
+                }
 
                 if (hit.Highlight.TryGetValue("fileName", out var fileNameHighlights))
+                {
+                    Console.WriteLine("File Name Highlights Found");
                     highlightedFileNames.AddRange(fileNameHighlights);
+                }
 
                 if (hit.Highlight.TryGetValue("fileType", out var fileTypeHighlights))
+                {
+                    Console.WriteLine("File Type Highlights Found");
                     highlightedFileTypes.AddRange(fileTypeHighlights);
+                }
+
+                var fileNameParts = hit.Source.FileName.LastIndexOf('.') is int lastDotIndex && lastDotIndex > 0
+                    ? new
+                    {
+                        Name = hit.Source.FileName.Substring(0, lastDotIndex),
+                        Extension = string.Concat(".", hit.Source.FileName.AsSpan(lastDotIndex + 1))
+                    }
+                    : new { Name = hit.Source.FileName, Extension = string.Empty };
 
                 results.Add(new GroupedSearchResults
                 {
@@ -217,9 +233,9 @@ public class ElasticSearchService : IElasticSearchService
                     FileName = hit.Source.FileName,
                     UploadedDate = hit.Source.UploadedDate,
                     Snippets = snippets,
-                    HighlightedFileName = highlightedFileNames.Count != 0 ? "<mark>" + highlightedFileNames.FirstOrDefault() + "</mark>" : null,
-                    HighlightedFileType = highlightedFileTypes.Count != 0 ? "<mark>" + highlightedFileTypes.FirstOrDefault() + "</mark>" : null,
-                    HighlightedUploadedDate = usedFields.Contains("uploadedDate")
+                    HighlightedFileName = highlightedFileNames.Count != 0 && highlightedFileTypes.Count != 0 ? "<mark>" + hit.Source.FileName + "</mark>" : highlightedFileNames.Count != 0 ? "<mark>" + fileNameParts.Name + "</mark>" + fileNameParts.Extension : highlightedFileTypes.Count != 0 ? fileNameParts.Name + "<mark>" + fileNameParts.Extension + "</mark>" : hit.Source.FileName,
+                    HighlightedFileType = highlightedFileTypes.Count != 0 ? fileNameParts.Name + "<mark>" + fileNameParts.Extension + "</mark>" : hit.Source.FileName,
+                    HighlightedUploadedDate = usedFields.Contains("uploadedDate") 
                 });
             }
 
@@ -231,6 +247,30 @@ public class ElasticSearchService : IElasticSearchService
         }
 
         return new SearchResultsViewModel();
+    }
+
+    static void CollectFields(JsonElement element, HashSet<string> fields)
+    {
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var prop in element.EnumerateObject())
+            {
+                if (prop.Value.ValueKind == JsonValueKind.Object)
+                {
+                    // Add the first (and usually only) property as a field
+                    foreach (var inner in prop.Value.EnumerateObject())
+                        fields.Add(inner.Name);
+
+                    // Recurse deeper
+                    CollectFields(prop.Value, fields);
+                }
+                else if (prop.Value.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var item in prop.Value.EnumerateArray())
+                        CollectFields(item, fields);
+                }
+            }
+        }
     }
 
     public async Task<DisplayFilesViewModel> GetFilesAsync(PaginationViewModel paginationViewModel)
