@@ -209,10 +209,11 @@ public class HomeController : Controller
                 var document = new DocumentViewModel
                 {
                     Id = customId,
-                    FileName = file.FileName.ToLowerInvariant(),
+                    FileName = fileNameWithoutExt.ToLowerInvariant(),
                     FileType = Path.GetExtension(file.FileName).ToLowerInvariant(),
                     UploadedBy = user.Id.ToString(),
-                    UploadedDate = DateTime.UtcNow,
+                    UploadedDate = DateTime.Now,
+                    UploadedDateText = DateTime.Now.ToString("dd-MM-yyyy"),
                     Data = base64Data
                 };
 
@@ -220,7 +221,7 @@ public class HomeController : Controller
 
                 var response = await _elasticClient.IndexAsync(document, i => i
                     .Id(document.Id)
-                    .Index("documents")
+                    .Index("documents_v2")
                     .Pipeline("attachment")
                     .Refresh(Elasticsearch.Net.Refresh.WaitFor));
 
@@ -271,7 +272,7 @@ public class HomeController : Controller
     [Authorize]
     public async Task<IActionResult> Download(string id)
     {
-        var response = await _elasticClient.GetAsync<DocumentViewModel>(id, x => x.Index("documents"));
+        var response = await _elasticClient.GetAsync<DocumentViewModel>(id, x => x.Index("documents_v2"));
 
         if (!response.Found)
             return NotFound("Document not found.");
@@ -574,7 +575,7 @@ public class HomeController : Controller
         }
 
         // Refresh the index once after all deletions
-        var refreshResponse = await _elasticClient.Indices.RefreshAsync("documents");
+        var refreshResponse = await _elasticClient.Indices.RefreshAsync("documents_v2");
         Console.WriteLine($"Refresh response: {refreshResponse.DebugInformation}");
 
         if (!refreshResponse.IsValid)

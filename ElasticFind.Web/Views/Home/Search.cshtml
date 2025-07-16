@@ -17,9 +17,10 @@
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-        <h3 class="results-text me-3" style="color: #3f629b;">Your Results Go Here</h3>
-        <h4 class="matching-docs-count d-none" style="color: #3f629b;">Found <span id="matchingDocsCountSpan"> matching
-                documents</span></h4>
+            <h3 class="results-text me-3" style="color: #3f629b;">Your Results Go Here</h3>
+            <h4 class="matching-docs-count d-none" style="color: #3f629b;">Found <span id="matchingDocsCountSpan">
+                    matching
+                    documents</span></h4>
         </div>
         <div class="sorter-container d-flex align-items-center d-none">
             <div class="fs-5" style="font-weight: 500;">Sort By: </div>
@@ -139,11 +140,11 @@
                             <div class="card mb-4">
                                 <div class="card-header d-flex justify-content-between align-items-center">
                                     <div>
-                                        <strong>${doc.highlightedFileName}</strong>
+                                        <strong>${doc.highlightedFileName}${doc.highlightedFileType}</strong>
                                         <span class="total-doc-count text-muted ${totalHighlights == 0 ? 'd-none' : ''}"> - Found ${totalHighlights} match${totalHighlights === 1 ? '' : 'es'}</span>
                                     </div> 
                                     <div class="d-flex align-items-center">
-                                    <div class="uploaded-date-text me-3">Uploaded at - <span class="uploaded-date">${new Date(doc.uploadedDate).toLocaleDateString('en-GB')}</span></div>
+                                    <div class="uploaded-date-text me-3">Uploaded at - <span class="uploaded-date">${doc.highlightedUploadedDate}</span></div>
                                     <div class="pdf-exclude">
                                         <span class="d-flex align-items-center">
                                         <button class="btn btn-sm btn-outline-primary single-export-btn me-2"" data-id="${doc.id}" title="Export this search result">
@@ -236,22 +237,24 @@
 
     $(document).on("keydown", ".rule-value-container input", function (e) {
         if (e.key === "Enter") {
-            currentPage = 1;
-            var rules = $('#builder').queryBuilder('getRules');
-            console.log("Rules: ", rules);
-            var esQuery = $('#builder').queryBuilder('getESBool');
-            console.log("ES Query: ", esQuery);
-            if (esQuery && Object.keys(esQuery).length > 0) {
-                esBoolQuery = esQuery;
-            }
-            searchDocumentContent();
+            setTimeout(function () {
+                currentPage = 1;
+                var rules = $('#builder').queryBuilder('getRules');
+                console.log("Rules: ", rules);
+                var esQuery = $('#builder').queryBuilder('getESBool');
+                console.log("ES Query: ", esQuery);
+                if (esQuery && Object.keys(esQuery).length > 0) {
+                    esBoolQuery = esQuery;
+                }
+                searchDocumentContent();
+            }, 50);
         }
 
         if (e.key === "Tab") {
             e.preventDefault();
             const $nearestAddRuleButton = $(this)
                 .closest(".rules-group-container")
-                .find(".rules-group-header [data-add='rule']"); 
+                .find(".rules-group-header [data-add='rule']");
             if ($nearestAddRuleButton.length) {
                 $nearestAddRuleButton.click();
             }
@@ -260,18 +263,18 @@
         if (e.key === "Delete" && e.altKey) {
             e.preventDefault();
             const $nearestDeleteRuleButton = $(this)
-            .closest(".rule-container")
-            .find("[data-delete='rule']");  
+                .closest(".rule-container")
+                .find("[data-delete='rule']");
             if ($nearestDeleteRuleButton.length) {
-            $nearestDeleteRuleButton.click();
+                $nearestDeleteRuleButton.click();
             }
         }
 
-        if (e.key === "q") {
+        if (e.key === "q" && e.altKey) {
             e.preventDefault();
             const $nearestAddGroupButton = $(this)
                 .closest(".rules-group-container")
-                .find(".rules-group-header [data-add='group']"); 
+                .find(".rules-group-header [data-add='group']");
             if ($nearestAddGroupButton.length) {
                 $nearestAddGroupButton.click();
             }
@@ -280,10 +283,10 @@
         if (e.key === "Backspace" && e.altKey) {
             e.preventDefault();
             const $nearestDeleteGroupButton = $(this)
-            .closest(".rules-group-container")
-            .find(".rules-group-header [data-delete='group']"); 
+                .closest(".rules-group-container")
+                .find(".rules-group-header [data-delete='group']");
             if ($nearestDeleteGroupButton.length) {
-            $nearestDeleteGroupButton.click();
+                $nearestDeleteGroupButton.click();
             }
         }
     });
@@ -662,6 +665,18 @@
             apply_to: ['number', 'date', 'datetime']
         },
         {
+            type: 'less_or_equal',
+            label: 'Less or equal',
+            nb_inputs: 1,
+            apply_to: ['number', 'date', 'datetime']
+        },
+        {
+            type: 'greater_or_equal',
+            label: 'Greater or equal',
+            nb_inputs: 1,
+            apply_to: ['number', 'date', 'datetime']
+        },
+        {
             type: 'between',
             label: 'Between',
             nb_inputs: 2,
@@ -721,7 +736,7 @@
                 changeMonth: true,
                 changeYear: true
             },
-            operators: ['equal', 'not_equal', 'less', 'greater', 'between']
+            operators: ['equal', 'not_equal', 'less_or_equal', 'greater_or_equal', 'between']
         }
         ],
         default_filter: 'attachment.content',  // Set field by default

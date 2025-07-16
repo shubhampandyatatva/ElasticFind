@@ -8,5 +8,5 @@ public class GroupedSearchResults
     public List<string>? Snippets { get; set; }
     public string? HighlightedFileName { get; set; }
     public string? HighlightedFileType { get; set; }
-    public bool HighlightedUploadedDate { get; set; }
+    public string? HighlightedUploadedDate { get; set; }
 }

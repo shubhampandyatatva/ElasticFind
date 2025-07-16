@@ -77,14 +77,14 @@ public class ElasticSearchService : IElasticSearchService
 
     public async Task<bool> DeleteAsync(string id)
     {
-        var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index("documents").Refresh(Refresh.WaitFor));
+        var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index("documents_v2").Refresh(Refresh.WaitFor));
         Console.WriteLine($"Delete response: {response.DebugInformation}");
         return response.IsValid;
     }
 
     public async Task<bool> DeleteMultipleFilesAsync(string id)
     {
-        var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index("documents"));
+        var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index("documents_v2"));
         Console.WriteLine($"Delete response: {response.DebugInformation}");
         return response.IsValid;
     }
@@ -106,7 +106,7 @@ public class ElasticSearchService : IElasticSearchService
             // Prepare highlighting dynamically
             IHighlight highlightBuilder(HighlightDescriptor<DocumentViewModel> h)
             {
-                h.PreTags("<mark>").PostTags("</mark>");
+                // h.PreTags("<mark>").PostTags("</mark>");
 
                 var highlightFields = new List<Func<HighlightFieldDescriptor<DocumentViewModel>, IHighlightField>>
                 {
@@ -116,6 +116,8 @@ public class ElasticSearchService : IElasticSearchService
                         .FragmentSize(200)
                         .NumberOfFragments(50)
                         .NoMatchSize(150)
+                        .PreTags("<mark>")
+                        .PostTags("</mark>")
                 };
 
                 if (usedFields.Contains("fileName.keyword"))
@@ -123,9 +125,11 @@ public class ElasticSearchService : IElasticSearchService
                     Console.WriteLine("Highlighting fileName field");
                     highlightFields.Add(f => f
                         .Field("fileName")
-                    .FragmentSize(200)
-                    .NumberOfFragments(50)
-                    .NoMatchSize(150)
+                        .FragmentSize(200)
+                        .NumberOfFragments(50)
+                        .NoMatchSize(150)
+                        .PreTags("<mark>")
+                        .PostTags("</mark>")
                     );
                 }
 
@@ -134,9 +138,24 @@ public class ElasticSearchService : IElasticSearchService
                     Console.WriteLine("Highlighting fileType field");
                     highlightFields.Add(f => f
                         .Field("fileType")
-                    .FragmentSize(50)
-                    .NumberOfFragments(1)
-                    .NoMatchSize(20)
+                        .FragmentSize(50)
+                        .NumberOfFragments(1)
+                        .NoMatchSize(20)
+                        .PreTags("<mark>")
+                        .PostTags("</mark>")
+                    );
+                }
+
+                if (usedFields.Contains("uploadedDate"))
+                {
+                    Console.WriteLine("Highlighting uploadedDate field");
+                    highlightFields.Add(f => f
+                        .Field("uploadedDate.text")
+                        .FragmentSize(50)
+                        .NumberOfFragments(1)
+                        .NoMatchSize(20)
+                        .PreTags("<mark>")
+                        .PostTags("</mark>")
                     );
                 }
 
@@ -161,13 +180,13 @@ public class ElasticSearchService : IElasticSearchService
 
             // Count
             var countResponse = await _elasticClient.CountAsync<DocumentViewModel>(c => c
-                .Index("documents")
+                .Index("documents_v2")
                 .Query(q => rawQuery)
             );
 
             // Search
             var response = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
-                .Index("documents")
+                .Index("documents_v2")
                 .Query(q => rawQuery)
                 .Highlight(highlightBuilder)
                 .Sort(sort)
@@ -176,9 +195,7 @@ public class ElasticSearchService : IElasticSearchService
             );
 
             var decodedRequest = Encoding.UTF8.GetString(response.ApiCall.RequestBodyInBytes);
-            // var decodedResponse = Encoding.UTF8.GetString(response.ApiCall.ResponseBodyInBytes);
             Console.WriteLine("ElasticClient Request Decoded: " + decodedRequest);
-            // Console.WriteLine("ElasticClient Response Decoded: " + decodedResponse);
 
 
             // Process results
@@ -199,7 +216,7 @@ public class ElasticSearchService : IElasticSearchService
                 var snippets = new List<string>();
                 var highlightedFileNames = new List<string>();
                 var highlightedFileTypes = new List<string>();
-                // var highlightedUploadedDates = new List<string>();
+                string? highlightedUploadedDate = null;
 
                 if (hit.Highlight.TryGetValue("attachment.content", out var contentHighlights))
                 {
@@ -219,6 +236,12 @@ public class ElasticSearchService : IElasticSearchService
                     highlightedFileTypes.AddRange(fileTypeHighlights);
                 }
 
+                if (hit.Highlight.TryGetValue("uploadedDate.text", out var uploadedDateHighlights))
+                {
+                    Console.WriteLine("Uploaded Date Highlights Found");
+                    highlightedUploadedDate = uploadedDateHighlights.FirstOrDefault()?.Split('T')[0];
+                }
+
                 var fileNameParts = hit.Source.FileName.LastIndexOf('.') is int lastDotIndex && lastDotIndex > 0
                     ? new
                     {
@@ -227,15 +250,21 @@ public class ElasticSearchService : IElasticSearchService
                     }
                     : new { Name = hit.Source.FileName, Extension = string.Empty };
 
+                Console.WriteLine("Content Highlights: " + snippets[0]);
+                Console.WriteLine("File Name Highlights: " + string.Join(", ", highlightedFileNames));
+                Console.WriteLine("File Type Highlights: " + string.Join(", ", highlightedFileTypes));
+                Console.WriteLine("Uploaded Date Highlights: " + highlightedUploadedDate);
+
                 results.Add(new GroupedSearchResults
                 {
                     Id = hit.Id,
                     FileName = hit.Source.FileName,
                     UploadedDate = hit.Source.UploadedDate,
                     Snippets = snippets,
-                    HighlightedFileName = highlightedFileNames.Count != 0 && highlightedFileTypes.Count != 0 ? "<mark>" + hit.Source.FileName + "</mark>" : highlightedFileNames.Count != 0 ? "<mark>" + fileNameParts.Name + "</mark>" + fileNameParts.Extension : highlightedFileTypes.Count != 0 ? fileNameParts.Name + "<mark>" + fileNameParts.Extension + "</mark>" : hit.Source.FileName,
-                    HighlightedFileType = highlightedFileTypes.Count != 0 ? fileNameParts.Name + "<mark>" + fileNameParts.Extension + "</mark>" : hit.Source.FileName,
-                    HighlightedUploadedDate = usedFields.Contains("uploadedDate") 
+                    // HighlightedFileName = highlightedFileNames.Count != 0 && highlightedFileTypes.Count != 0 ? "<mark>" + hit.Source.FileName + "</mark>" : highlightedFileNames.Count != 0 ? "<mark>" + fileNameParts.Name + "</mark>" + fileNameParts.Extension : highlightedFileTypes.Count != 0 ? fileNameParts.Name + "<mark>" + fileNameParts.Extension + "</mark>" : hit.Source.FileName,
+                    HighlightedFileName = highlightedFileNames.Count != 0 ? highlightedFileNames.FirstOrDefault() : hit.Source.FileName,
+                    HighlightedFileType = highlightedFileTypes.Count != 0 ? highlightedFileTypes.FirstOrDefault() : hit.Source.FileType,
+                    HighlightedUploadedDate = highlightedUploadedDate ?? hit.Source.UploadedDate?.ToString("yyyy-MM-dd"),
                 });
             }
 
@@ -276,7 +305,7 @@ public class ElasticSearchService : IElasticSearchService
     public async Task<DisplayFilesViewModel> GetFilesAsync(PaginationViewModel paginationViewModel)
     {
         var searchResponse = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
-            .Index("documents")
+            .Index("documents_v2")
             .From((paginationViewModel.Page - 1) * paginationViewModel.PageSize)
             .Size(paginationViewModel.PageSize)
             .Query(q =>
@@ -305,7 +334,7 @@ public class ElasticSearchService : IElasticSearchService
         paginationViewModel.TotalRecords = paginationViewModel.SearchString == null ?
                 (int)searchResponse.Total :
                 (int)(await _elasticClient.CountAsync<DocumentViewModel>(c => c
-                .Index("documents")
+                .Index("documents_v2")
                 .Query(q => q.Wildcard(w => w
                     .Field(f => f.FileName.Suffix("keyword"))
                     .Value($"*{paginationViewModel.SearchString.ToLowerInvariant()}*")
@@ -358,7 +387,7 @@ public class ElasticSearchService : IElasticSearchService
     public async Task<List<string>> GetAllFileIdsAsync()
     {
         var searchResponse = await _elasticClient.SearchAsync<FileViewModel>(s => s
-            .Index("documents")
+            .Index("documents_v2")
             .Size(10000)  // Elasticsearch default limit is 10,000
             .Source(src => src.Includes(f => f.Field(fm => fm.Id)))
             .Query(q => q.MatchAll())
