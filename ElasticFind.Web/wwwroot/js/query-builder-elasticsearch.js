@@ -37,8 +37,20 @@
             between: function (v) { return { 'gte': v[0], 'lte': v[1] }; },
             // in: function (v) { return v.split(',').map(function (e) { return e.trim(); }); },
             // not_in: function (v) { return v.split(',').map(function (e) { return e.trim(); }); },
-            // is_in: function (v) { return Array.isArray(v) ? v : String(v).split(',').map(e => e.trim()); },
-            // is_not_in: function (v) { return Array.isArray(v) ? v : String(v).split(',').map(e => e.trim()); },
+            is_in: function (v) {
+                const allTypes = '.pdf, .docx, .doc, .xlsx, .xls, .txt, .pptx, .ppt, .rtf';
+                if( v === 'Other') {
+                    return allTypes;
+                }
+                return v;
+            },
+            is_not_in: function (v) {
+                const allTypes = '.pdf, .docx, .doc, .xlsx, .xls, .txt, .pptx, .ppt, .rtf';
+                if( v === 'Other') {
+                    return allTypes;
+                }
+                return v;
+            },
             in: function (v) {
                 const allTypes = ['.pdf', '.docx', '.doc', '.xlsx', '.xls', '.txt', '.pptx', '.ppt', '.rtf'];
 
@@ -62,6 +74,9 @@
             fuzzy: function (v) {
                 console.log("Fuzzy search ES query: ", v);
                 return { query: v, fuzziness: 'AUTO' };
+            },
+            match_phrase: function (v) {
+                return v;
             }
             // equal: function (v) {
             //     const allTypes = ['.pdf', '.docx', '.doc', '.xlsx', '.xls', '.txt', '.pptx', '.ppt', '.rtf'];
@@ -155,7 +170,7 @@
 
                         // this is a corner case, when we have an "or" group and a negative operator,
                         // we express this with a sub boolean query and must_not.
-                        if (data.condition === 'OR' && (rule.operator === 'not_equal' || rule.operator === 'not_in' || rule.operator === 'is_null' || rule.operator === 'not_contains' || rule.operator === 'not_begins_with' || rule.operator === 'not_ends_with')) {
+                        if (data.condition === 'OR' && (rule.operator === 'not_equal' || rule.operator === 'not_in' || rule.operator === 'is_null' || rule.operator === 'not_contains' || rule.operator === 'not_begins_with' || rule.operator === 'not_ends_with') || (rule.operator === 'is_not_in' && rule.value !== "Other")) {
                             return { 'bool': { 'must_not': [part] } }
                         } else {
                             return part
@@ -286,8 +301,9 @@
         const wildcard = /^(contains|not_contains|begins_with|not_begins_with|ends_with|not_ends_with)$/.exec(rule.operator);
         const terms = /^(in|not_in)$/.exec(rule.operator);
         const range = /^(less|less_or_equal|greater|greater_or_equal|between)$/.exec(rule.operator);
-        const is_in = /^(is_in|is_not_in)$/.exec(rule.operator);
+        // const is_in = /^(is_in|is_not_in)$/.exec(rule.operator);
         // const fuzzy = /^(fuzzy)$/.exec(rule.operator);
+        const match_phrase = /^(match_phrase)$/.exec(rule.operator);
 
         if (wildcard !== null) {
             return 'wildcard';
@@ -298,9 +314,12 @@
         if (range !== null) {
             return 'range';
         }
-        if( is_in !== null) {
-            return 'terms';
+        if (match_phrase !== null) {
+            return 'match_phrase';
         }
+        // if( is_in !== null) {
+        //     return 'terms';
+        // }
         // if (fuzzy !== null) {
         //     return 'match';
         // }
@@ -314,10 +333,8 @@
     * Get the right type of clause in the bool query
     */
     function getClauseWord(condition, operator, value) {
-        if (operator === 'in' && value == "Other") return 'must_not'; // Special case for "Other" file type
-        if (operator === 'not_in' && value == "Other") return 'must'; 
-        if (condition === 'AND' && (operator !== 'not_equal' && operator !== 'not_in' && operator !== 'not_contains' && operator !== 'not_begins_with' && operator !== 'not_ends_with')) { return 'must' }
-        if (condition === 'AND' && (operator === 'not_equal' || operator == 'not_in' || operator === 'not_contains' || operator === 'not_begins_with' || operator === 'not_ends_with')) { return 'must_not' }
+        if (condition === 'AND' && (operator !== 'not_equal' && operator !== 'not_in' && operator !== 'not_contains' && operator !== 'not_begins_with' && operator !== 'not_ends_with' || (operator === 'is_not_in' && value == "Other"))) { return 'must' }
+        if (condition === 'AND' && (operator === 'not_equal' || operator == 'not_in' || operator === 'not_contains' || operator === 'not_begins_with' || operator === 'not_ends_with' || (operator === 'is_in' && value == "Other"))) { return 'must_not' }
         if (condition === 'OR') { return 'should' }
     }
 }));

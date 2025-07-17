@@ -4,9 +4,8 @@
 }
 
 <head>
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/css/query-builder.default.min.css">
-    <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+    <link rel="stylesheet" href="~/css/query-builder-default-min.css">
+    <link rel="stylesheet" href="~/css/jquery-ui.css">
 </head>
 
 <body>
@@ -73,8 +72,8 @@
         </button>
     </div>
 
-    <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jQuery-QueryBuilder/dist/js/query-builder.standalone.min.js"></script>
+    <script src="~/js/jquery-ui-min.js"></script>
+    <script src="~/js/query-builder-standalone-min.js"></script>
     <script src="~/js/query-builder-elasticsearch.js"></script>
 </body>
 
@@ -239,6 +238,7 @@
         if (e.key === "Enter") {
             setTimeout(function () {
                 currentPage = 1;
+                $("#sortBySelect").val("1");
                 var rules = $('#builder').queryBuilder('getRules');
                 console.log("Rules: ", rules);
                 var esQuery = $('#builder').queryBuilder('getESBool');
@@ -681,6 +681,12 @@
             label: 'Between',
             nb_inputs: 2,
             apply_to: ['number', 'date', 'datetime']
+        },
+        {
+            type: 'match_phrase',
+            label: 'match full phrase',
+            nb_inputs: 1,
+            apply_to: ['string', 'number', 'datetime', 'boolean']
         }
         ]
     });
@@ -695,21 +701,22 @@
                     'equal', 'not_equal', 'contains', 'not_contains',
                     'begins_with', 'not_begins_with',
                     'ends_with', 'not_ends_with',
-                    'in', 'not_in', 'fuzzy'
+                    'fuzzy', 'match_phrase'
                 ]
             },
             {
-                id: 'fileName.keyword',
+                id: 'fileName',
                 label: 'File Name',
                 type: 'string',
                 operators: [
+                    'equal', 'not_equal',
                     'contains', 'not_contains',
                     'begins_with', 'not_begins_with',
-                    'ends_with', 'not_ends_with'
+                    'ends_with', 'not_ends_with', 'match_phrase'
                 ]
             },
             {
-                id: 'fileType.keyword',
+                id: 'fileType',
                 label: 'File Type',
                 type: 'string',
                 input: 'select',
@@ -723,10 +730,10 @@
                 '.rtf': 'rtf',
                 'Other': 'Other'
             },
-            operators: ['in', 'not_in'] // - include this feature when we use multiple select
+            operators: ['is_in', 'is_not_in'] // - include this feature when we use multiple select
             },
         {
-            id: 'uploadedDate',
+            id: 'uploadedDate.text',
             label: 'Upload Date',
             type: 'date',
             input: 'text',
@@ -736,7 +743,7 @@
                 changeMonth: true,
                 changeYear: true
             },
-            operators: ['equal', 'not_equal', 'less_or_equal', 'greater_or_equal', 'between']
+            operators: ['equal', 'not_equal', 'less_or_equal', 'greater_or_equal', 'between', 'match_phrase']
         }
         ],
         default_filter: 'attachment.content',  // Set field by default
@@ -744,7 +751,7 @@
     });
 
     $('#builder').on('afterCreateRuleInput.queryBuilder', function (e, rule) {
-        if (rule.filter?.id === 'uploadedDate' && ['equal', 'less', 'greater'].includes(rule.operator.type)) {
+        if (rule.filter?.id === 'uploadedDate.text' && ['equal', 'less', 'greater'].includes(rule.operator.type)) {
             const $input = rule.$el.find('.rule-value-container input');
             const minDate = new Date('2020-01-01');
             const maxDate = new Date(); // today
@@ -756,7 +763,7 @@
             $input.datepicker('setDate', maxDate); // default to today's date
         }
 
-        if (rule.filter?.id === 'uploadedDate' && rule.operator.type === 'between') {
+        if (rule.filter?.id === 'uploadedDate.text' && rule.operator.type === 'between') {
             const $inputs = rule.$el.find('.rule-value-container input');
 
             const $start = $inputs.eq(0);
@@ -791,6 +798,7 @@
 
     $('#btnSearch').on('click', function () {
         currentPage = 1;
+        $("#sortBySelect").val("1");
         var rules = $('#builder').queryBuilder('getRules');
         console.log("Rules: ", rules);
         var esQuery = $('#builder').queryBuilder('getESBool');

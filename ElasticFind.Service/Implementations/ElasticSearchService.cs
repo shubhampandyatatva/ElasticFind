@@ -106,8 +106,6 @@ public class ElasticSearchService : IElasticSearchService
             // Prepare highlighting dynamically
             IHighlight highlightBuilder(HighlightDescriptor<DocumentViewModel> h)
             {
-                // h.PreTags("<mark>").PostTags("</mark>");
-
                 var highlightFields = new List<Func<HighlightFieldDescriptor<DocumentViewModel>, IHighlightField>>
                 {
                     // Always include attachment.content
@@ -120,7 +118,7 @@ public class ElasticSearchService : IElasticSearchService
                         .PostTags("</mark>")
                 };
 
-                if (usedFields.Contains("fileName.keyword"))
+                if (usedFields.Contains("fileName"))
                 {
                     Console.WriteLine("Highlighting fileName field");
                     highlightFields.Add(f => f
@@ -133,7 +131,7 @@ public class ElasticSearchService : IElasticSearchService
                     );
                 }
 
-                if (usedFields.Contains("fileType.keyword"))
+                if (usedFields.Contains("fileType"))
                 {
                     Console.WriteLine("Highlighting fileType field");
                     highlightFields.Add(f => f
@@ -146,7 +144,7 @@ public class ElasticSearchService : IElasticSearchService
                     );
                 }
 
-                if (usedFields.Contains("uploadedDate"))
+                if (usedFields.Contains("uploadedDate.text"))
                 {
                     Console.WriteLine("Highlighting uploadedDate field");
                     highlightFields.Add(f => f
@@ -204,9 +202,9 @@ public class ElasticSearchService : IElasticSearchService
             {
                 Console.WriteLine($"Document ID: {hit.Id}");
 
-                foreach (var highlight1 in hit.Highlight)
+                foreach (var highlight in hit.Highlight)
                 {
-                    Console.WriteLine($"Highlighted Field: {highlight1.Key}");
+                    Console.WriteLine($"Highlighted Field: {highlight.Key}");
                     // foreach (var fragment in highlight1.Value)
                     // {
                     //     Console.WriteLine($" - {fragment}");

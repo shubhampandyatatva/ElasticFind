@@ -253,7 +253,7 @@ static async Task ValidateAndInitializeElasticsearchAsync(IElasticClient client)
 
     var health = await client.Cluster.HealthAsync();
     if (health.Status.ToString().Equals("red", StringComparison.OrdinalIgnoreCase))
-        throw new Exception("Elasticsearch is not ready to be used. Try restarting the service.");
+        throw new Exception("Elasticsearch is not ready. Try restarting the service.");
 
     var indexExists = await client.Indices.ExistsAsync("documents");
     if (!indexExists.Exists)
