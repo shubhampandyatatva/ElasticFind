@@ -7,6 +7,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Nest;
 using Newtonsoft.Json.Linq;
 using System;
+using Microsoft.Extensions.Configuration;
 
 namespace ElasticFind.Service.Implementations;
 
@@ -15,12 +16,14 @@ public class ElasticSearchService : IElasticSearchService
     private readonly IElasticClient _elasticClient;
     private readonly IUserService _userService;
     private readonly IMemoryCache _cache;
+    private readonly IConfiguration _configuration;
 
-    public ElasticSearchService(IElasticClient elasticClient, IUserService userService, IMemoryCache cache)
+    public ElasticSearchService(IElasticClient elasticClient, IUserService userService, IMemoryCache cache, IConfiguration configuration)
     {
         _elasticClient = elasticClient;
         _userService = userService;
         _cache = cache;
+        _configuration = configuration;
     }
 
     public async Task<bool> CreateDocumentIndexAsync(string indexName)
@@ -77,14 +80,14 @@ public class ElasticSearchService : IElasticSearchService
 
     public async Task<bool> DeleteAsync(string id)
     {
-        var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index("documents_v2").Refresh(Refresh.WaitFor));
+        var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index(_configuration["ElasticSearch:IndexName"]).Refresh(Refresh.WaitFor));
         Console.WriteLine($"Delete response: {response.DebugInformation}");
         return response.IsValid;
     }
 
     public async Task<bool> DeleteMultipleFilesAsync(string id)
     {
-        var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index("documents_v2"));
+        var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index(_configuration["ElasticSearch:IndexName"]));
         Console.WriteLine($"Delete response: {response.DebugInformation}");
         return response.IsValid;
     }
@@ -178,13 +181,13 @@ public class ElasticSearchService : IElasticSearchService
 
             // Count
             var countResponse = await _elasticClient.CountAsync<DocumentViewModel>(c => c
-                .Index("documents_v2")
+                .Index(_configuration["ElasticSearch:IndexName"])
                 .Query(q => rawQuery)
             );
 
             // Search
             var response = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
-                .Index("documents_v2")
+                .Index(_configuration["ElasticSearch:IndexName"])
                 .Query(q => rawQuery)
                 .Highlight(highlightBuilder)
                 .Sort(sort)
@@ -303,7 +306,7 @@ public class ElasticSearchService : IElasticSearchService
     public async Task<DisplayFilesViewModel> GetFilesAsync(PaginationViewModel paginationViewModel)
     {
         var searchResponse = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
-            .Index("documents_v2")
+            .Index(_configuration["ElasticSearch:IndexName"])
             .From((paginationViewModel.Page - 1) * paginationViewModel.PageSize)
             .Size(paginationViewModel.PageSize)
             .Query(q =>
@@ -332,7 +335,7 @@ public class ElasticSearchService : IElasticSearchService
         paginationViewModel.TotalRecords = paginationViewModel.SearchString == null ?
                 (int)searchResponse.Total :
                 (int)(await _elasticClient.CountAsync<DocumentViewModel>(c => c
-                .Index("documents_v2")
+                .Index(_configuration["ElasticSearch:IndexName"])
                 .Query(q => q.Wildcard(w => w
                     .Field(f => f.FileName.Suffix("keyword"))
                     .Value($"*{paginationViewModel.SearchString.ToLowerInvariant()}*")
@@ -385,7 +388,7 @@ public class ElasticSearchService : IElasticSearchService
     public async Task<List<string>> GetAllFileIdsAsync()
     {
         var searchResponse = await _elasticClient.SearchAsync<FileViewModel>(s => s
-            .Index("documents_v2")
+            .Index(_configuration["ElasticSearch:IndexName"])
             .Size(10000)  // Elasticsearch default limit is 10,000
             .Source(src => src.Includes(f => f.Field(fm => fm.Id)))
             .Query(q => q.MatchAll())

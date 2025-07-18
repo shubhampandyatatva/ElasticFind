@@ -4,14 +4,14 @@
     "D:\\Tatva\\ElasticFind\\ElasticFind.Service\\ElasticFind.Service.csproj": {}
   },
   "projects": {
-    "D:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj": {
+    "d:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj",
+        "projectUniqueName": "d:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj",
         "projectName": "ElasticFind.Repository",
-        "projectPath": "D:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj",
+        "projectPath": "d:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj",
         "packagesPath": "C:\\Users\\pcs90\\.nuget\\packages\\",
-        "outputPath": "D:\\Tatva\\ElasticFind\\ElasticFind.Repository\\obj\\",
+        "outputPath": "d:\\Tatva\\ElasticFind\\ElasticFind.Repository\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\pcs90\\AppData\\Roaming\\NuGet\\NuGet.Config"
@@ -121,8 +121,8 @@
           "net7.0": {
             "targetAlias": "net7.0",
             "projectReferences": {
-              "D:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj": {
-                "projectPath": "D:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj"
+              "d:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj": {
+                "projectPath": "d:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj"
               }
             }
           }

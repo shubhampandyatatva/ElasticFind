@@ -221,7 +221,7 @@ public class HomeController : Controller
 
                 var response = await _elasticClient.IndexAsync(document, i => i
                     .Id(document.Id)
-                    .Index("documents_v2")
+                    .Index(_config["Elasticsearch:IndexName"] ?? "documents")
                     .Pipeline("attachment")
                     .Refresh(Elasticsearch.Net.Refresh.WaitFor));
 
@@ -272,7 +272,7 @@ public class HomeController : Controller
     [Authorize]
     public async Task<IActionResult> Download(string id)
     {
-        var response = await _elasticClient.GetAsync<DocumentViewModel>(id, x => x.Index("documents_v2"));
+        var response = await _elasticClient.GetAsync<DocumentViewModel>(id, x => x.Index(_config["Elasticsearch:IndexName"] ?? "documents"));
 
         if (!response.Found)
             return NotFound("Document not found.");

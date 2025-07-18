@@ -12,12 +12,17 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Rotativa.AspNetCore;
 using Nest;
+using ElasticFind.Web.MiddleWare;
+using ElasticFind.Web.SerilogConfig;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ElasticFindContext>(options =>
 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+SerilogConfiguration.ConfigureSerilog(builder.Configuration);
+builder.Services.AddSingleton(Log.Logger);
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 
 builder.Services.AddScoped<IAuthService, AuthService>();
@@ -97,7 +102,7 @@ var settings = new ConnectionSettings(pool)
     // .BasicAuthentication("elastic", "xU0dIO7RHrWFwVl-cgb*")
     .DisableDirectStreaming()
     .EnableDebugMode()
-    .DefaultIndex("documents");
+    .DefaultIndex(builder.Configuration["Elasticsearch:IndexName"] ?? "documents");
 
 var client = new ElasticClient(settings);
 
@@ -112,88 +117,6 @@ catch (Exception ex)
 {
     StartupDiagnostics.ElasticsearchError = ex.Message;
 }
-
-// // Check if index exists and create if not
-// var indexExists = client.Indices.Exists("documents3");
-// if (!indexExists.Exists)
-// {
-//     var createIndexResponse = client.Indices.Create("documents3", c => c
-//         .Map<DocumentViewModel>(m => m.AutoMap())
-//     );
-
-//     if (!createIndexResponse.IsValid)
-//     {
-//         Console.WriteLine("Failed to create index!");
-//         Console.WriteLine($"Debug Info: {createIndexResponse.DebugInformation}");
-//         Console.WriteLine($"Server Error: {createIndexResponse.ServerError}");
-//     }
-//     else
-//     {
-//         Console.WriteLine("'Documents3' index created.");
-//     }
-// }
-
-// var getPipelineResponse = client.Ingest.GetPipeline(g => g.Id("attachment"));
-
-// if (!getPipelineResponse.IsValid || !getPipelineResponse.Pipelines.ContainsKey("attachment"))
-// {
-//     var putPipelineResponse = client.Ingest.PutPipeline("attachment", p => p
-//         .Description("Extract attachment information")
-//         .Processors(pr => pr
-//             .Attachment<DocumentViewModel>(a => a
-//                 .Field(f => f.Data)
-//                 .TargetField(f => f.Attachment)
-//             )
-//         )
-//     );
-
-//     if (!putPipelineResponse.IsValid)
-//     {
-//         Console.WriteLine($"Failed to create pipeline: {putPipelineResponse.ServerError}");
-//     }
-//     else
-//     {
-//         Console.WriteLine("Attachment pipeline created.");
-//     }
-// }
-// else
-// {
-//     Console.WriteLine("Attachment pipeline already exists.");
-// }
-
-// var hrRecord = new Humanresources
-// {
-//     Nationalidnumber = "IND1234567",
-//     LoginID = "0001",
-//     Jobtitle = "Software Engineer",
-//     Gender = "Male",
-// };
-
-// var indexResponse = client.IndexDocument(hrRecord);
-
-// if (indexResponse.IsValid)
-// {
-//     Console.WriteLine("Document indexed successfully.");
-// }
-// else
-// {
-//     Console.WriteLine("Failed to index document.");
-//     Console.WriteLine($"Debug Info: {indexResponse.DebugInformation}");
-// }
-
-// var searchResponse = client.Search<Humanresources>(s => s
-//     .Query(q => q
-//         .Match(m => m
-//             .Field(f => f.FileName)
-//             .Query("Resume")
-//         )
-//     )
-// );
-
-// foreach (var doc in searchResponse.Documents)
-// {
-//     Console.WriteLine($"Found: {doc.FileName} - {doc.Id}");
-// }
 
 builder.Services.AddCors(options =>
 {
@@ -224,12 +147,12 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
-
+// Use Serilog for logging
 app.UseCors("OnlyOfficePolicy");
 
 app.UseWebSockets();
 app.UseRotativa();
-
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 

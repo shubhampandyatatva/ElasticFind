@@ -709,7 +709,6 @@
                 label: 'File Name',
                 type: 'string',
                 operators: [
-                    'equal', 'not_equal',
                     'contains', 'not_contains',
                     'begins_with', 'not_begins_with',
                     'ends_with', 'not_ends_with', 'match_phrase'
@@ -720,31 +719,30 @@
                 label: 'File Type',
                 type: 'string',
                 input: 'select',
-                @* multiple: true, *@
-            values: {
-                '.pdf': 'pdf',
-                '.docx,.doc': 'docx/dox',
-                '.xlsx,.xls': 'xlsx/xls',
-                '.txt': 'txt',
-                '.pptx,.ppt': 'pptx/ppt',
-                '.rtf': 'rtf',
-                'Other': 'Other'
+                values: {
+                    '.pdf': 'pdf',
+                    '.docx,.doc': 'docx/dox',
+                    '.xlsx,.xls': 'xlsx/xls',
+                    '.txt': 'txt',
+                    '.pptx,.ppt': 'pptx/ppt',
+                    '.rtf': 'rtf',
+                    'Other': 'Other'
+                },
+                operators: ['is_in', 'is_not_in']
             },
-            operators: ['is_in', 'is_not_in'] // - include this feature when we use multiple select
-            },
-        {
-            id: 'uploadedDate.text',
-            label: 'Upload Date',
-            type: 'date',
-            input: 'text',
-            plugin: 'datepicker',
-            plugin_config: {
-                dateFormat: 'yy-mm-dd',
-                changeMonth: true,
-                changeYear: true
-            },
-            operators: ['equal', 'not_equal', 'less_or_equal', 'greater_or_equal', 'between', 'match_phrase']
-        }
+            {
+                id: 'uploadedDateText',
+                label: 'Upload Date',
+                type: 'date',
+                input: 'text',
+                plugin: 'datepicker',
+                plugin_config: {
+                    dateFormat: 'dd-MM-yy',
+                    changeMonth: true,
+                    changeYear: true
+                },
+                operators: ['equal', 'not_equal', 'less_or_equal', 'greater_or_equal', 'between', 'match_phrase']
+            }
         ],
         default_filter: 'attachment.content',  // Set field by default
         allow_empty: true

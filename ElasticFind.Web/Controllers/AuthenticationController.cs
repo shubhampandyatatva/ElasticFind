@@ -1,3 +1,5 @@
+using System.Diagnostics;
+using System.Reflection;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using ElasticFind.Repository.Data;
@@ -5,6 +7,8 @@ using ElasticFind.Repository.ViewModels;
 using ElasticFind.Service.Constants;
 using ElasticFind.Service.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Serilog;
+using Serilog.Context;
 
 namespace ElasticFind.Web.Controllers;
 
@@ -14,12 +18,14 @@ public class AuthenticationController : Controller
     private readonly IResetPasswordService _resetPasswordService;
     private readonly IEmailService _emailService;
     private readonly IJwtService _jwtService;
-    public AuthenticationController(IAuthService authService, IResetPasswordService resetPasswordService, IEmailService emailService, IJwtService jwtService)
+    private readonly Serilog.ILogger _logger;
+    public AuthenticationController(IAuthService authService, IResetPasswordService resetPasswordService, IEmailService emailService, IJwtService jwtService, Serilog.ILogger logger)
     {
         _authService = authService;
         _resetPasswordService = resetPasswordService;
         _emailService = emailService;
         _jwtService = jwtService;
+        _logger = logger;
     }
 
     [HttpGet]
@@ -79,7 +85,7 @@ public class AuthenticationController : Controller
             TempData["ErrorMessage"] = StartupDiagnostics.ElasticsearchError;
             return View();
         }
-        
+
         if (ModelState.IsValid)
         {
             JsonResponse response = await _authService.ValidateUser(loginViewModel.Email, loginViewModel.Password);
@@ -131,7 +137,30 @@ public class AuthenticationController : Controller
 
                 TempData["SuccessMessage"] = response.Message;
 
-                return user.Role.RoleName == Roles.Admin ? RedirectToAction("Index", "Home") : RedirectToAction("Search", "Home");
+                using (LogContext.PushProperty("EnvironmentName", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown"))
+                using (LogContext.PushProperty("Exception", null)) // no exception
+                using (LogContext.PushProperty("FilePath", HttpContext.Request.Path))
+                using (LogContext.PushProperty("IPAddress", HttpContext.Connection.RemoteIpAddress?.ToString()))
+                using (LogContext.PushProperty("Level", "Information"))
+                using (LogContext.PushProperty("LineNumber", new StackTrace(true).GetFrame(0)?.GetFileLineNumber()))
+                using (LogContext.PushProperty("MachineName", Environment.MachineName))
+                using (LogContext.PushProperty("Message", "User login successful"))
+                using (LogContext.PushProperty("MessageTemplate", "User {UserName} logged in successfully"))
+                using (LogContext.PushProperty("MethodName", MethodBase.GetCurrentMethod()?.Name))
+                using (LogContext.PushProperty("ProcessInfo", $"PID: {Environment.ProcessId}, App: {Assembly.GetEntryAssembly()?.GetName().Name}"))
+                using (LogContext.PushProperty("Properties", null)) // optional custom props
+                using (LogContext.PushProperty("PropsTest", "login-test")) // sample static value
+                using (LogContext.PushProperty("RaiseDate", DateTime.Now))
+                using (LogContext.PushProperty("ThreadId", Environment.CurrentManagedThreadId))
+                using (LogContext.PushProperty("UserAgent", Request.Headers["User-Agent"].ToString()))
+                using (LogContext.PushProperty("UserName", user.Username))
+                {
+                    _logger.Information("User {UserName} logged in successfully", user.Username);
+                    Log.Information("User {UserName} logged in successfully", user.Username);
+                    Console.WriteLine($"User {user.Username} logged in successfully");
+                }
+
+                return user.Role?.RoleName == Roles.Admin ? RedirectToAction("Index", "Home") : RedirectToAction("Search", "Home");
             }
             else
             {
