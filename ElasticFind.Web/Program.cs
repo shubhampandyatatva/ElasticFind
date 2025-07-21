@@ -13,17 +13,56 @@ using Microsoft.IdentityModel.Tokens;
 using Rotativa.AspNetCore;
 using Nest;
 using ElasticFind.Web.MiddleWare;
-using ElasticFind.Web.SerilogConfig;
 using Serilog;
+using Serilog.Sinks.PostgreSQL;
+using ElasticFind.Service.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<ElasticFindContext>(options =>
 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-SerilogConfiguration.ConfigureSerilog(builder.Configuration);
-builder.Services.AddSingleton(Log.Logger);
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+
+// Configure Serilog
+var columnOptions = new Dictionary<string, ColumnWriterBase>
+{
+    { "environment_name", new SinglePropertyColumnWriter("environment_name", PropertyWriteMethod.Raw, NpgsqlTypes.NpgsqlDbType.Text) },
+    { "exception", new ExceptionColumnWriter() },
+    { "file_path", new SinglePropertyColumnWriter("file_path", PropertyWriteMethod.Raw, NpgsqlTypes.NpgsqlDbType.Text) },
+    { "ip_address", new SinglePropertyColumnWriter("ip_address", PropertyWriteMethod.Raw, NpgsqlTypes.NpgsqlDbType.Text) },
+    { "level", new LevelColumnWriter(true, NpgsqlTypes.NpgsqlDbType.Varchar) },
+    { "line_number", new SinglePropertyColumnWriter("line_number", PropertyWriteMethod.Raw, NpgsqlTypes.NpgsqlDbType.Integer) },
+    { "machine_name", new SinglePropertyColumnWriter("machine_name", PropertyWriteMethod.Raw, NpgsqlTypes.NpgsqlDbType.Text) },
+    { "message", new RenderedMessageColumnWriter() },
+    { "message_template", new MessageTemplateColumnWriter() },
+    { "method_name", new SinglePropertyColumnWriter("method_name", PropertyWriteMethod.Raw, NpgsqlTypes.NpgsqlDbType.Text) },
+    { "process_info", new SinglePropertyColumnWriter("process_info", PropertyWriteMethod.Raw, NpgsqlTypes.NpgsqlDbType.Text) },
+    { "properties", new PropertiesColumnWriter(NpgsqlTypes.NpgsqlDbType.Jsonb) },
+    { "props_test", new SinglePropertyColumnWriter("props_test", PropertyWriteMethod.Raw, NpgsqlTypes.NpgsqlDbType.Text) },
+    { "raise_date", new SinglePropertyColumnWriter("raise_date", PropertyWriteMethod.Raw, NpgsqlTypes.NpgsqlDbType.Timestamp) },
+    { "thread_id", new SinglePropertyColumnWriter("thread_id", PropertyWriteMethod.Raw, NpgsqlTypes.NpgsqlDbType.Integer) },
+    { "user_agent", new SinglePropertyColumnWriter("user_agent", PropertyWriteMethod.Raw, NpgsqlTypes.NpgsqlDbType.Text) },
+    { "user_name", new SinglePropertyColumnWriter("user_name", PropertyWriteMethod.Raw, NpgsqlTypes.NpgsqlDbType.Text) }
+};
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.WithThreadId()
+    .Enrich.WithEnvironmentName()
+    .Enrich.WithMachineName()
+    .Enrich.WithProcessId()
+    .Enrich.WithProcessName()
+    .Enrich.FromLogContext()
+    .WriteTo.Console()
+    .WriteTo.PostgreSQL(
+        connectionString: builder.Configuration.GetConnectionString("DefaultConnection"),
+        tableName: "logs",
+        columnOptions: columnOptions,
+        needAutoCreateTable: true)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
@@ -115,7 +154,7 @@ try
 }
 catch (Exception ex)
 {
-    StartupDiagnostics.ElasticsearchError = ex.Message;
+    StartupDiagnostics.ElasticsearchError = ex.Message; 
 }
 
 builder.Services.AddCors(options =>
@@ -172,11 +211,11 @@ static async Task ValidateAndInitializeElasticsearchAsync(IElasticClient client)
 {
     var pingResponse = await client.PingAsync();
     if (!pingResponse.IsValid)
-        throw new Exception("Elasticsearch service is not reachable! Try restarting the service.");
+        throw new ElasticSearchException("Elasticsearch service is not reachable! Please start the elasticsearch service.");
 
     var health = await client.Cluster.HealthAsync();
     if (health.Status.ToString().Equals("red", StringComparison.OrdinalIgnoreCase))
-        throw new Exception("Elasticsearch is not ready. Try restarting the service.");
+        throw new ElasticSearchException("Elasticsearch service is not ready. Try restarting the service.");
 
     var indexExists = await client.Indices.ExistsAsync("documents");
     if (!indexExists.Exists)
@@ -186,7 +225,7 @@ static async Task ValidateAndInitializeElasticsearchAsync(IElasticClient client)
         );
 
         if (!createIndexResponse.IsValid)
-            throw new Exception("Failed to initialize elasticsearch properly!");
+            throw new ElasticSearchException("There was some issue initializing Elasticsearch properly! Try restarting the elasticsearch service or the application.");
         else
             Console.WriteLine("'Documents' index created.");
     }
@@ -205,7 +244,7 @@ static async Task ValidateAndInitializeElasticsearchAsync(IElasticClient client)
         bool hasAttachmentPlugin = pluginResponse.Records.Any(r => r.Component.Contains("ingest-attachment"));
 
         if (!hasAttachmentPlugin)
-            throw new Exception("Failed to initialize elasticsearch properly!");
+            throw new ElasticSearchException("Ingest-Attachment plugin is required for processing documents. Please install it to use ElasticFind.");
     }
 
     var pipelineResponse = await client.Ingest.GetPipelineAsync(p => p.Id("attachment"));
@@ -222,7 +261,7 @@ static async Task ValidateAndInitializeElasticsearchAsync(IElasticClient client)
         );
 
         if (!putPipelineResponse.IsValid)
-            throw new Exception("Failed to initialize elasticsearch properly!");
+            throw new ElasticSearchException("There was some issue initializing Elasticsearch properly! Try restarting the application.");
         else
             Console.WriteLine("Attachment pipeline created.");
     }

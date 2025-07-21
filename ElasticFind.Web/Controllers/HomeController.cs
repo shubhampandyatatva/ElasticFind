@@ -214,6 +214,7 @@ public class HomeController : Controller
                     UploadedBy = user.Id.ToString(),
                     UploadedDate = DateTime.Now,
                     UploadedDateText = DateTime.Now.ToString("dd-MM-yyyy"),
+                    
                     Data = base64Data
                 };
 

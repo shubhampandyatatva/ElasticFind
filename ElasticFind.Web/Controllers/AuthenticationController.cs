@@ -18,14 +18,12 @@ public class AuthenticationController : Controller
     private readonly IResetPasswordService _resetPasswordService;
     private readonly IEmailService _emailService;
     private readonly IJwtService _jwtService;
-    private readonly Serilog.ILogger _logger;
-    public AuthenticationController(IAuthService authService, IResetPasswordService resetPasswordService, IEmailService emailService, IJwtService jwtService, Serilog.ILogger logger)
+    public AuthenticationController(IAuthService authService, IResetPasswordService resetPasswordService, IEmailService emailService, IJwtService jwtService)
     {
         _authService = authService;
         _resetPasswordService = resetPasswordService;
         _emailService = emailService;
         _jwtService = jwtService;
-        _logger = logger;
     }
 
     [HttpGet]
@@ -33,32 +31,35 @@ public class AuthenticationController : Controller
     {
         if (!string.IsNullOrEmpty(StartupDiagnostics.ElasticsearchError))
         {
-            Console.WriteLine("Elasticsearch Error: " + StartupDiagnostics.ElasticsearchError);
             TempData["ErrorMessage"] = StartupDiagnostics.ElasticsearchError;
+            Log.Error("Elasticsearch Error: " + StartupDiagnostics.ElasticsearchError);
             return View();
         }
 
         string? jwtToken = Request.Cookies["JwtToken"];
         if (jwtToken == null)
         {
+            Log.Warning("No JWT Token found in cookies, redirecting to login page.");
             return View();
         }
 
         string? email = _jwtService.GetClaimValue(jwtToken, ClaimTypes.Email);
         if (email == null)
         {
-            Console.WriteLine("Error: Cannot read email from JWTToken!");
+            Log.Warning("No email claim found in JWT Token, redirecting to login page.");
             return View();
         }
         User? existingUser = await _authService.GetUserByEmail(email);
         if (existingUser == null)
         {
+            Log.Warning("User with the email obtained from JWT token was not found, redirecting to login page.");
             return View();
         }
 
         string? roleName = _jwtService.GetClaimValue(jwtToken, ClaimTypes.Role);
         if (roleName == null)
         {
+            Log.Warning("No role claim found in JWT Token, redirecting to login page.");
             return View();
         }
 
@@ -73,6 +74,7 @@ public class AuthenticationController : Controller
             };
             Response.Cookies.Append("ProfileImagePath", existingUser.ProfileImage, cookieOptions);
         }
+        Log.Information("User {UserName} accessed ElasticFind Home", existingUser.Username);
         return roleName == Roles.Admin ? RedirectToAction("Index", "Home") : RedirectToAction("Search", "Home");
     }
 
@@ -83,6 +85,7 @@ public class AuthenticationController : Controller
         {
             Console.WriteLine("Elasticsearch Error: " + StartupDiagnostics.ElasticsearchError);
             TempData["ErrorMessage"] = StartupDiagnostics.ElasticsearchError;
+            Log.Error("Elasticsearch Error: " + StartupDiagnostics.ElasticsearchError);
             return View();
         }
 
@@ -98,6 +101,7 @@ public class AuthenticationController : Controller
                 {
                     Console.WriteLine("Error: User not found by this ID!");
                     TempData["ErrorMessage"] = "Some error occured!";
+                    Log.Error("User by email in JWT token not found!");
                     return View(loginViewModel);
                 }
                 string token = _jwtService.GenerateJwtToken(user);
@@ -136,41 +140,21 @@ public class AuthenticationController : Controller
                 }
 
                 TempData["SuccessMessage"] = response.Message;
-
-                using (LogContext.PushProperty("EnvironmentName", Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown"))
-                using (LogContext.PushProperty("Exception", null)) // no exception
-                using (LogContext.PushProperty("FilePath", HttpContext.Request.Path))
-                using (LogContext.PushProperty("IPAddress", HttpContext.Connection.RemoteIpAddress?.ToString()))
-                using (LogContext.PushProperty("Level", "Information"))
-                using (LogContext.PushProperty("LineNumber", new StackTrace(true).GetFrame(0)?.GetFileLineNumber()))
-                using (LogContext.PushProperty("MachineName", Environment.MachineName))
-                using (LogContext.PushProperty("Message", "User login successful"))
-                using (LogContext.PushProperty("MessageTemplate", "User {UserName} logged in successfully"))
-                using (LogContext.PushProperty("MethodName", MethodBase.GetCurrentMethod()?.Name))
-                using (LogContext.PushProperty("ProcessInfo", $"PID: {Environment.ProcessId}, App: {Assembly.GetEntryAssembly()?.GetName().Name}"))
-                using (LogContext.PushProperty("Properties", null)) // optional custom props
-                using (LogContext.PushProperty("PropsTest", "login-test")) // sample static value
-                using (LogContext.PushProperty("RaiseDate", DateTime.Now))
-                using (LogContext.PushProperty("ThreadId", Environment.CurrentManagedThreadId))
-                using (LogContext.PushProperty("UserAgent", Request.Headers["User-Agent"].ToString()))
-                using (LogContext.PushProperty("UserName", user.Username))
-                {
-                    _logger.Information("User {UserName} logged in successfully", user.Username);
-                    Log.Information("User {UserName} logged in successfully", user.Username);
-                    Console.WriteLine($"User {user.Username} logged in successfully");
-                }
+                Log.Information("User {UserName} logged in successfully", user.Username);
 
                 return user.Role?.RoleName == Roles.Admin ? RedirectToAction("Index", "Home") : RedirectToAction("Search", "Home");
             }
             else
             {
                 TempData["ErrorMessage"] = response.Message;
+                Log.Warning("Login failed for user {Email}: {Message}", loginViewModel.Email, response.Message);
                 return View(loginViewModel);
             }
         }
         else
         {
             TempData["ErrorMessage"] = "Some error occured!";
+            Log.Error("Model state is invalid for login attempt with this email.");
             return View(loginViewModel);
         }
     }

@@ -709,6 +709,7 @@
                 label: 'File Name',
                 type: 'string',
                 operators: [
+                    'equal', 'not_equal',
                     'contains', 'not_contains',
                     'begins_with', 'not_begins_with',
                     'ends_with', 'not_ends_with', 'match_phrase'
@@ -737,7 +738,7 @@
                 input: 'text',
                 plugin: 'datepicker',
                 plugin_config: {
-                    dateFormat: 'dd-MM-yy',
+                    dateFormat: 'dd-mm-yy', 
                     changeMonth: true,
                     changeYear: true
                 },

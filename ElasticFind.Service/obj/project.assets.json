@@ -7837,8 +7837,8 @@
         "net7.0": {
           "targetAlias": "net7.0",
           "projectReferences": {
-            "d:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj": {
-              "projectPath": "d:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj"
+            "D:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj": {
+              "projectPath": "D:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj"
             }
           }
         }

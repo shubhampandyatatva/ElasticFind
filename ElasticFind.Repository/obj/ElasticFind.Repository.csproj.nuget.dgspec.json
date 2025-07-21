@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "d:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj": {}
+    "D:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj": {}
   },
   "projects": {
-    "d:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj": {
+    "D:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "d:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj",
+        "projectUniqueName": "D:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj",
         "projectName": "ElasticFind.Repository",
-        "projectPath": "d:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj",
+        "projectPath": "D:\\Tatva\\ElasticFind\\ElasticFind.Repository\\ElasticFind.Repository.csproj",
         "packagesPath": "C:\\Users\\pcs90\\.nuget\\packages\\",
-        "outputPath": "d:\\Tatva\\ElasticFind\\ElasticFind.Repository\\obj\\",
+        "outputPath": "D:\\Tatva\\ElasticFind\\ElasticFind.Repository\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\pcs90\\AppData\\Roaming\\NuGet\\NuGet.Config"
