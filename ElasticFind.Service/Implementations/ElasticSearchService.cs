@@ -9,6 +9,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using Microsoft.Extensions.Configuration;
 using ElasticFind.Service.Exceptions;
+using Serilog.Context;
 
 namespace ElasticFind.Service.Implementations;
 
@@ -470,7 +471,12 @@ public class ElasticSearchService : IElasticSearchService
         }
         catch (Exception ex)
         {
-            throw new ElasticSearchException("An unexpected error occurred while fetching all file IDs from the server.", ex);
+            var stackTrace = new System.Diagnostics.StackTrace(ex, true);
+            var lineNumber = stackTrace.GetFrame(0)?.GetFileLineNumber() ?? 0;
+            using (LogContext.PushProperty("line_number", lineNumber))
+            {
+                throw new ElasticSearchException("An unexpected error occurred while fetching all file IDs from the server.", ex);
+            }
         }
     }
 }

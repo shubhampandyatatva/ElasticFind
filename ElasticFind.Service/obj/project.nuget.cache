@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "BSTW54reVG2H38nREUvaM3/GP1/fw6bJD573JQyKMTZ0JdC83JZq5ux0pAOtGCsg/P4CTiEy8tybSo5gNIA35A==",
+  "dgSpecHash": "PM1IXc6NVWtSe/6VutnJIx6md5rdbBTHPd/X6nBDmu8wWpSA4/g8jlImU5kdB97/UdEBxcegcIavOlV3N8STTg==",
   "success": true,
   "projectFilePath": "D:\\Tatva\\ElasticFind\\ElasticFind.Service\\ElasticFind.Service.csproj",
   "expectedPackageFiles": [
@@ -87,6 +87,7 @@
     "C:\\Users\\pcs90\\.nuget\\packages\\runtime.ubuntu.14.04-x64.runtime.native.system.security.cryptography.openssl\\4.3.0\\runtime.ubuntu.14.04-x64.runtime.native.system.security.cryptography.openssl.4.3.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\runtime.ubuntu.16.04-x64.runtime.native.system.security.cryptography.openssl\\4.3.0\\runtime.ubuntu.16.04-x64.runtime.native.system.security.cryptography.openssl.4.3.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\runtime.ubuntu.16.10-x64.runtime.native.system.security.cryptography.openssl\\4.3.0\\runtime.ubuntu.16.10-x64.runtime.native.system.security.cryptography.openssl.4.3.0.nupkg.sha512",
+    "C:\\Users\\pcs90\\.nuget\\packages\\serilog\\4.3.0\\serilog.4.3.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\system.appcontext\\4.3.0\\system.appcontext.4.3.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\system.buffers\\4.6.0\\system.buffers.4.6.0.nupkg.sha512",
     "C:\\Users\\pcs90\\.nuget\\packages\\system.collections\\4.3.0\\system.collections.4.3.0.nupkg.sha512",

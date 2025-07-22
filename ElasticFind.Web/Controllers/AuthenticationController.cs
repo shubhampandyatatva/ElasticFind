@@ -32,7 +32,7 @@ public class AuthenticationController : Controller
         if (!string.IsNullOrEmpty(StartupDiagnostics.ElasticsearchError))
         {
             TempData["ErrorMessage"] = StartupDiagnostics.ElasticsearchError;
-            Log.Error("Elasticsearch Error: " + StartupDiagnostics.ElasticsearchError);
+            // Log.Error("Elasticsearch Error: " + StartupDiagnostics.ElasticsearchError);
             return View();
         }
 

@@ -63,6 +63,8 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 builder.Host.UseSerilog();
+builder.Services.AddSingleton(Log.Logger);
+builder.Services.AddLogging(loggingBuilder => loggingBuilder.AddSerilog(dispose: true));
 
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IAuthRepository, AuthRepository>();
@@ -73,7 +75,6 @@ builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IProfileRepository, ProfileRepository>();
-builder.Services.AddScoped<IAddressService, AddressService>();
 builder.Services.AddScoped<IUploadImageService, UploadImageService>();
 builder.Services.AddScoped<IElasticSearchService, ElasticSearchService>();
 builder.Services.AddScoped<IPreviewFileService, PreviewFileService>();
@@ -133,11 +134,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
        };
    });
 
-var pool = new SingleNodeConnectionPool(new Uri("https://localhost:9200"));
-
+var pool = new SingleNodeConnectionPool(new Uri(builder.Configuration["Elasticsearch:Url"] ?? "https://localhost:9200"));
 var settings = new ConnectionSettings(pool)
     .ServerCertificateValidationCallback((sender, cert, chain, errors) => true) // Ignore cert errors
-    .BasicAuthentication("elastic", "158xkDDd9Qn1fajXw0K1")
+    .BasicAuthentication(builder.Configuration["Elasticsearch:Username"] ?? "elastic", builder.Configuration["Elasticsearch:Password"] ?? "elastic123") // if password not generated, reset the password in elasticsearch instance
     // .BasicAuthentication("elastic", "xU0dIO7RHrWFwVl-cgb*")
     .DisableDirectStreaming()
     .EnableDebugMode()
@@ -148,23 +148,14 @@ var client = new ElasticClient(settings);
 // Optional: Register for DI so you can inject IElasticClient later
 builder.Services.AddSingleton<IElasticClient>(client);
 
-try
-{
-    await ValidateAndInitializeElasticsearchAsync(client);
-}
-catch (Exception ex)
-{
-    StartupDiagnostics.ElasticsearchError = ex.Message; 
-}
-
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("OnlyOfficePolicy", builder =>
+    options.AddPolicy("OnlyOfficePolicy", policyBuilder =>
     {
         // builder.WithOrigins("http://192.168.4.90")
-        builder.WithOrigins("http://localhost", "http://localhost:5052")
-               .AllowAnyMethod()
-               .AllowAnyHeader();
+        policyBuilder.WithOrigins(builder.Configuration["OnlyOffice:ServerUrl"] ?? "http://localhost", builder.Configuration["OnlyOffice:ProjectUrl"] ?? "http://localhost:5052")
+        .AllowAnyMethod()
+        .AllowAnyHeader();
     });
 });
 
@@ -205,17 +196,27 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Authentication}/{action=Login}/{id?}");
 
+try
+{
+    await ValidateAndInitializeElasticsearchAsync(client);
+}
+catch (Exception ex)
+{
+    StartupDiagnostics.ElasticsearchError = ex.Message;
+    Log.Logger.Error(ex.Message);
+}
+
 app.Run();
 
 static async Task ValidateAndInitializeElasticsearchAsync(IElasticClient client)
 {
     var pingResponse = await client.PingAsync();
     if (!pingResponse.IsValid)
-        throw new ElasticSearchException("Elasticsearch service is not reachable! Please start the elasticsearch service.");
+        throw new Exception("Elasticsearch service is not reachable! Please start the elasticsearch service.");
 
     var health = await client.Cluster.HealthAsync();
     if (health.Status.ToString().Equals("red", StringComparison.OrdinalIgnoreCase))
-        throw new ElasticSearchException("Elasticsearch service is not ready. Try restarting the service.");
+        throw new Exception("Elasticsearch service is not ready. Try restarting the service.");
 
     var indexExists = await client.Indices.ExistsAsync("documents");
     if (!indexExists.Exists)
@@ -225,7 +226,7 @@ static async Task ValidateAndInitializeElasticsearchAsync(IElasticClient client)
         );
 
         if (!createIndexResponse.IsValid)
-            throw new ElasticSearchException("There was some issue initializing Elasticsearch properly! Try restarting the elasticsearch service or the application.");
+            throw new Exception("There was some issue initializing Elasticsearch properly! Try restarting the elasticsearch service or the application.");
         else
             Console.WriteLine("'Documents' index created.");
     }
@@ -244,7 +245,7 @@ static async Task ValidateAndInitializeElasticsearchAsync(IElasticClient client)
         bool hasAttachmentPlugin = pluginResponse.Records.Any(r => r.Component.Contains("ingest-attachment"));
 
         if (!hasAttachmentPlugin)
-            throw new ElasticSearchException("Ingest-Attachment plugin is required for processing documents. Please install it to use ElasticFind.");
+            throw new Exception("Ingest-Attachment plugin is required for processing documents. Please install it to use ElasticFind.");
     }
 
     var pipelineResponse = await client.Ingest.GetPipelineAsync(p => p.Id("attachment"));
@@ -261,7 +262,7 @@ static async Task ValidateAndInitializeElasticsearchAsync(IElasticClient client)
         );
 
         if (!putPipelineResponse.IsValid)
-            throw new ElasticSearchException("There was some issue initializing Elasticsearch properly! Try restarting the application.");
+            throw new Exception("There was some issue initializing Elasticsearch properly! Try restarting the application.");
         else
             Console.WriteLine("Attachment pipeline created.");
     }

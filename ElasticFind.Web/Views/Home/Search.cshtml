@@ -574,14 +574,14 @@
     $.fn.queryBuilder.defaults({
         operators: [
             {
-                type: 'equal',
-                label: 'Equal',
+                type: 'match',
+                label: 'Match',
                 nb_inputs: 1,
                 apply_to: ['string', 'number', 'datetime', 'boolean']
             },
             {
-                type: 'not_equal',
-                label: 'Not equal',
+                type: 'do_not_match',
+                label: 'Do not match',
                 nb_inputs: 1,
                 apply_to: ['string', 'number', 'datetime', 'boolean']
             },
@@ -683,8 +683,14 @@
             apply_to: ['number', 'date', 'datetime']
         },
         {
-            type: 'match_phrase',
-            label: 'match full phrase',
+            type: 'equal',
+            label: 'Equal',
+            nb_inputs: 1,
+            apply_to: ['string', 'number', 'datetime', 'boolean']
+        },
+        {
+            type: 'not_equal',
+            label: 'Not equal',
             nb_inputs: 1,
             apply_to: ['string', 'number', 'datetime', 'boolean']
         }
@@ -698,10 +704,11 @@
                 label: 'Content',
                 type: 'string',
                 operators: [
-                    'equal', 'not_equal', 'contains', 'not_contains',
+                    'match', 'do_not_match', 'contains', 'not_contains',
                     'begins_with', 'not_begins_with',
                     'ends_with', 'not_ends_with',
-                    'fuzzy', 'match_phrase'
+                    'fuzzy',
+                    'equal', 'not_equal'
                 ]
             },
             {
@@ -709,10 +716,10 @@
                 label: 'File Name',
                 type: 'string',
                 operators: [
-                    'equal', 'not_equal',
+                    'match', 'do_not_match',
                     'contains', 'not_contains',
-                    'begins_with', 'not_begins_with',
-                    'ends_with', 'not_ends_with', 'match_phrase'
+                    @* 'begins_with', 'not_begins_with', 'ends_with', 'not_ends_with',  *@
+                    'equal', 'not_equal'
                 ]
             },
             {
@@ -742,7 +749,9 @@
                     changeMonth: true,
                     changeYear: true
                 },
-                operators: ['equal', 'not_equal', 'less_or_equal', 'greater_or_equal', 'between', 'match_phrase']
+                @* operators: ['equal', 'not_equal', 'less_or_equal', 'greater_or_equal', 'between', 'match_phrase'] *@
+                @* operators: ['match', 'do_not_match'] *@
+                operators: ['equal', 'not_equal']
             }
         ],
         default_filter: 'attachment.content',  // Set field by default
@@ -750,7 +759,7 @@
     });
 
     $('#builder').on('afterCreateRuleInput.queryBuilder', function (e, rule) {
-        if (rule.filter?.id === 'uploadedDate.text' && ['equal', 'less', 'greater'].includes(rule.operator.type)) {
+        if (rule.filter?.id === 'uploadedDateText' && ['equal', 'less', 'greater'].includes(rule.operator.type)) {
             const $input = rule.$el.find('.rule-value-container input');
             const minDate = new Date('2020-01-01');
             const maxDate = new Date(); // today
@@ -762,7 +771,7 @@
             $input.datepicker('setDate', maxDate); // default to today's date
         }
 
-        if (rule.filter?.id === 'uploadedDate.text' && rule.operator.type === 'between') {
+        if (rule.filter?.id === 'uploadedDateText' && rule.operator.type === 'between') {
             const $inputs = rule.$el.find('.rule-value-container input');
 
             const $start = $inputs.eq(0);

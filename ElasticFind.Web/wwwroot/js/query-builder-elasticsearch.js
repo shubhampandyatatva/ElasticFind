@@ -22,8 +22,8 @@
     // ===============================
     QueryBuilder.defaults({
         ESBoolOperators: {
-            equal: function (v) { return v; }, 
-            not_equal: function (v) { return v; },
+            match: function (v) { return v; }, 
+            do_not_match: function (v) { return v; },
             less: function (v) { return { 'lt': v }; },
             less_or_equal: function (v) { return { 'lte': v }; },
             greater: function (v) { return { 'gt': v }; },
@@ -75,7 +75,10 @@
                 console.log("Fuzzy search ES query: ", v);
                 return { query: v, fuzziness: 'AUTO' };
             },
-            match_phrase: function (v) {
+            equal: function (v) {
+                return v;
+            },
+            not_equal: function (v) {
                 return v;
             }
             // equal: function (v) {
@@ -170,7 +173,7 @@
 
                         // this is a corner case, when we have an "or" group and a negative operator,
                         // we express this with a sub boolean query and must_not.
-                        if (data.condition === 'OR' && (rule.operator === 'not_equal' || rule.operator === 'not_in' || rule.operator === 'is_null' || rule.operator === 'not_contains' || rule.operator === 'not_begins_with' || rule.operator === 'not_ends_with') || (rule.operator === 'is_not_in' && rule.value !== "Other")) {
+                        if (data.condition === 'OR' && (rule.operator === 'not_equal' || rule.operator === 'not_in' || rule.operator === 'is_null' || rule.operator === 'not_contains' || rule.operator === 'not_begins_with' || rule.operator === 'not_ends_with') || (rule.operator === 'is_not_in' && rule.value !== "Other") || rule.operator === 'do_not_match') {
                             return { 'bool': { 'must_not': [part] } }
                         } else {
                             return part
@@ -303,7 +306,7 @@
         const range = /^(less|less_or_equal|greater|greater_or_equal|between)$/.exec(rule.operator);
         // const is_in = /^(is_in|is_not_in)$/.exec(rule.operator);
         // const fuzzy = /^(fuzzy)$/.exec(rule.operator);
-        const match_phrase = /^(match_phrase)$/.exec(rule.operator);
+        const match_phrase = /^(equal|not_equal)$/.exec(rule.operator);
 
         if (wildcard !== null) {
             return 'wildcard';

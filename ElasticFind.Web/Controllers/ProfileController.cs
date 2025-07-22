@@ -10,12 +10,10 @@ public class ProfileController : Controller
 {
     private readonly IProfileService _profileService;
     private readonly IJwtService _jwtService;
-    private readonly IAddressService _addressService;
-    public ProfileController(IProfileService profileService, IJwtService jwtService, IAddressService addressService)
+    public ProfileController(IProfileService profileService, IJwtService jwtService)
     {
         _profileService = profileService;
         _jwtService = jwtService;
-        _addressService = addressService;
     }
 
     [HttpGet]

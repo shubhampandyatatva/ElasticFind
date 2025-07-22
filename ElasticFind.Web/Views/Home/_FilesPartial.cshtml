@@ -19,7 +19,7 @@
                     <td><input type="checkbox" class="slaveCheckbox form-check pointer" data-id="@Model.Files[i].Id"></td>
                     <td>@(((Model.Pagination.Page - 1) * Model.Pagination.PageSize) + i + 1)</td>
                     <td class="fw-medium">@Model.Files[i].FileName</td>
-                    <td class="fw-medium">@Model.Files[i].UploadedBy</td>
+                    <td class="fw-medium"><span class="ms-3">@Model.Files[i].UploadedBy</span></td>
                     <td class="fw-medium">@Model.Files[i].UploadedDate</td>
                     <td class="text-center">
                         <div class="d-flex justify-content-center gap-3">

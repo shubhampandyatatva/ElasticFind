@@ -31,7 +31,6 @@ public class GlobalExceptionMiddleware
         var process = System.Diagnostics.Process.GetCurrentProcess();
         var processInfo = $"{process.ProcessName}:{process.Id}";
         var methodName = context.Request.Method; // Assuming HTTP method here
-        var lineNumber = 0; // Needs manual source injection or skipped
         var propsTest = "test_value";
 
         // You can also add any custom dynamic properties in a dictionary as needed.
@@ -46,27 +45,33 @@ public class GlobalExceptionMiddleware
         using (LogContext.PushProperty("environment_name", environmentName))
         using (LogContext.PushProperty("process_info", processInfo))
         using (LogContext.PushProperty("method_name", methodName))
-        using (LogContext.PushProperty("line_number", lineNumber))
         {
             try
             {
                 await _next(context); // pass to next middleware
-
-                if (context.Request.Path.StartsWithSegments("/Authentication/Login") && context.Response.StatusCode == 200)
-                {
-                    Log.Information("User {user_name} logged in from IP {ip_address}", userName, ipAddress);
-                }
             }
             catch (ElasticSearchException ex)
             {
-                Log.Error(ex, ex.Message);
+                var stackTrace = new System.Diagnostics.StackTrace(ex, true);
+                var lineNumber = stackTrace.GetFrame(0)?.GetFileLineNumber() ?? 0;
+                Console.WriteLine("Line number: " + lineNumber);
+                using (LogContext.PushProperty("line_number", lineNumber))
+                {
+                    Log.Error(ex, ex.Message); 
+                }
                 context.Response.StatusCode = 500;
                 await context.Response.WriteAsync("Unhandled Exception ocuured: " + ex.Message);
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Unhandled exception for user {user_name} from IP {ip_address} on path {file_path}. User-Agent: {user_agent}", userName, ipAddress, filePath, userAgent);
-
+                var stackTrace = new System.Diagnostics.StackTrace(ex, true);
+                var lineNumber = stackTrace.GetFrame(0)?.GetFileLineNumber() ?? 0;
+                Console.WriteLine("Line number: " + lineNumber);
+                using (LogContext.PushProperty("line_number", lineNumber))
+                {
+                    Log.Error(ex, "Unhandled exception for user {user_name} from IP {ip_address} on path {file_path}. User-Agent: {user_agent}", userName, ipAddress, filePath, userAgent);
+                }
+                
                 context.Response.StatusCode = 500;
                 await context.Response.WriteAsync("An unexpected error occurred.");
             }
