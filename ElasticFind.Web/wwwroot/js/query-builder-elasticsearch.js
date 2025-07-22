@@ -173,7 +173,7 @@
 
                         // this is a corner case, when we have an "or" group and a negative operator,
                         // we express this with a sub boolean query and must_not.
-                        if (data.condition === 'OR' && (rule.operator === 'not_equal' || rule.operator === 'not_in' || rule.operator === 'is_null' || rule.operator === 'not_contains' || rule.operator === 'not_begins_with' || rule.operator === 'not_ends_with') || (rule.operator === 'is_not_in' && rule.value !== "Other") || rule.operator === 'do_not_match') {
+                        if (data.condition === 'OR' && (rule.operator === 'not_equal' || rule.operator === 'not_in' || rule.operator === 'is_null' || rule.operator === 'not_contains' || rule.operator === 'not_begins_with' || rule.operator === 'not_ends_with' || rule.operator === 'do_not_match') || (rule.operator === 'is_not_in' && rule.value !== "Other")) {
                             return { 'bool': { 'must_not': [part] } }
                         } else {
                             return part
@@ -320,15 +320,8 @@
         if (match_phrase !== null) {
             return 'match_phrase';
         }
-        // if( is_in !== null) {
-        //     return 'terms';
-        // }
-        // if (fuzzy !== null) {
-        //     return 'match';
-        // }
-        // if (rule.value === 'Other') return 'terms';
 
-        // Default all "equal" or other operators to match
+        // Default all "match" or other operators to match
         return 'match';
     }
 
@@ -336,8 +329,16 @@
     * Get the right type of clause in the bool query
     */
     function getClauseWord(condition, operator, value) {
-        if (condition === 'AND' && (operator !== 'not_equal' && operator !== 'not_in' && operator !== 'not_contains' && operator !== 'not_begins_with' && operator !== 'not_ends_with' || (operator === 'is_not_in' && value == "Other"))) { return 'must' }
-        if (condition === 'AND' && (operator === 'not_equal' || operator == 'not_in' || operator === 'not_contains' || operator === 'not_begins_with' || operator === 'not_ends_with' || (operator === 'is_in' && value == "Other"))) { return 'must_not' }
-        if (condition === 'OR') { return 'should' }
+        // if(operator === 'is_not_in' && value !== "Other") { return 'must' }
+        // if(operator === 'is_in' && value === "Other") { return 'must_not' }
+        if(condition === 'AND' && (operator === 'is_not_in' && value !== "Other")) { return 'must' }
+        if(condition === 'AND' && (operator === 'is_in' && value === "Other")) { return 'must_not' }
+        if(condition === 'OR' && (operator === 'is_not_in' && value !== "Other")) { return 'should' }
+        if(condition === 'OR' && (operator === 'is_in' && value === "Other")) { return 'should_not' }
+        if (condition === 'AND' && (operator !== 'not_equal' && operator !== 'not_in' && operator !== 'not_contains' && operator !== 'not_begins_with' && operator !== 'not_ends_with' && operator !== 'do_not_match')) { return 'must' }
+        if (condition === 'AND' && (operator === 'not_equal' || operator == 'not_in' || operator === 'not_contains' || operator === 'not_begins_with' || operator === 'not_ends_with' || operator === 'do_not_match')) { return 'must_not' }
+        // if(condition === 'AND' && (operator === 'is_in' && value === "Other")) { return 'must_not' }
+        // if(condition === 'AND' && (operator === 'is_not_in' && value === "Other")) { return 'must' }
+        if (condition === 'OR') { return 'should' }    
     }
 }));

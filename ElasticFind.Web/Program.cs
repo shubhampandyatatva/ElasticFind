@@ -134,6 +134,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
        };
    });
 
+string indexName = builder.Configuration["Elasticsearch:IndexName"] ?? "documents";
+
 var pool = new SingleNodeConnectionPool(new Uri(builder.Configuration["Elasticsearch:Url"] ?? "https://localhost:9200"));
 var settings = new ConnectionSettings(pool)
     .ServerCertificateValidationCallback((sender, cert, chain, errors) => true) // Ignore cert errors
@@ -141,7 +143,7 @@ var settings = new ConnectionSettings(pool)
     // .BasicAuthentication("elastic", "xU0dIO7RHrWFwVl-cgb*")
     .DisableDirectStreaming()
     .EnableDebugMode()
-    .DefaultIndex(builder.Configuration["Elasticsearch:IndexName"] ?? "documents");
+    .DefaultIndex(indexName);
 
 var client = new ElasticClient(settings);
 
@@ -208,7 +210,7 @@ catch (Exception ex)
 
 app.Run();
 
-static async Task ValidateAndInitializeElasticsearchAsync(IElasticClient client)
+async Task ValidateAndInitializeElasticsearchAsync(IElasticClient client)
 {
     var pingResponse = await client.PingAsync();
     if (!pingResponse.IsValid)
@@ -218,21 +220,21 @@ static async Task ValidateAndInitializeElasticsearchAsync(IElasticClient client)
     if (health.Status.ToString().Equals("red", StringComparison.OrdinalIgnoreCase))
         throw new Exception("Elasticsearch service is not ready. Try restarting the service.");
 
-    var indexExists = await client.Indices.ExistsAsync("documents");
+    var indexExists = await client.Indices.ExistsAsync(indexName);
     if (!indexExists.Exists)
     {
-        var createIndexResponse = await client.Indices.CreateAsync("documents", c => c
+        var createIndexResponse = await client.Indices.CreateAsync(indexName, c => c
             .Map<DocumentViewModel>(m => m.AutoMap())
         );
 
         if (!createIndexResponse.IsValid)
             throw new Exception("There was some issue initializing Elasticsearch properly! Try restarting the elasticsearch service or the application.");
         else
-            Console.WriteLine("'Documents' index created.");
+            Console.WriteLine(indexName + " index created.");
     }
     else
     {
-        Console.WriteLine("'Documents' index already exists.");
+        Console.WriteLine(indexName + " index already exists.");
     }
 
     var info = await client.RootNodeInfoAsync();
@@ -268,6 +270,6 @@ static async Task ValidateAndInitializeElasticsearchAsync(IElasticClient client)
     }
     else
     {
-        Console.WriteLine("Attachment pipeline already exists.");
+        Console.WriteLine("Attachment pipeline already exists."); 
     }
 }

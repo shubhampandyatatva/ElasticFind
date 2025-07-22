@@ -576,7 +576,7 @@ public class HomeController : Controller
         }
 
         // Refresh the index once after all deletions
-        var refreshResponse = await _elasticClient.Indices.RefreshAsync("documents_v2");
+        var refreshResponse = await _elasticClient.Indices.RefreshAsync(_config["Elasticsearch:IndexName"] ?? "documents");
         Console.WriteLine($"Refresh response: {refreshResponse.DebugInformation}");
 
         if (!refreshResponse.IsValid)

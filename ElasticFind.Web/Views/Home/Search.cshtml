@@ -111,7 +111,6 @@
     function searchDocumentContent() {
         var sortBy = $("#sortBySelect").val().trim();
         currentPageSize = $("#itemsPerPageSelect").val();
-        console.log("Searching with parameters:", { sortBy: sortBy, currentPage: currentPage, currentPageSize: currentPageSize, esBoolQuery: JSON.stringify(esBoolQuery) });
 
         $("#loader").find(".spinner-border").removeClass("text-success").addClass("text-primary");
         @* $("#loader").show(); *@
@@ -123,8 +122,6 @@
             data: { sortBy: sortBy, currentPage: currentPage, currentPageSize: currentPageSize, esBoolQuery: JSON.stringify(esBoolQuery) },
             success: function (data) {
                 var html = "";
-                console.log("Search results:", data);
-                console.log("Data length:", data.searchResults.length);
 
                 if (data.searchResults.length === 0) {
                     html = "<div class='alert alert-warning'>No results found.</div>";
@@ -239,8 +236,7 @@
             setTimeout(function () {
                 currentPage = 1;
                 $("#sortBySelect").val("1");
-                var rules = $('#builder').queryBuilder('getRules');
-                console.log("Rules: ", rules);
+                @* var rules = $('#builder').queryBuilder('getRules'); *@
                 var esQuery = $('#builder').queryBuilder('getESBool');
                 console.log("ES Query: ", esQuery);
                 if (esQuery && Object.keys(esQuery).length > 0) {
@@ -317,7 +313,6 @@
     //Preview Button
     $(document).on("click", ".preview-btn", function () {
         const fileId = $(this).data("id");
-        console.log("Previewing file with ID:", fileId);
 
         @* $("#onlyofficeFrame").attr("src", `/Home/OnlyOfficeViewerPage?id=${fileId}`); *@
             window.location.href = `/Home/OnlyOfficeViewerPage?id=${fileId}`;
@@ -396,9 +391,6 @@
                 matchCount,
                 snippets
             });
-        });
-        console.log("Exporting filters:", {
-            searchType, keyword, fileType, startDate, endDate, sortBy, searchString, results
         });
         // Send to backend
         $.ajax({
@@ -480,9 +472,6 @@
                 snippets
             });
         });
-        console.log("Exporting filters in single export:", {
-            searchType, keyword, fileType, startDate, endDate, sortBy, searchString, results
-        });
         // Send to backend
         $.ajax({
             url: '/Home/ExportToPdf',
@@ -529,7 +518,6 @@
                 a.click();
                 a.remove();
                 URL.revokeObjectURL(downloadUrl);
-                console.log("successss!");
             },
             error: function () {
                 alert("Error downloading file.");
@@ -554,20 +542,17 @@
     $("#previousPageButton").on("click", function () {
         if (currentPage > 1) {
             currentPage--;
-            console.log("Current page:", currentPage);
             searchDocumentContent();
         }
     });
 
     $("#nextPageButton").on("click", function () {
         currentPage++;
-        console.log("Current page:", currentPage);
         searchDocumentContent();
     });
 
     $("#lastPageButton").on("click", function () {
         currentPage = Math.ceil($("#totalDocuments").text() / currentPageSize);
-        console.log("Current page on lastpagebutton click: ", currentPage);
         searchDocumentContent();
     });
 
@@ -745,13 +730,13 @@
                 input: 'text',
                 plugin: 'datepicker',
                 plugin_config: {
-                    dateFormat: 'dd-mm-yy', 
+                    dateFormat: 'dd-mm-yy',
                     changeMonth: true,
                     changeYear: true
                 },
                 @* operators: ['equal', 'not_equal', 'less_or_equal', 'greater_or_equal', 'between', 'match_phrase'] *@
-                @* operators: ['match', 'do_not_match'] *@
-                operators: ['equal', 'not_equal']
+            @* operators: ['match', 'do_not_match'] *@
+            operators: ['equal', 'not_equal']
             }
         ],
         default_filter: 'attachment.content',  // Set field by default
@@ -807,8 +792,7 @@
     $('#btnSearch').on('click', function () {
         currentPage = 1;
         $("#sortBySelect").val("1");
-        var rules = $('#builder').queryBuilder('getRules');
-        console.log("Rules: ", rules);
+        @* var rules = $('#builder').queryBuilder('getRules'); *@
         var esQuery = $('#builder').queryBuilder('getESBool');
         console.log("ES Query: ", esQuery);
         if (esQuery && Object.keys(esQuery).length > 0) {

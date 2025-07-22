@@ -303,11 +303,6 @@ public class ElasticSearchService : IElasticSearchService
                         }
                         : new { Name = hit.Source.FileName, Extension = string.Empty };
 
-                    Console.WriteLine("Content Highlights: " + snippets[0]);
-                    Console.WriteLine("File Name Highlights: " + string.Join(", ", highlightedFileNames));
-                    Console.WriteLine("File Type Highlights: " + string.Join(", ", highlightedFileTypes));
-                    Console.WriteLine("Uploaded Date Highlights: " + highlightedUploadedDate);
-
                     results.Add(new GroupedSearchResults
                     {
                         Id = hit.Id,
