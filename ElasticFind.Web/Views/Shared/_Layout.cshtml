@@ -29,6 +29,7 @@
     string? jwtToken = Context.Request.Cookies["JwtToken"];
     string? roleName = jwtToken != null ? userService.GetClaimValue(jwtToken, ClaimTypes.Role) : null;
     string? action = ViewContext.RouteData.Values["action"]?.ToString();
+    string? controller = ViewContext.RouteData.Values["controller"]?.ToString();
     string? imageProfilePath = Context.Request.Cookies["ProfileImagePath"];
     if (string.IsNullOrEmpty(imageProfilePath))
     {
@@ -58,11 +59,11 @@
                 </button>
             </div>
 
-            <a asp-controller="Home" asp-action="Index" class="tab-link @(action == "Index" ? "active" : "")"
+            <a asp-controller="Home" asp-action="Index" class="tab-link @(controller == "Home" && action == "Index" ? "active" : "")"
                 style="display: @(roleName == Roles.Admin ? "" : "none");" title="Manage Files">
                 <i class="fas fa-folder-open me-2"></i> <span>Manage Files</span>
             </a>
-            <a asp-controller="Home" asp-action="Search" class="tab-link @(action == "Search" ? "active" : "")"
+            <a asp-controller="Home" asp-action="Search" class="tab-link @(controller == "Home" && action == "Search" ? "active" : "")"
                 title="Search Documents">
                 <i class="fas fa-search me-2"></i> <span>Search Documents</span>
             </a>
@@ -70,9 +71,13 @@
                 title="Analytics">
                 <i class="fas fa-chart-line me-2"></i> <span>Analytics</span>
             </a> *@
-            <a asp-controller="Home" asp-action="Users" class="tab-link @(action == "Users" ? "active" : "")"
+            <a asp-controller="Home" asp-action="Users" class="tab-link @(controller == "Home" && action == "Users" ? "active" : "")"
                 style="display: @(roleName == Roles.Admin ? "" : "none");" title="Users">
                 <i class="fas fa-users me-2"></i> <span>Users</span>
+            </a>
+            <a asp-controller="Categories" asp-action="Index" class="tab-link @(controller == "Categories" && action == "Index" ? "active" : "")"
+                style="display: @(roleName == Roles.Admin ? "" : "none");" title="Categories">
+                <i class="fa-solid fa-layer-group me-2"></i> <span>Categories</span>
             </a>
         </nav>
 

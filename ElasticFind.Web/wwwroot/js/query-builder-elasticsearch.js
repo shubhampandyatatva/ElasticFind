@@ -173,7 +173,7 @@
 
                         // this is a corner case, when we have an "or" group and a negative operator,
                         // we express this with a sub boolean query and must_not.
-                        if (data.condition === 'OR' && (rule.operator === 'not_equal' || rule.operator === 'not_in' || rule.operator === 'is_null' || rule.operator === 'not_contains' || rule.operator === 'not_begins_with' || rule.operator === 'not_ends_with' || rule.operator === 'do_not_match') || (rule.operator === 'is_not_in' && rule.value !== "Other")) {
+                        if (data.condition === 'OR' && (rule.operator === 'not_equal' || rule.operator === 'not_in' || rule.operator === 'is_null' || rule.operator === 'not_contains' || rule.operator === 'not_begins_with' || rule.operator === 'not_ends_with' || rule.operator === 'do_not_match' || (rule.operator === 'is_not_in' && rule.value !== 'Other') || (rule.operator === 'is_in' && rule.value === 'Other'))) {
                             return { 'bool': { 'must_not': [part] } }
                         } else {
                             return part
@@ -271,35 +271,6 @@
         }
     });
 
-    /**
-    * Get the right type of query term in elasticsearch DSL
-    */
-    // function getQueryDSLWord(rule) {
-    //     var term = /^(equal|not_equal)$/.exec(rule.operator),
-    //         wildcard = /.(\*|\?)/.exec(rule.value),
-    //         terms = /^(in|not_in)$/.exec(rule.operator);
-
-    //     if (term !== null && wildcard !== null) { return 'wildcard'; }
-    //     if (term !== null) { return 'term'; }
-    //     if (terms !== null) { return 'terms'; } 
-    //     return 'range';
-    // }
-
-    // function getQueryDSLWord(rule) {
-    //     var term = /^(equal|not_equal|contains)$/.exec(rule.operator),
-    //         wildcard = /^(contains)$/.exec(rule.operator),
-    //         terms = /^(in|not_in)$/.exec(rule.operator),
-    //         range = /^(less|less_or_equal|greater|greater_or_equal|between)$/.exec(rule.operator);
-
-    //     if (wildcard !== null) { return 'wildcard'; }
-    //     if (term !== null) { return 'term'; }
-    //     if (terms !== null) { return 'terms'; }
-    //     if (range !== null) { return 'range'; }
-    //     return 'match';
-    // }
-
-    // For matching the analyzed tokens (text fields)
-
     function getQueryDSLWord(rule) {
         const wildcard = /^(contains|not_contains|begins_with|not_begins_with|ends_with|not_ends_with)$/.exec(rule.operator);
         const terms = /^(in|not_in)$/.exec(rule.operator);
@@ -329,16 +300,10 @@
     * Get the right type of clause in the bool query
     */
     function getClauseWord(condition, operator, value) {
-        // if(operator === 'is_not_in' && value !== "Other") { return 'must' }
-        // if(operator === 'is_in' && value === "Other") { return 'must_not' }
-        if(condition === 'AND' && (operator === 'is_not_in' && value !== "Other")) { return 'must' }
-        if(condition === 'AND' && (operator === 'is_in' && value === "Other")) { return 'must_not' }
-        if(condition === 'OR' && (operator === 'is_not_in' && value !== "Other")) { return 'should' }
-        if(condition === 'OR' && (operator === 'is_in' && value === "Other")) { return 'should_not' }
-        if (condition === 'AND' && (operator !== 'not_equal' && operator !== 'not_in' && operator !== 'not_contains' && operator !== 'not_begins_with' && operator !== 'not_ends_with' && operator !== 'do_not_match')) { return 'must' }
-        if (condition === 'AND' && (operator === 'not_equal' || operator == 'not_in' || operator === 'not_contains' || operator === 'not_begins_with' || operator === 'not_ends_with' || operator === 'do_not_match')) { return 'must_not' }
-        // if(condition === 'AND' && (operator === 'is_in' && value === "Other")) { return 'must_not' }
-        // if(condition === 'AND' && (operator === 'is_not_in' && value === "Other")) { return 'must' }
+        if (condition === 'AND' && (operator !== 'not_equal' && operator !== 'not_in' && operator !== 'not_contains' && operator !== 'not_begins_with' && operator !== 'not_ends_with' && operator !== 'do_not_match' && (operator !== 'is_not_in' && value !== 'Other'))) { return 'must' }
+        if (condition === 'AND' && (operator === 'not_equal' || operator == 'not_in' || operator === 'not_contains' || operator === 'not_begins_with' || operator === 'not_ends_with' || operator === 'do_not_match' || ((operator === 'is_not_in' && value !== 'Other')))) { return 'must_not' }
+        if(condition === 'AND' && operator === 'is_in' && value === 'Other') { return 'must_not' }
+        if(condition === 'AND' && operator === 'is_not_in' && value === 'Other') { return 'must' }
         if (condition === 'OR') { return 'should' }    
     }
 }));

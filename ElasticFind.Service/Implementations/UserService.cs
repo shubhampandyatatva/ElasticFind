@@ -357,7 +357,7 @@ public class UserService : IUserService
         return claim?.Value;
     }
 
-    public static ClaimsPrincipal? ValidateToken(string token)
+    private static ClaimsPrincipal? ValidateToken(string token)
     {
         JwtSecurityTokenHandler handler = new();
         JwtSecurityToken? jsonToken = handler.ReadToken(token) as JwtSecurityToken;

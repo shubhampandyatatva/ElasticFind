@@ -1,0 +1,130 @@
+@model ElasticFind.Repository.ViewModels.DisplayCategoriesViewModel
+
+<div class="table-responsive">
+    <table class="table shadow">
+        <thead>
+            <tr>
+                <th scope="col">Sr. No</th>
+                <th scope="col" class="text-start">
+                    <span class="d-flex align-items-center ms-1">
+                        Name
+                        <i class="fa-solid fa-arrow-up NameSortUp ms-2 pointer" data-order="Asc" onclick="sortTable('Asc')"></i>
+                        <i class="fa-solid fa-arrow-down NameSortDown ms-2 pointer" data-order="Desc" onclick="sortTable('Desc')"></i>
+                    </span>
+                </th>
+                <th scope="col">Description</th>
+                <th scope="col" class="ms-3"><span>Status</span></th>
+                <th scope="col" class="text-center">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (int i=0; i<Model.CategoryList.Count; i++)
+            {
+                <tr>
+                    <td class="align-middle">@(i+1)</td>
+                    <td class="text-start d-flex align-items-center">@Model.CategoryList[i].Name</td>
+                    <td class="align-middle">@Model.CategoryList[i].Description</td>
+                    <td class="align-middle"><span class="status status-active">@Model.CategoryList[i].Status</span></td>
+
+                    <td class="align-middle">
+                        <span class="d-flex justify-content-center align-items-center">
+                            <i class="fa fa-pencil me-4 edit-user-icon pointer" onclick="setUserId('@Model.CategoryList[i].Id')" data-bs-toggle="modal" data-bs-target="#toggle_user_modal" data-toggle="tooltip" data-placement="bottom" title="Toggle User status">
+                            <i class="fa fa-trash pointer" data-bs-toggle="modal" data-bs-target="#delete_user_modal" data-toggle="tooltip" data-placement="bottom" title="Delete User" data-user-id="@Model.CategoryList[i].Id" onclick="setUserId('@Model.CategoryList[i].Id')"></i>
+                        </span> 
+                    </td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <td colspan="6">
+                    <div class="d-flex justify-content-end align-items-center">
+                        <span class="me-2">Items per page:</span>
+                        <select class="pointer" id="itemsPerPage" onchange="changePageSize()">
+                            <option value="5" selected=@(Model.PaginationViewModel.PageSize == 5 ? "selected" : null)>5</option>
+                            <option value="10" selected=@(Model.PaginationViewModel.PageSize == 10 ? "selected" : null)>10</option>
+                            <option value="15" selected=@(Model.PaginationViewModel.PageSize == 15 ? "selected" : null)>15</option>
+                        </select>
+                        <span class="ms-2">Showing @(Model.PaginationViewModel.PageSize * (Model.PaginationViewModel.Page - 1) + 1) -
+                            @((Model.PaginationViewModel.PageSize * Model.PaginationViewModel.Page) > Model.PaginationViewModel.TotalRecords ? Model.PaginationViewModel.TotalRecords :
+                                                        (Model.PaginationViewModel.PageSize * Model.PaginationViewModel.Page)) of @Model.PaginationViewModel.TotalRecords</span>
+                        <button type="button"
+                                class="btn btn-sm btn-outline-secondary ms-2 @(Model.PaginationViewModel.Page > 1 ? "" : "disabled")"
+                                id="firstPageButton" title="First Page" onclick="loadFirstPage()"><i
+                                    class="bi bi-chevron-double-left"></i></button>
+
+                        <button class="btn btn-sm btn-outline-secondary ms-2 @(Model.PaginationViewModel.Page > 1 ? "" : "disabled")"
+                            onclick="loadPrevPage()">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+
+                        <button
+                            class="btn btn-sm btn-outline-secondary ms-2 @(Model.PaginationViewModel.Page* Model.PaginationViewModel.PageSize < Model.PaginationViewModel.TotalRecords ? "" : "disabled")"
+                            onclick="loadNextPage()">
+                            <i class="bi bi-chevron-right"></i>
+                        </button>
+                        <button type="button"
+                                class="btn btn-sm btn-outline-secondary ms-2 @((Model.PaginationViewModel.Page * Model.PaginationViewModel.PageSize < Model.PaginationViewModel.TotalRecords) ? "" : "disabled")"
+                                id="lastPageButton" title="Last Page" onclick="loadLastPage()"><i
+                                    class="bi bi-chevron-double-right"></i></button>
+                    </div>
+                </td>
+            </tr>
+        </tfoot>
+    </table>
+</div>
+
+<script>
+    $(document).ready(function () {
+        $('.status').each(function () {
+            if ($(this).text() == "Active") {
+                $(this).addClass("status-active");
+            } else {
+                $(this).addClass("status-inactive");
+            }
+        });
+    });
+
+    function loadFirstPage() {
+        const searchString = $("#searchInput").val();
+        const currentPageSize = parseInt($("#itemsPerPage").val());
+        loadPage(1, currentPageSize, searchString, null);
+    }
+
+    function loadPrevPage() {
+        var page = @Model.PaginationViewModel.Page - 1;
+        var pageSize = @Model.PaginationViewModel.PageSize;
+        var searchString = $("#searchInput").val();
+        var sortOrder = $(this).data("order");
+        loadPage(page, pageSize, searchString, sortOrder);
+    }
+
+    function loadNextPage() {
+        var page = @Model.PaginationViewModel.Page + 1;
+        var pageSize = @Model.PaginationViewModel.PageSize;
+        var searchString = $("#searchInput").val();
+        var sortOrder = $(this).data("order");
+        loadPage(page, pageSize, searchString, sortOrder);
+    }
+
+    function loadLastPage() {
+        const searchString = $("#searchInput").val();
+        const totalRecords = @Model.PaginationViewModel.TotalRecords;
+        const currentPageSize = parseInt($("#itemsPerPage").val());
+        currentPage = Math.ceil(totalRecords / currentPageSize);
+        loadPage(currentPage, currentPageSize, searchString, null);
+    }
+
+    function sortTable(order) {
+        var page = @Model.PaginationViewModel.Page;
+        var pageSize = @Model.PaginationViewModel.PageSize;
+        var searchString = $("#searchInput").val();
+        SortOrder = order;
+        console.log("Sorting table with order: ", SortOrder);
+        loadPage(page, pageSize, searchString, SortOrder);
+    }
+
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip()
+    });
+</script>

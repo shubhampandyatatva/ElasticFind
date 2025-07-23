@@ -342,19 +342,6 @@
         $("#loader").find(".spinner-border").removeClass("text-primary").addClass("text-success");
         $("#loader").show();
 
-        // Extract data from current results
-        var searchType = $("#searchTypeSelect").val();
-        if (searchType == "1") {
-            searchType = "Full-Text Search";
-        } else if (searchType == "2") {
-            searchType = "Multiple-Text Search";
-        } else if (searchType == "3") {
-            searchType = "Fuzzy Search";
-        } else if (searchType == "4") {
-            searchType = "Synonym Search";
-        }
-        const keyword = $("#searchKeywordInput").val();
-        const fileType = $("#fileTypeFilter").val().replace(".", "");
         var sortBy = $("#sortBySelect").val();
         if (sortBy == "1") {
             sortBy = "Date (Descending)";
@@ -365,17 +352,18 @@
         } else {
             sortBy = "No sorting";
         }
-        const searchString = $("#searchInput").val() || null;
-        if (!startDate || !endDate) {
-            startDate = null;
-            endDate = null;
-        }
+        const totalDocumentsCount = $("#totalDocuments").text().trim();
+
         const results = [];
 
         $("#searchResults .card").each(function () {
-            const fileName = $(this).find(".card-header strong").text().trim();
-            const matchText = $(this).find(".card-header .text-muted").text();
+            const fileName = $(this).find(".card-header strong").html().trim();
+            console.log("File Name: ", fileName);
+            const matchText = $(this).find(".card-header .text-muted").html();
+            console.log("Match Text: ", matchText); 
             const matchCount = parseInt(matchText.match(/\d+/)[0]);
+            const uploadedDateText = $(this).find(".uploaded-date-text").html().trim();
+            console.log("Uploaded Date Text: ", uploadedDateText); 
 
             const snippets = [];
             $(this).find(".list-group-item").each(function () {
@@ -389,6 +377,7 @@
             results.push({
                 fileName,
                 matchCount,
+                uploadedDateText,
                 snippets
             });
         });
@@ -397,9 +386,7 @@
             url: '/Home/ExportToPdf',
             method: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({
-                searchType, keyword, fileType, startDate, endDate, sortBy, searchString, results
-            }),
+            data: JSON.stringify({ sortBy, totalDocumentsCount, results }),
             xhrFields: {
                 responseType: 'blob'  // so we can download the PDF
             },
@@ -422,18 +409,6 @@
         $("#loader").find(".spinner-border").removeClass("text-primary").addClass("text-success");
         $("#loader").show();
 
-        var searchType = $("#searchTypeSelect").val();
-        if (searchType == "1") {
-            searchType = "Full-Text Search";
-        } else if (searchType == "2") {
-            searchType = "Multiple-Text Search";
-        } else if (searchType == "3") {
-            searchType = "Fuzzy Search";
-        } else if (searchType == "4") {
-            searchType = "Synonym Search";
-        }
-        const keyword = $("#searchKeywordInput").val();
-        const fileType = $("#fileTypeFilter").val().replace(".", "");
         var sortBy = $("#sortBySelect").val();
         if (sortBy == "1") {
             sortBy = "Date (Ascending)";
@@ -444,18 +419,13 @@
         } else {
             sortBy = "No sorting";
         }
-        const searchString = $("#searchInput").val() || null;
-        if (!startDate || !endDate) {
-            startDate = null;
-            endDate = null;
-        }
-
         const results = [];
 
         $(this).closest(".card").each(function () {
             const fileName = $(this).find(".card-header strong").text().trim();
             const matchText = $(this).find(".card-header .text-muted").text();
             const matchCount = parseInt(matchText.match(/\d+/)[0]);
+            const uploadedDateText = $(this).find(".uploaded-date-text").html().trim();
 
             const snippets = [];
             $(this).find(".list-group-item").each(function () {
@@ -469,6 +439,7 @@
             results.push({
                 fileName,
                 matchCount,
+                uploadedDateText,
                 snippets
             });
         });
@@ -477,9 +448,7 @@
             url: '/Home/ExportToPdf',
             method: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({
-                searchType, keyword, fileType, startDate, endDate, sortBy, searchString, results
-            }),
+            data: JSON.stringify({ sortBy, results }),
             xhrFields: {
                 responseType: 'blob'  // so we can download the PDF
             },

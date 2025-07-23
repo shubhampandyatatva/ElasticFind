@@ -279,17 +279,32 @@ public class HomeController : Controller
         var fileBytes = Convert.FromBase64String(response.Source.Data);
 
         // Infer content type from extension
-        var ext = Path.GetExtension(response.Source.FileName).ToLower();
+        var ext = response.Source.FileType.ToLower();
         var contentType = ext switch
         {
             ".pdf" => "application/pdf",
             ".txt" => "text/plain",
             ".docx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             ".doc" => "application/msword",
+            ".xlsx" => "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            ".xls" => "application/vnd.ms-excel",
+            "txt" => "text/plain",
+            ".pptx" => "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+            ".ppt" => "application/vnd.ms-powerpoint",
+            ".rtf" => "application/rtf",
+            ".csv" => "text/csv",
+            ".json" => "application/json",
+            ".xml" => "application/xml",
+            ".html" => "text/html",
+            ".png" => "image/png",
+            ".dotx" => "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+            ".dot" => "application/msword",
+            ".odt" => "application/vnd.oasis.opendocument.text",
+            ".ods" => "application/vnd.oasis.opendocument.spreadsheet",
             _ => "application/octet-stream"
         };
 
-        return File(fileBytes, contentType, response.Source.FileName);
+        return File(fileBytes, contentType, response.Source.FileName+ext);
     }
 
     [HttpGet]
