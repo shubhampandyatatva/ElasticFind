@@ -10,12 +10,12 @@ namespace ElasticFind.Service.Implementations;
 public class AuthService : IAuthService
 {
     private readonly IAuthRepository _authRepository;
-    private readonly IResetPasswordService _resetPasswordService;
+    private readonly IUserService _userService;
     private readonly IUserRepository _userRepository;
-    public AuthService(IAuthRepository authRepository, IResetPasswordService resetPasswordService, IUserRepository userRepository)
+    public AuthService(IAuthRepository authRepository, IUserService userService, IUserRepository userRepository)
     {
         _authRepository = authRepository;
-        _resetPasswordService = resetPasswordService;
+        _userService = userService;
         _userRepository = userRepository;
     }
 
@@ -92,7 +92,7 @@ public class AuthService : IAuthService
 
     public async Task<bool> ResetUserPassword(ResetPasswordViewModel resetPasswordViewModel)
     {
-        string decryptedToken = _resetPasswordService.DecryptResetPasswordToken(resetPasswordViewModel.Token);
+        string decryptedToken = _userService.DecryptResetPasswordToken(resetPasswordViewModel.Token);
         if (string.IsNullOrEmpty(decryptedToken))
         {
             Console.WriteLine("Error: Decrypted Token is null!");

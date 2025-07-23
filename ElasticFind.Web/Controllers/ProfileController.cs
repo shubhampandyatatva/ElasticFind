@@ -8,12 +8,10 @@ namespace ElasticFind.Web.Controllers;
 
 public class ProfileController : Controller
 {
-    private readonly IProfileService _profileService;
-    private readonly IJwtService _jwtService;
-    public ProfileController(IProfileService profileService, IJwtService jwtService)
+    private readonly IUserService _userService;
+    public ProfileController(IUserService userService)
     {
-        _profileService = profileService;
-        _jwtService = jwtService;
+        _userService = userService;
     }
 
     [HttpGet]
@@ -26,7 +24,7 @@ public class ProfileController : Controller
             TempData["Anonymous"] = "Please Login first to change your password.";
             return RedirectToAction("Authentication", "Login");
         }
-        string? email = _jwtService.GetClaimValue(jwtToken, ClaimTypes.Email);
+        string? email = _userService.GetClaimValue(jwtToken, ClaimTypes.Email);
         if (string.IsNullOrEmpty(email))
         {
             TempData["Anonymous"] = "Your authentication token is not valid! Please login again to continue.";
@@ -41,7 +39,7 @@ public class ProfileController : Controller
     {
         if (ModelState.IsValid)
         {
-            JsonResponse response = await _profileService.ChangePassword(viewModel);
+            JsonResponse response = await _userService.ChangePassword(viewModel);
             if (response.Success)
             {
                 TempData["Email"] = viewModel.Email;
@@ -73,14 +71,14 @@ public class ProfileController : Controller
             TempData["Anonymous"] = "Please Login first to change your password.";
             return RedirectToAction("Authentication", "Login");
         }
-        string? email = _jwtService.GetClaimValue(jwtToken, ClaimTypes.Email);
+        string? email = _userService.GetClaimValue(jwtToken, ClaimTypes.Email);
         if (string.IsNullOrEmpty(email))
         {
             TempData["Anonymous"] = "Your authentication token is not valid! Please login again to continue.";
             return RedirectToAction("Authentication", "Login");
         }
 
-        MyProfileViewModel? myProfile = await _profileService.GetProfileByEmail(email);
+        MyProfileViewModel? myProfile = await _userService.GetProfileByEmail(email);
         if (myProfile == null)
         {
             TempData["ErrorMessage"] = "Profile not found!";
@@ -99,7 +97,7 @@ public class ProfileController : Controller
     {
         if (ModelState.IsValid)
         {
-            JsonResponse response = await _profileService.UpdateProfile(myProfileViewModel);
+            JsonResponse response = await _userService.UpdateProfile(myProfileViewModel);
             if (response.Success)
             {
                 Console.WriteLine("Profile Image Path: " + response.Anonymous);

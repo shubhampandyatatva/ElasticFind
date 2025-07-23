@@ -15,15 +15,13 @@ namespace ElasticFind.Web.Controllers;
 public class AuthenticationController : Controller
 {
     private readonly IAuthService _authService;
-    private readonly IResetPasswordService _resetPasswordService;
+    private readonly IUserService _userService;
     private readonly IEmailService _emailService;
-    private readonly IJwtService _jwtService;
-    public AuthenticationController(IAuthService authService, IResetPasswordService resetPasswordService, IEmailService emailService, IJwtService jwtService)
+    public AuthenticationController(IAuthService authService, IUserService userService, IEmailService emailService)
     {
         _authService = authService;
-        _resetPasswordService = resetPasswordService;
+        _userService = userService;
         _emailService = emailService;
-        _jwtService = jwtService;
     }
 
     [HttpGet]
@@ -43,7 +41,7 @@ public class AuthenticationController : Controller
             return View();
         }
 
-        string? email = _jwtService.GetClaimValue(jwtToken, ClaimTypes.Email);
+        string? email = _userService.GetClaimValue(jwtToken, ClaimTypes.Email);
         if (email == null)
         {
             Log.Warning("No email claim found in JWT Token, redirecting to login page.");
@@ -56,7 +54,7 @@ public class AuthenticationController : Controller
             return View();
         }
 
-        string? roleName = _jwtService.GetClaimValue(jwtToken, ClaimTypes.Role);
+        string? roleName = _userService.GetClaimValue(jwtToken, ClaimTypes.Role);
         if (roleName == null)
         {
             Log.Warning("No role claim found in JWT Token, redirecting to login page.");
@@ -104,7 +102,7 @@ public class AuthenticationController : Controller
                     Log.Error("User by email in JWT token not found!");
                     return View(loginViewModel);
                 }
-                string token = _jwtService.GenerateJwtToken(user);
+                string token = _userService.GenerateJwtToken(user);
 
                 if (!loginViewModel.RememberMe)
                 {
@@ -182,7 +180,7 @@ public class AuthenticationController : Controller
                     TempData["ErrorMessage"] = "Some error occured!";
                     return View(registerViewModel);
                 }
-                string token = _jwtService.GenerateJwtToken(user);
+                string token = _userService.GenerateJwtToken(user);
 
                 CookieOptions cookieOptions = new()
                 {
@@ -225,7 +223,7 @@ public class AuthenticationController : Controller
                 TempData["ErrorMessage"] = "User with this email does not exist. Please enter a valid email or register on our website.";
                 return View(forgotPasswordViewModel);
             }
-            string resetPasswordToken = _resetPasswordService.GenerateResetPasswordToken(forgotPasswordViewModel.Email);
+            string resetPasswordToken = _userService.GenerateResetPasswordToken(forgotPasswordViewModel.Email);
             string? resetPasswordLink = Url.Action("ResetPassword", "Authentication", new { token = resetPasswordToken }, Request.Scheme); //watch
             Console.WriteLine("Reset Password Link: " + resetPasswordLink);
             bool isEmailSent = await _emailService.SendResetPasswordEmail(forgotPasswordViewModel.Email, resetPasswordLink);
@@ -256,7 +254,7 @@ public class AuthenticationController : Controller
             return RedirectToAction("Login");
         }
 
-        JsonResponse resetPasswordResult = await _resetPasswordService.ValidateResetPasswordToken(token);
+        JsonResponse resetPasswordResult = await _userService.ValidateResetPasswordToken(token);
 
         if (resetPasswordResult.Success)
         {

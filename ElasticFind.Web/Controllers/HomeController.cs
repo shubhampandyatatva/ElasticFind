@@ -29,10 +29,9 @@ public class HomeController : Controller
     private readonly IElasticClient _elasticClient;
     private readonly IPreviewFileService _previewFileService;
     private readonly IExportService _exportService;
-    private readonly IJwtService _jwtService;
     private readonly IConfiguration _config;
 
-    public HomeController(ILogger<HomeController> logger, IUserService userService, IElasticSearchService elasticSearchService, IElasticClient elasticClient, IPreviewFileService previewFileService, IExportService exportService, IJwtService jwtService, IConfiguration config)
+    public HomeController(ILogger<HomeController> logger, IUserService userService, IElasticSearchService elasticSearchService, IElasticClient elasticClient, IPreviewFileService previewFileService, IExportService exportService, IConfiguration config)
     {
         _logger = logger;
         _userService = userService;
@@ -40,7 +39,6 @@ public class HomeController : Controller
         _elasticClient = elasticClient;
         _previewFileService = previewFileService;
         _exportService = exportService;
-        _jwtService = jwtService;
         _config = config;
     }
 
@@ -179,7 +177,7 @@ public class HomeController : Controller
         {
             return BadRequest("Unauthorized: JWT token is missing.");
         }
-        string? email = _jwtService.GetClaimValue(jwtToken, ClaimTypes.Email);
+        string? email = _userService.GetClaimValue(jwtToken, ClaimTypes.Email);
         if (email == null)
         {
             return BadRequest("Unauthorized: Email cannot be retrieved from JWT token.");
@@ -480,7 +478,7 @@ public class HomeController : Controller
             }
         };
 
-        var token = _jwtService.GenerateJwtTokenForOnlyOffice(docConfig);
+        var token = _userService.GenerateJwtTokenForOnlyOffice(docConfig);
 
         ViewBag.ConfigJson = JsonConvert.SerializeObject(docConfig);
         ViewBag.Token = token;

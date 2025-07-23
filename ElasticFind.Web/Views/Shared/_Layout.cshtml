@@ -24,18 +24,17 @@
     <link rel="stylesheet" href="~/css/site.css">
 </head>
 
-@inject IJwtService jwtService
 @inject IUserService userService
 @{
     string? jwtToken = Context.Request.Cookies["JwtToken"];
-    string? roleName = jwtToken != null ? jwtService.GetClaimValue(jwtToken, ClaimTypes.Role) : null;
+    string? roleName = jwtToken != null ? userService.GetClaimValue(jwtToken, ClaimTypes.Role) : null;
     string? action = ViewContext.RouteData.Values["action"]?.ToString();
     string? imageProfilePath = Context.Request.Cookies["ProfileImagePath"];
     if (string.IsNullOrEmpty(imageProfilePath))
     {
         imageProfilePath = "images/admin-icon.png";
     }
-    string username = jwtToken != null ? jwtService.GetClaimValue(jwtToken, ClaimTypes.Name) : "Guest";
+    string? username = jwtToken != null ? userService.GetClaimValue(jwtToken, ClaimTypes.Name) : "Guest";
     if (string.IsNullOrEmpty(username)) // if token is corrupt, it won't be verified and hence GetClaimValue will return null
 {
         username = "Guest";
