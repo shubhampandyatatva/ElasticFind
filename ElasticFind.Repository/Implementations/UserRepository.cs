@@ -109,7 +109,7 @@ public class UserRepository : IUserRepository
 
     public async Task<bool> IsUserActive(string email)
     {
-        return await _dbcontext.Users.Where(u => u.Email == email && u.Isactive == true && u.Isdeleted != true).AnyAsync();
+        return await _dbcontext.Users.Where(u => u.Email.ToLower() == email.ToLower() && u.Isactive == true && u.Isdeleted != true).AnyAsync();
     }
 
     public Task<List<FileViewModel>> GetFiles(PaginationViewModel pagination)

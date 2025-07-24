@@ -18,17 +18,17 @@ public class CategoryRepository : ICategoryRepository
         var query = _dbcontext.Categories.Where(u => u.IsDeleted != true).OrderBy(u => u.Id);
         if (!string.IsNullOrEmpty(pagination.SearchString))
         {
-            query = query.Where(u => u.Name.ToLower().Contains(pagination.SearchString.ToLower()) || u.Description.ToLower().Contains(pagination.SearchString.ToLower())).OrderBy(u => u.Id);
+            query = query.Where(u => u.Name.ToLower().Contains(pagination.SearchString.ToLower())).OrderBy(u => u.Id);
         }
 
-        query = pagination.SortOrder == "Asc" ? query.OrderBy(u => u.Name) : query.OrderByDescending(u => u.Name);
+        // query = pagination.SortOrder == "Asc" ? query.OrderBy(u => u.Name) : query.OrderByDescending(u => u.Name);
 
         List<CategoryViewModel> categories = query.Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize).Select(u => new CategoryViewModel
         {
             Id = u.Id,
             Name = u.Name,
             Description = u.Description,
-            Status = u.IsDeleted == true ? "Active" : "Inactive",
+            CreatedBy = u.CreatedBy,
         }).ToList();
 
         return categories;
@@ -43,4 +43,51 @@ public class CategoryRepository : ICategoryRepository
     {
         return await _dbcontext.Categories.Where(u => u.IsDeleted != true && (u.Name.ToLower().Contains(searchString.ToLower()) || u.Description.ToLower().Contains(searchString.ToLower()))).CountAsync();
     }
+
+    public async Task AddCategoryToDb(Category category)
+    {
+        try
+        {
+            await _dbcontext.Categories.AddAsync(category);
+            await _dbcontext.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("An error occurred while adding the category to the database.", ex);
+        }
+    }
+
+    public async Task<Category?> GetCategoryByName(string name)
+    {
+        return await _dbcontext.Categories.FirstOrDefaultAsync(c => c.Name.ToLower() == name.ToLower() && c.IsDeleted != true);
+    }
+
+    public async Task UpdateCategory(Category category)
+    {
+        try
+        {
+            _dbcontext.Categories.Update(category);
+            await _dbcontext.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("An error occurred while updating the category.", ex);
+        }
+    }
+
+    public async Task DeleteCategoryByName(string name)
+    {
+        try
+        {
+            Category? category = await _dbcontext.Categories.FirstOrDefaultAsync(c => c.Name.ToLower() == name.ToLower() && c.IsDeleted != true) ?? throw new Exception("Category not found.");
+
+            _dbcontext.Categories.Remove(category);
+            await _dbcontext.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("An error occurred while deleting the category.", ex);
+        }
+    }
+
 }

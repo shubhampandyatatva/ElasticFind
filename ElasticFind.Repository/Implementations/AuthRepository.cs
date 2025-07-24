@@ -16,13 +16,13 @@ public class AuthRepository : IAuthRepository
 
     public async Task<bool> CheckIfUserByEmailExists(string email)
     {
-        User? user = await _dbcontext.Users.FirstOrDefaultAsync(u => u.Email == email && u.Isdeleted != true);
+        User? user = await _dbcontext.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower() && u.Isdeleted != true);
         return user != null;
     }
 
     public async Task<bool> CheckUserPassword(string email, string password)
     {
-        User? user = await _dbcontext.Users.FirstOrDefaultAsync(u => u.Email == email && u.Isdeleted != true);
+        User? user = await _dbcontext.Users.FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower() && u.Isdeleted != true);
         return user != null && user.Password == password;
     }
 
@@ -66,6 +66,6 @@ public class AuthRepository : IAuthRepository
 
     public async Task<User?> GetUserByEmail(string email)
     {
-        return await _dbcontext.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Email == email && u.Isdeleted != true);
+        return await _dbcontext.Users.Include(u => u.Role).FirstOrDefaultAsync(u => u.Email.ToLower() == email.ToLower() && u.Isdeleted != true);
     }
 }

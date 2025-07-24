@@ -11,21 +11,240 @@
 
 <body>
     <div class="container-fluid"></div>
-        <div class="headbar d-flex justify-content-between align-items-center p-1 mb-4">
+    <div class="headbar d-flex justify-content-between align-items-center p-1 mb-4">
         <h2 style="color: #305796;">Manage Categories</h2>
 
         <div class="d-flex align-items-center">
-            <button type="button" class="btn btn-primary add-category-button me-3">+ Add Category</button>
+            <button type="button" class="btn btn-primary add-category-button me-3" data-bs-toggle="modal"
+                data-bs-target="#addEditCategoryModal">+ Add Category</button>
             <div class="search d-flex align-items-center">
-                <input type="text" id="searchInput" placeholder="Search" class="form-control" style="max-width: 500px;">
+                <input type="text" id="searchInput" placeholder="Search" class="form-control" style="max-width: 500px;"
+                    title="Search Categories by name">
                 <img src="~/images/search-icon.svg" alt="Search Icon" class="search-icon">
             </div>
         </div>
     </div>
 
-    <div id="displayUsersList" style="max-height: 70vh; overflow-y: auto;">
+    <div id="displayCategoryList" style="max-height: 70vh; overflow-y: auto;">
         @await Html.PartialAsync("_CategoriesPartial", Model)
     </div>
+
+    <!-- Add Edit Category Modal -->
+    @* <div id="addEditCategoryModalPartial">
+        @await Html.PartialAsync("_AddEditCategoryModalPartial")
+    </div> *@
+
+    <div class="modal fade" id="addEditCategoryModal" tabindex="-1" role="dialog"
+        aria-labelledby="addEditCategoryModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addEditCategoryModalLabel">Add Document Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" id="category-id">
+                    <div class="form-group mb-3">
+                        <label for="category-name" class="col-form-label">Name:</label>
+                        <input type="text" class="form-control" id="category-name">
+                        <div class="name-error text-danger mt-1"></div>
+                    </div>
+                    <div class="form-group">
+                        <label for="category-description" class="col-form-label">Description <span class="text-muted"
+                                style="font-size: 14px;">(Optional)</span>:</label>
+                        <textarea class="form-control" id="category-description"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal"
+                        id="addEditCategoryCloseButton">Close</button>
+                    <button type="button" class="btn btn-primary" id="addEditCategorySaveButton">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Modal -->
+
+    <div class="modal fade" id="deleteCategoryModal" tabindex="-1" role="dialog"
+        aria-labelledby="deleteCategoryModalCenterTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteCategoryModalLongTitle">Delete Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <!-- Content wrapper -->
+                <div id="deleteModalContent">
+                    <div class="modal-body d-flex flex-column align-items-center">
+                        <img src="~/images/warning-icon.svg" alt="Warning icon">
+                        <span class="text-center">Deleting this category will delete all the documents in this category. Are you sure you want to
+                        proceed with deleting this category?</span>
+                    </div>
+                    <div class="modal-footer justify-content-center">
+                        <button type="button" class="btn btn-danger" id="deleteModalYesButton">Delete this
+                            category</button>
+                        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Back to page</button>
+                    </div>
+                </div>
+
+                <!-- Spinner wrapper -->
+                <div id="deleteModalSpinner" class="d-none text-center p-4">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+                    <div class="mt-3">Deleting file...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadCategories(page, pageSize, searchString, sortOrder) {
+            try {
+                const response = await $.ajax({
+                    url: '@Url.Action("Index", "Categories")',
+                    type: 'GET',
+                    data: { page: page, pageSize: pageSize, searchString: searchString, sortOrder: sortOrder }
+                });
+
+                $("#displayCategoryList").html(response);
+            } catch (error) {
+                alert("An error occurred while loading categories!");
+            }
+        }
+
+        function changePageSize() {
+            var pageSize = $("#itemsPerPage").val();
+            var searchString = $("#searchInput").val();
+            loadCategories(1, pageSize, searchString, null);
+        }
+
+        $("#searchInput").on("input", function () {
+            var searchString = $(this).val();
+            var pageSize = $("#itemsPerPage").val();
+            loadCategories(1, pageSize, searchString, null);
+        });
+
+        $(".add-category-button").on("click", function () {
+            $("#addEditCategoryModalLabel").text("Add Document Category");
+            $("#category-id").val("");
+            $("#category-name").val("");
+            $("#category-description").val("");
+            $(".name-error").text("");
+        });
+
+        $("#addEditCategorySaveButton").on("click", function () {
+            var categoryId = $("#category-id").val();
+            var categoryName = $("#category-name").val();
+            var categoryDescription = $("#category-description").val();
+
+            if (categoryName.trim() === "") {
+                $(".name-error").text("Please enter a category name.");
+                return;
+            }
+
+
+            console.log("Old Category Name: " + oldCategoryNameGlobal);
+
+            $.ajax({
+                url: '@Url.Action("AddEditCategory", "Categories")',
+                type: 'POST',
+                data: { id: categoryId, name: categoryName, oldCategoryName: oldCategoryNameGlobal, description: categoryDescription },
+                success: function (response) {
+                    if (response.success) {
+                        $("#addEditCategoryModal").modal('hide');
+                        toastr.success(response.message);
+                        $("#category-name").val("");
+                        $("#category-description").val("");
+                        var itemsPerPage = $("#itemsPerPage").val();
+                        var searchInput = $("#searchInput").val();
+                        loadCategories(1, itemsPerPage, searchInput);
+                    } else {
+                        toastr.error(response.message);
+                        $("#addEditCategoryModal").modal('hide');
+                    }
+                },
+                error: function () {
+                    alert("An error occurred while saving the category!");
+                    $("#addEditCategoryModal").modal('hide');
+                }
+            });
+        });
+
+        $("#addEditCategoryCloseButton").on("click", function () {
+            setTimeout(function () {
+                $("#category-name").val("");
+                $("#category-description").val("");
+                $(".name-error").text("");
+            }, 200);
+        });
+
+        var categoryName;
+        function setCategoryName(name) {
+            categoryName = name.toLowerCase();
+        }
+
+        $(document).on("click", "#deleteModalYesButton", async function () {
+            $("#deleteModalContent").addClass("d-none");
+            $("#deleteModalSpinner").removeClass("d-none");
+
+            var searchString = $("#searchInput").val();
+            var pageSize = $("#itemsPerPage").val();
+
+            try {
+                const response = await $.ajax({
+                    url: "/Categories/DeleteCategory",
+                    type: "POST",
+                    data: { name: categoryName }
+                });
+
+                if (response.success) {
+                    await loadCategories(1, pageSize, searchString, null);
+                    $('#deleteCategoryModal').modal('hide');
+                    toastr.success(response.message, "Success");
+                } else {
+                    $('#deleteCategoryModal').modal('hide');
+                    toastr.error(response.message, "Error");
+                }
+            } catch (err) {
+                $('#deleteCategoryModal').modal('hide');
+                alert("An error occurred while deleting the file!");
+                console.error(err);
+            } finally {
+                // Restore modal content
+                $("#deleteModalContent").removeClass("d-none");
+                $("#deleteModalSpinner").addClass("d-none");
+            }
+        });
+
+        var oldCategoryNameGlobal;
+        
+        $(document).on("click", ".edit-category-icon", function() {
+            var categoryName = $(this).data("category-name");
+            oldCategoryNameGlobal = categoryName;
+
+            $.ajax({
+                url: '@Url.Action("GetCategoryByName", "Categories")',
+                type: 'GET',
+                data: { name: categoryName },
+                success: function(response) {
+                    console.log(response);
+                    if (response.success) {
+                        $("#addEditCategoryModalLabel").text("Edit Document Category");
+                        $("#category-id").val(response.category.id);
+                        $("#category-name").val(response.category.name);
+                        $("#category-description").val(response.category.description);
+                        $(".name-error").text("");
+                        $("#addEditCategoryModal").modal('show');
+                    } else {
+                        toastr.error(response.message, "Error");
+                    }
+                },
+                error: function() {
+                    alert("An error occurred while fetching the category details!");
+                }
+            })
+        });
+    </script>
 </body>
 
 </html>

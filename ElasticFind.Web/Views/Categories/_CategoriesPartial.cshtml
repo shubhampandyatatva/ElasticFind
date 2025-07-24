@@ -4,34 +4,28 @@
     <table class="table shadow">
         <thead>
             <tr>
-                <th scope="col">Sr. No</th>
-                <th scope="col" class="text-start">
-                    <span class="d-flex align-items-center ms-1">
-                        Name
-                        <i class="fa-solid fa-arrow-up NameSortUp ms-2 pointer" data-order="Asc" onclick="sortTable('Asc')"></i>
-                        <i class="fa-solid fa-arrow-down NameSortDown ms-2 pointer" data-order="Desc" onclick="sortTable('Desc')"></i>
-                    </span>
-                </th>
+                <th scope="col" style="width: 12%;">Sr. No</th>
+                <th scope="col" style="width: 14%;">Name</th>
                 <th scope="col">Description</th>
-                <th scope="col" class="ms-3"><span>Status</span></th>
-                <th scope="col" class="text-center">Action</th>
+                <th scope="col" class="text-start" style="width: 12%;">Created By</th>
+                <th scope="col" class="text-center" style="width: 12%;">Action</th>
             </tr>
         </thead>
         <tbody>
             @for (int i=0; i<Model.CategoryList.Count; i++)
             {
                 <tr>
-                    <td class="align-middle">@(i+1)</td>
-                    <td class="text-start d-flex align-items-center">@Model.CategoryList[i].Name</td>
-                    <td class="align-middle">@Model.CategoryList[i].Description</td>
-                    <td class="align-middle"><span class="status status-active">@Model.CategoryList[i].Status</span></td>
+                    <td class="align-middle">@(Model.PaginationViewModel.TotalRecords == 0 ? 0 : ((Model.PaginationViewModel.Page - 1) * Model.PaginationViewModel.PageSize + i + 1))</td>
+                    <td class="align-middle">@Model.CategoryList[i].Name</td>
+                    <td class="align-middle"><span class="@(Model.CategoryList[i].Description == null ? "text-muted" : "")" style="@(Model.CategoryList[i].Description == null ? "font-size: 15px;" : "")">@(Model.CategoryList[i].Description ?? "No Description Available")</span></td>
+                    <td class="align-middle">@Model.CategoryList[i].CreatedBy</td>
 
                     <td class="align-middle">
                         <span class="d-flex justify-content-center align-items-center">
-                            <i class="fa fa-pencil me-4 edit-user-icon pointer" onclick="setUserId('@Model.CategoryList[i].Id')" data-bs-toggle="modal" data-bs-target="#toggle_user_modal" data-toggle="tooltip" data-placement="bottom" title="Toggle User status">
-                            <i class="fa fa-trash pointer" data-bs-toggle="modal" data-bs-target="#delete_user_modal" data-toggle="tooltip" data-placement="bottom" title="Delete User" data-user-id="@Model.CategoryList[i].Id" onclick="setUserId('@Model.CategoryList[i].Id')"></i>
+                            <i class="fa fa-pencil me-4 edit-category-icon pointer" data-category-name="@Model.CategoryList[i].Name" style="color: rgb(22, 107, 235);" data-toggle="tooltip" data-placement="bottom" title="Edit Category"></i>
+                            <i class="fa fa-trash text-danger pointer" data-bs-toggle="modal" data-bs-target="#deleteCategoryModal" data-toggle="tooltip" data-placement="bottom" title="Delete Category" data-category-name="@Model.CategoryList[i].Name" onclick="setCategoryName('@Model.CategoryList[i].Name')"></i>
                         </span> 
-                    </td>
+                    </td> 
                 </tr>
             }
         </tbody>
@@ -75,36 +69,24 @@
 </div>
 
 <script>
-    $(document).ready(function () {
-        $('.status').each(function () {
-            if ($(this).text() == "Active") {
-                $(this).addClass("status-active");
-            } else {
-                $(this).addClass("status-inactive");
-            }
-        });
-    });
-
     function loadFirstPage() {
         const searchString = $("#searchInput").val();
         const currentPageSize = parseInt($("#itemsPerPage").val());
-        loadPage(1, currentPageSize, searchString, null);
+        loadCategories(1, currentPageSize, searchString, null);
     }
 
     function loadPrevPage() {
         var page = @Model.PaginationViewModel.Page - 1;
         var pageSize = @Model.PaginationViewModel.PageSize;
         var searchString = $("#searchInput").val();
-        var sortOrder = $(this).data("order");
-        loadPage(page, pageSize, searchString, sortOrder);
+        loadCategories(page, pageSize, searchString, null);
     }
 
     function loadNextPage() {
         var page = @Model.PaginationViewModel.Page + 1;
         var pageSize = @Model.PaginationViewModel.PageSize;
         var searchString = $("#searchInput").val();
-        var sortOrder = $(this).data("order");
-        loadPage(page, pageSize, searchString, sortOrder);
+        loadCategories(page, pageSize, searchString, null);
     }
 
     function loadLastPage() {
@@ -112,16 +94,7 @@
         const totalRecords = @Model.PaginationViewModel.TotalRecords;
         const currentPageSize = parseInt($("#itemsPerPage").val());
         currentPage = Math.ceil(totalRecords / currentPageSize);
-        loadPage(currentPage, currentPageSize, searchString, null);
-    }
-
-    function sortTable(order) {
-        var page = @Model.PaginationViewModel.Page;
-        var pageSize = @Model.PaginationViewModel.PageSize;
-        var searchString = $("#searchInput").val();
-        SortOrder = order;
-        console.log("Sorting table with order: ", SortOrder);
-        loadPage(page, pageSize, searchString, SortOrder);
+        loadCategories(currentPage, currentPageSize, searchString, null);
     }
 
     $(function () {

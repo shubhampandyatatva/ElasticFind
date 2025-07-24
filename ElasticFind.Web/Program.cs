@@ -19,6 +19,8 @@ using ElasticFind.Service.Exceptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpContextAccessor();
+
 builder.Services.AddDbContext<ElasticFindContext>(options =>
 options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
@@ -131,7 +133,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
        };
    });
 
-string indexName = builder.Configuration["Elasticsearch:IndexName"] ?? "documents";
+string name = builder.Configuration["Elasticsearch:IndexName"] ?? "documents";
 
 var pool = new SingleNodeConnectionPool(new Uri(builder.Configuration["Elasticsearch:Url"] ?? "https://localhost:9200"));
 var settings = new ConnectionSettings(pool)
@@ -140,7 +142,7 @@ var settings = new ConnectionSettings(pool)
     // .BasicAuthentication("elastic", "xU0dIO7RHrWFwVl-cgb*")
     .DisableDirectStreaming()
     .EnableDebugMode()
-    .DefaultIndex(indexName);
+    .DefaultIndex(name);
 
 var client = new ElasticClient(settings);
 
@@ -217,21 +219,21 @@ async Task ValidateAndInitializeElasticsearchAsync(IElasticClient client)
     if (health.Status.ToString().Equals("red", StringComparison.OrdinalIgnoreCase))
         throw new Exception("Elasticsearch service is not ready. Try restarting the service.");
 
-    var indexExists = await client.Indices.ExistsAsync(indexName);
+    var indexExists = await client.Indices.ExistsAsync(name);
     if (!indexExists.Exists)
     {
-        var createIndexResponse = await client.Indices.CreateAsync(indexName, c => c
+        var createIndexResponse = await client.Indices.CreateAsync(name, c => c
             .Map<DocumentViewModel>(m => m.AutoMap())
         );
 
         if (!createIndexResponse.IsValid)
             throw new Exception("There was some issue initializing Elasticsearch properly! Try restarting the elasticsearch service or the application.");
         else
-            Console.WriteLine(indexName + " index created.");
+            Console.WriteLine(name + " index created.");
     }
     else
     {
-        Console.WriteLine(indexName + " index already exists.");
+        Console.WriteLine(name + " index already exists.");
     }
 
     var info = await client.RootNodeInfoAsync();
