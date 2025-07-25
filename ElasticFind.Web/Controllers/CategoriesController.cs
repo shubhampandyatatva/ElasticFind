@@ -1,12 +1,15 @@
 using System.Threading.Tasks;
 using ElasticFind.Repository.Data;
 using ElasticFind.Repository.ViewModels;
+using ElasticFind.Service.Constants;
 using ElasticFind.Service.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Nest;
 
 namespace ElasticFind.Web.Controllers;
 
+[Authorize(Roles = Roles.Admin)]
 public class CategoriesController : Controller
 {
     private readonly ICategoryService _categoryService;

@@ -137,11 +137,17 @@
             var categoryName = $("#category-name").val();
             var categoryDescription = $("#category-description").val();
 
+            console.log("categoryname.trim: ", categoryName.trim());
             if (categoryName.trim() === "") {
                 $(".name-error").text("Please enter a category name.");
                 return;
             }
-
+            
+            console.log("/\s/.test(categoryName.trim()): ", /\s/.test(categoryName.trim())); 
+            if (/\s/.test(categoryName.trim())) {
+                $(".name-error").text("Category name cannot contain spaces. Can contain hyphen, underscore, or dot.");
+                return;
+            }
 
             console.log("Old Category Name: " + oldCategoryNameGlobal);
 

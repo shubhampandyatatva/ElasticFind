@@ -7,6 +7,16 @@
     <h2 class="mb-4" style="color: #305796;">Manage Files</h2>
 
     <form id="uploadForm" enctype="multipart/form-data" style="width: 100%; max-width: 550px;" class="mx-auto mb-4">
+        <div class="category-container d-flex align-items-center mb-4">
+            <label style="width: 360px;">Select Category for Upload:</label>
+            <select class="form-select flex-grow-1">
+                <option value="">Select Category</option>
+                @foreach (var category in Model.Categories)
+                {
+                    <option value="@category.Name">@category.Name</option>
+                }
+            </select>
+        </div>
         <div id="dropzone" class="upload-dropzone">
             <i class="fas fa-cloud-upload-alt"></i>
             <p class="mb-2">Drag & drop your files here</p>
@@ -41,6 +51,17 @@
                     class="position-absolute top-50 translate-middle-y end-0 me-3" style="height: 18px;" />
             </div>
         </div>
+    </div>
+
+    <div class="select-category d-flex align-items-center mb-3">
+        <div class="select-category-text me-3">View files from: </div>
+        <select class="form-select me-3" style="width: 200px;">
+        @foreach (var category in Model.Categories)
+        {
+            <option value="@category.Name">@category.Name</option>
+        }
+        </select>
+        <button type="button" class="btn btn-primary" id="selectCategoryBtn">Search</button>
     </div>
 
     <input type="hidden" id="allFileIdsJson" value='@Html.Raw(Json.Serialize(ViewBag.AllFileIds))' />
@@ -146,7 +167,13 @@
         }
     }
 
-    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('click', function () {
+        if ($(".category-container select").val() === "") {
+            toastr.warning("Please select a category for uploading the files.", "Warning");
+            return;
+        }
+        fileInput.click();
+    });
 
     // Handle click selection
     fileInput.addEventListener('change', () => {
@@ -238,25 +265,25 @@
         updateMasterCheckboxState();
     });
 
-    async function loadPage(page, pageSize, searchString, sortOrder) {
-        console.log(page, pageSize, searchString, sortOrder);
+    async function loadPage(selectedCategory, page, pageSize, searchString, sortOrder) {
+        console.log(selectedCategory, page, pageSize, searchString, sortOrder);
         try {
             const data = await $.ajax({
                 url: "/Home/Index",
                 type: "GET",
-                data: { page: page, pageSize: pageSize, searchString: searchString, sortOrder: sortOrder }
+                data: { selectedCategory: selectedCategory, page: page, pageSize: pageSize, searchString: searchString, sortOrder: sortOrder }
             });
 
             $("#filesPartialView").html(data);
 
             @* allFileIds = JSON.parse($("#allFileIdsJson").val() || "[]"); *@
                 @* allFileIds = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.AllFileIds))' || "[]"); *@
-                    allFileIds = JSON.parse($("#allFileIdsJson").val() || "[]");
+                allFileIds = JSON.parse($("#allFileIdsJson").val() || "[]");
 
             console.log("Updated allFileIds: ", allFileIds);
             @* $("#allFileIdsJson").val(allFileIds); *@
-            // Update state variables
-            currentPage = page;
+                // Update state variables
+                currentPage = page;
             currentPageSize = pageSize;
 
             // Restore checkbox states after new content
@@ -312,8 +339,15 @@
     $("#uploadForm").on("submit", function (e) {
         e.preventDefault();
 
+        var uploadCategory = $(".category-container select").val();
+
+        if (uploadCategory === "") {
+            toastr.warning("Please select a category for uploading the files.", "Warning");
+            return;
+        }
+
         if (allFiles.length === 0) {
-            alert("No files selected. Please select files to upload.");
+            toastr.warning("Please select files to upload.", "Warning");
             return;
         }
 
@@ -324,10 +358,14 @@
             formData.append("files", file);
         });
 
+        formData.append("uploadCategory", uploadCategory);
+
         var pageSize = $("#itemsPerPage").val();
         var searchString = $("#searchInput").val();
 
         $("#uploadProgressContainer").removeClass("d-none");
+
+        var selectedCategory = $(".select-category select").val();
 
         $.ajax({
             url: "/Home/UploadDocuments",
@@ -336,7 +374,7 @@
             processData: false,
             contentType: false,
             success: function (response) {
-                loadPage(1, pageSize, searchString, SortOrder);
+                loadPage(selectedCategory, 1, pageSize, searchString, SortOrder);
                 toastr.success(response, "Success");
                 allFiles = []; // reset after successful upload
                 updateFileNameDisplay([]);
@@ -395,13 +433,15 @@
         function changePageSize() {
             var pageSize = $("#itemsPerPage").val();
             var searchString = $("#searchInput").val();
-            loadPage(1, pageSize, searchString, SortOrder);
+            var selectedCategory = $(".select-category select").val();
+            loadPage(selectedCategory, 1, pageSize, searchString, SortOrder);
         }
 
     $("#searchInput").on("input", function () {
         var searchString = $(this).val();
         var pageSize = $("#itemsPerPage").val();
-        loadPage(1, pageSize, searchString, SortOrder);
+        var selectedCategory = $(".select-category select").val();
+        loadPage(selectedCategory, 1, pageSize, searchString, SortOrder);
     });
 
     var fileId;
@@ -415,6 +455,7 @@
 
         var searchString = $("#searchInput").val();
         var pageSize = $("#itemsPerPage").val();
+        var selectedCategory = $(".select-category select").val();
 
         try {
             const response = await $.ajax({
@@ -425,7 +466,7 @@
 
             if (response.success) {
                 console.log("Success before loadPage");
-                await loadPage(1, pageSize, searchString, SortOrder);
+                await loadPage(selectedCategory, 1, pageSize, searchString, SortOrder);
                 console.log("Success after loadPage");
                 $('#delete_file_modal').modal('hide');
                 toastr.success(response.message, "Success");
@@ -444,11 +485,11 @@
         }
     });
 
-    function downloadFile(fileId, fileName) {
+    function downloadFile(fileId, fileName, category) {
         $("#downloadLoader").show();
 
         $.ajax({
-            url: `/Home/Download/${fileId}`,
+            url: `/Home/Download?fileId=${fileId}&category=${category}`,
             method: "GET",
             xhrFields: {
                 responseType: 'blob' // Get the raw binary data
@@ -494,6 +535,8 @@
         $("#deleteMultipleFilesModalContent").addClass("d-none");
         $("#deleteMultipleFilesModalSpinner").removeClass("d-none");
 
+        var selectedCategory = $(".select-category select").val();
+
         try {
             const response = await $.ajax({
                 url: "/Home/DeleteMultipleFiles",
@@ -503,7 +546,7 @@
 
             if (response.success) {
                 toastr.success(response.message, "Success");
-                loadPage(1, $("#itemsPerPage").val(), $("#searchInput").val(), SortOrder);
+                loadPage(selectedCategory, 1, $("#itemsPerPage").val(), $("#searchInput").val(), SortOrder);
                 selectedFileIds.clear();
                 console.log("All File Ids after delete files: ", allFileIds);
                 // Restore modal content
@@ -526,5 +569,11 @@
             $("#deleteMultipleFilesModalContent").removeClass("d-none");
             $("#deleteMultipleFilesModalSpinner").addClass("d-none");
         }
+    });
+
+    $("#selectCategoryBtn").on("click", function () {
+        const selectedCategory = $(".select-category select").val();
+        console.log("Selected Category: ", selectedCategory);
+        loadPage(selectedCategory, 1, $("#itemsPerPage").val(), $("#searchInput").val(), SortOrder);
     });
 </script>

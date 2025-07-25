@@ -11,8 +11,12 @@
 <body>
     <h3 class="mb-4" style="color: #305796;">Search Documents</h3>
 
+    <div id="categoryDropdownContainer" class="category-container d-flex align-items-center mb-4">
+
+    </div>
+
     <div id="builder" class="mb-3"></div>
-    <button id="btnSearch" class="btn btn-primary mb-3 pointer">Query Search</button>
+    <button id="btnSearch" class="btn btn-primary mb-3 pointer">Search</button>
 
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -108,6 +112,33 @@
 
     var esBoolQuery = {};
 
+    var selectedCategoryGlobal = "";
+
+    $(document).ready(function () {
+        $.ajax({
+            url: '/Home/GetAllCategories',
+            type: 'GET',
+            success: function (categories) {
+                console.log("Categories: ", categories); 
+                let html = `
+                    <label style="width: 150px;">Select Category: </label>
+                    <select id="categoryDropdown" class="form-select" style="width: 300px;">
+                        <option value="">Select Category</option>`;
+
+                categories.forEach(c => {
+                    html += `<option value="${c.name}">${c.name}</option>`;
+                });
+
+                html += `</select>`;
+
+                $('#categoryDropdownContainer').html(html);
+            },
+            error: function () {
+                $('#categoryDropdownContainer').html("<span class='text-danger'>Failed to load categories.</span>");
+            }
+        });
+    });
+
     function searchDocumentContent() {
         var sortBy = $("#sortBySelect").val().trim();
         currentPageSize = $("#itemsPerPageSelect").val();
@@ -119,13 +150,14 @@
         $.ajax({
             url: "/Home/SearchDocumentContent",
             type: "POST",
-            data: { sortBy: sortBy, currentPage: currentPage, currentPageSize: currentPageSize, esBoolQuery: JSON.stringify(esBoolQuery) },
+            data: { selectedCategory: selectedCategoryGlobal, sortBy: sortBy, currentPage: currentPage, currentPageSize: currentPageSize, esBoolQuery: JSON.stringify(esBoolQuery) },
             success: function (data) {
                 var html = "";
 
                 if (data.searchResults.length === 0) {
                     html = "<div class='alert alert-warning'>No results found.</div>";
                 } else {
+                    console.log("Data: ", data);
                     data.searchResults.forEach(function (doc, index) {
                         let totalHighlights = 0;
                         doc.snippets.forEach(snippet => {
@@ -146,7 +178,7 @@
                                         <button class="btn btn-sm btn-outline-primary single-export-btn me-2"" data-id="${doc.id}" title="Export this search result">
                                             <i class="bi bi-file-earmark-arrow-up"></i>
                                         </button>
-                                        <button onclick="downloadFile('${doc.id}', '${doc.fileName}')" class="btn btn-sm btn-outline-secondary me-2" title="Download">
+                                        <button onclick="downloadFile('${doc.id}', '${doc.fileName}', '${selectedCategoryGlobal}')" class="btn btn-sm btn-outline-secondary me-2" title="Download">
                                             <i class="bi bi-download"></i>
                                         </button>
                                         @* <button class="btn btn-sm btn-outline-primary preview-btn" data-id="${doc.id}" title="Preview">
@@ -234,14 +266,21 @@
     $(document).on("keydown", ".rule-value-container input", function (e) {
         if (e.key === "Enter") {
             setTimeout(function () {
+                var selectedCategory = $("#categoryDropdown").val();
+                if(selectedCategory === "")
+                {
+                    toastr.warning("Please select a category!", "Warning");
+                    return;
+                }
+
                 currentPage = 1;
                 $("#sortBySelect").val("1");
-                @* var rules = $('#builder').queryBuilder('getRules'); *@
                 var esQuery = $('#builder').queryBuilder('getESBool');
                 console.log("ES Query: ", esQuery);
                 if (esQuery && Object.keys(esQuery).length > 0) {
                     esBoolQuery = esQuery;
                 }
+                selectedCategoryGlobal = selectedCategory;
                 searchDocumentContent();
             }, 50);
         }
@@ -352,54 +391,65 @@
         } else {
             sortBy = "No sorting";
         }
-        const totalDocumentsCount = $("#totalDocuments").text().trim();
 
-        const results = [];
-
-        $("#searchResults .card").each(function () {
-            const fileName = $(this).find(".card-header strong").html().trim();
-            console.log("File Name: ", fileName);
-            const matchText = $(this).find(".card-header .text-muted").html();
-            console.log("Match Text: ", matchText); 
-            const matchCount = parseInt(matchText.match(/\d+/)[0]);
-            const uploadedDateText = $(this).find(".uploaded-date-text").html().trim();
-            console.log("Uploaded Date Text: ", uploadedDateText); 
-
-            const snippets = [];
-            $(this).find(".list-group-item").each(function () {
-                // Skip the item if it contains the "View all matches" link
-                const anchor = $(this).find("a.toggle-snippets-link");
-                if (anchor.length === 0) {
-                    snippets.push($(this).html().trim());
-                }
-            });
-
-            results.push({
-                fileName,
-                matchCount,
-                uploadedDateText,
-                snippets
-            });
-        });
-        // Send to backend
         $.ajax({
-            url: '/Home/ExportToPdf',
-            method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify({ sortBy, totalDocumentsCount, results }),
-            xhrFields: {
-                responseType: 'blob'  // so we can download the PDF
-            },
-            success: function (blob) {
-                const link = document.createElement('a');
-                link.href = window.URL.createObjectURL(blob);
-                link.download = "ElasticFind_Results.pdf";
-                link.click();
+            url: "/Home/SearchDocumentContent",
+            type: "POST",
+            data: { selectedCategory: selectedCategoryGlobal, sortBy: sortBy, currentPage: 0, currentPageSize: 0, esBoolQuery: JSON.stringify(esBoolQuery) },
+            success: function (data) {
+                console.log("Export Data: ", data);
+
+                const results = [];
+                data.searchResults.forEach(function (doc) {
+                    const snippets = [];
+                    let totalHighlights = 0;
+                    doc.snippets.forEach(function (snippet) {
+                        totalHighlights += (snippet.match(/<mark>/g) || []).length;
+                        snippets.push(snippet);
+                    });
+
+                    results.push({
+                        fileName: doc.highlightedFileName,
+                        fileType: doc.highlightedFileType,
+                        highlightedUploadedDate: doc.highlightedUploadedDate,
+                        matchCount: totalHighlights,
+                        snippets: snippets
+                    });
+                });
+
+                const exportModel = [];
+                exportModel.push({
+                    sortBy: sortBy,
+                    selectedCategory: selectedCategoryGlobal,
+                    totalDocumentsCount: data.totalDocuments,
+                    results: results
+                });
+
+                // Send to backend
+                $.ajax({
+                    url: '/Home/ExportToPdf',
+                    method: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(exportModel[0]),
+                    xhrFields: {
+                        responseType: 'blob'  // so we can download the PDF
+                    },
+                    success: function (blob) {
+                        const link = document.createElement('a');
+                        link.href = window.URL.createObjectURL(blob);
+                        link.download = "ElasticFind_Results.pdf";
+                        link.click();
+                    },
+                    error: function () {
+                        alert("Failed to export PDF");
+                    },
+                    complete: function () {
+                        $("#loader").hide();
+                    }
+                });
             },
             error: function () {
-                alert("Failed to export PDF");
-            },
-            complete: function () {
+                alert("Failed to fetch search results for export");
                 $("#loader").hide();
             }
         });
@@ -448,7 +498,7 @@
             url: '/Home/ExportToPdf',
             method: 'POST',
             contentType: 'application/json',
-            data: JSON.stringify({ sortBy, results }),
+            data: JSON.stringify({ sortBy, selectedCategory: selectedCategoryGlobal, results }),
             xhrFields: {
                 responseType: 'blob'  // so we can download the PDF
             },
@@ -467,12 +517,12 @@
         });
     });
 
-    function downloadFile(fileId, fileName) {
+    function downloadFile(fileId, fileName, category) {
         $("#loader").find(".spinner-border").removeClass("text-success").addClass("text-primary");
         $("#loader").show();
 
         $.ajax({
-            url: `/Home/Download/${fileId}`,
+            url: `/Home/Download?fileId=${fileId}&category=${category}`,
             method: "GET",
             xhrFields: {
                 responseType: 'blob' // Get the raw binary data
@@ -759,6 +809,12 @@
     });
 
     $('#btnSearch').on('click', function () {
+        var selectedCategory = $("#categoryDropdown").val();
+        if(selectedCategory === "")
+        {
+            toastr.warning("Please select a category!", "Warning");
+            return;
+        }
         currentPage = 1;
         $("#sortBySelect").val("1");
         @* var rules = $('#builder').queryBuilder('getRules'); *@
@@ -767,6 +823,7 @@
         if (esQuery && Object.keys(esQuery).length > 0) {
             esBoolQuery = esQuery;
         }
+        selectedCategoryGlobal = selectedCategory;
         searchDocumentContent();
     });
 </script>

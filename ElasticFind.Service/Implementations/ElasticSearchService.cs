@@ -10,6 +10,7 @@ using System;
 using Microsoft.Extensions.Configuration;
 using ElasticFind.Service.Exceptions;
 using Serilog.Context;
+using ElasticFind.Repository.Interfaces;
 
 namespace ElasticFind.Service.Implementations;
 
@@ -19,13 +20,15 @@ public class ElasticSearchService : IElasticSearchService
     private readonly IUserService _userService;
     private readonly IMemoryCache _cache;
     private readonly IConfiguration _configuration;
+    private readonly ICategoryRepository _categoryRepository;
 
-    public ElasticSearchService(IElasticClient elasticClient, IUserService userService, IMemoryCache cache, IConfiguration configuration)
+    public ElasticSearchService(IElasticClient elasticClient, IUserService userService, IMemoryCache cache, IConfiguration configuration, ICategoryRepository categoryRepository)
     {
         _elasticClient = elasticClient;
         _userService = userService;
         _cache = cache;
         _configuration = configuration;
+        _categoryRepository = categoryRepository;
     }
 
     public async Task<bool> CreateDocumentIndexAsync(string indexName)
@@ -142,7 +145,7 @@ public class ElasticSearchService : IElasticSearchService
         }
     }
 
-    public async Task<SearchResultsViewModel> SearchDocumentsAsync(string? sortBy = null, int currentPage = 1, int currentPageSize = 5, string? esBoolQuery = null)
+    public async Task<SearchResultsViewModel> SearchDocumentsAsync(string selectedCategory, string? sortBy = null, int currentPage = 1, int currentPageSize = 5, string? esBoolQuery = null)
     {
         try
         {
@@ -233,19 +236,32 @@ public class ElasticSearchService : IElasticSearchService
 
                 // Count
                 var countResponse = await _elasticClient.CountAsync<DocumentViewModel>(c => c
-                    .Index(_configuration["ElasticSearch:IndexName"])
+                    .Index(selectedCategory.ToLowerInvariant())
                     .Query(q => rawQuery)
                 );
 
-                // Search
-                var response = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
-                    .Index(_configuration["ElasticSearch:IndexName"])
-                    .Query(q => rawQuery)
-                    .Highlight(highlightBuilder)
-                    .Sort(sort)
-                    .Skip((currentPage - 1) * currentPageSize)
-                    .Take(currentPageSize)
-                );
+                ISearchResponse<DocumentViewModel> response;
+
+                if (currentPage == 0 && currentPageSize == 0)
+                {
+                    response = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
+                        .Index(selectedCategory.ToLowerInvariant())
+                        .Query(q => rawQuery)
+                        .Highlight(highlightBuilder)
+                        .Sort(sort)
+                    );
+                }
+                else
+                {
+                    response = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
+                        .Index(selectedCategory.ToLowerInvariant())
+                        .Query(q => rawQuery)
+                        .Highlight(highlightBuilder)
+                        .Sort(sort)
+                        .Skip((currentPage - 1) * currentPageSize)
+                        .Take(currentPageSize)
+                    );
+                }
 
                 var decodedRequest = Encoding.UTF8.GetString(response.ApiCall.RequestBodyInBytes);
                 Console.WriteLine("ElasticClient Request Decoded: " + decodedRequest);
@@ -255,17 +271,6 @@ public class ElasticSearchService : IElasticSearchService
                 var results = new List<GroupedSearchResults>();
                 foreach (var hit in response.Hits)
                 {
-                    Console.WriteLine($"Document ID: {hit.Id}");
-
-                    foreach (var highlight in hit.Highlight)
-                    {
-                        Console.WriteLine($"Highlighted Field: {highlight.Key}");
-                        // foreach (var fragment in highlight1.Value)
-                        // {
-                        //     Console.WriteLine($" - {fragment}");
-                        // }
-                    }
-
                     var snippets = new List<string>();
                     var highlightedFileNames = new List<string>();
                     var highlightedFileTypes = new List<string>();
@@ -295,21 +300,12 @@ public class ElasticSearchService : IElasticSearchService
                         highlightedUploadedDate = uploadedDateHighlights.FirstOrDefault()?.Split('T')[0];
                     }
 
-                    var fileNameParts = hit.Source.FileName.LastIndexOf('.') is int lastDotIndex && lastDotIndex > 0
-                        ? new
-                        {
-                            Name = hit.Source.FileName.Substring(0, lastDotIndex),
-                            Extension = string.Concat(".", hit.Source.FileName.AsSpan(lastDotIndex + 1))
-                        }
-                        : new { Name = hit.Source.FileName, Extension = string.Empty };
-
                     results.Add(new GroupedSearchResults
                     {
                         Id = hit.Id,
                         FileName = hit.Source.FileName,
                         UploadedDate = hit.Source.UploadedDate,
                         Snippets = snippets,
-                        // HighlightedFileName = highlightedFileNames.Count != 0 && highlightedFileTypes.Count != 0 ? "<mark>" + hit.Source.FileName + "</mark>" : highlightedFileNames.Count != 0 ? "<mark>" + fileNameParts.Name + "</mark>" + fileNameParts.Extension : highlightedFileTypes.Count != 0 ? fileNameParts.Name + "<mark>" + fileNameParts.Extension + "</mark>" : hit.Source.FileName,
                         HighlightedFileName = highlightedFileNames.Count != 0 ? highlightedFileNames.FirstOrDefault() : hit.Source.FileName,
                         HighlightedFileType = highlightedFileTypes.Count != 0 ? highlightedFileTypes.FirstOrDefault() : hit.Source.FileType,
                         HighlightedUploadedDate = highlightedUploadedDate ?? hit.Source.UploadedDate?.ToString("yyyy-MM-dd"),
@@ -355,12 +351,12 @@ public class ElasticSearchService : IElasticSearchService
         }
     }
 
-    public async Task<DisplayFilesViewModel> GetFilesAsync(PaginationViewModel paginationViewModel)
+    public async Task<DisplayFilesViewModel> GetFilesAsync(PaginationViewModel paginationViewModel, string indexName)
     {
         try
         {
             var searchResponse = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
-                .Index(_configuration["ElasticSearch:IndexName"])
+                .Index(indexName.ToLowerInvariant())
                 .From((paginationViewModel.Page - 1) * paginationViewModel.PageSize)
                 .Size(paginationViewModel.PageSize)
                 .Query(q =>
@@ -389,17 +385,20 @@ public class ElasticSearchService : IElasticSearchService
             paginationViewModel.TotalRecords = paginationViewModel.SearchString == null ?
                     (int)searchResponse.Total :
                     (int)(await _elasticClient.CountAsync<DocumentViewModel>(c => c
-                    .Index(_configuration["ElasticSearch:IndexName"])
+                    .Index(indexName.ToLowerInvariant())
                     .Query(q => q.Wildcard(w => w
                         .Field(f => f.FileName.Suffix("keyword"))
                         .Value($"*{paginationViewModel.SearchString.ToLowerInvariant()}*")
                     ))
                 )).Count;
 
+            List<CategoryViewModel> categories = await _categoryRepository.GetAllCategories();
+
             DisplayFilesViewModel displayFilesViewModel = new()
             {
                 Pagination = paginationViewModel,
-                Files = files
+                Files = files,
+                Categories = categories
             };
 
             return displayFilesViewModel;
@@ -457,6 +456,30 @@ public class ElasticSearchService : IElasticSearchService
         {
             var searchResponse = await _elasticClient.SearchAsync<FileViewModel>(s => s
                 .Index(_configuration["ElasticSearch:IndexName"])
+                .Size(10000)  // Elasticsearch default limit is 10,000
+                .Source(src => src.Includes(f => f.Field(fm => fm.Id)))
+                .Query(q => q.MatchAll())
+            );
+
+            return searchResponse.Documents.Select(d => d.Id).ToList();
+        }
+        catch (Exception ex)
+        {
+            var stackTrace = new System.Diagnostics.StackTrace(ex, true);
+            var lineNumber = stackTrace.GetFrame(0)?.GetFileLineNumber() ?? 0;
+            using (LogContext.PushProperty("line_number", lineNumber))
+            {
+                throw new ElasticSearchException("An unexpected error occurred while fetching all file IDs from the server.", ex);
+            }
+        }
+    }
+
+    public async Task<List<string>> GetAllFileIdsByIndexAsync(string index)
+    {
+        try
+        {
+            var searchResponse = await _elasticClient.SearchAsync<FileViewModel>(s => s
+                .Index(index.ToLowerInvariant())
                 .Size(10000)  // Elasticsearch default limit is 10,000
                 .Source(src => src.Includes(f => f.Field(fm => fm.Id)))
                 .Query(q => q.MatchAll())

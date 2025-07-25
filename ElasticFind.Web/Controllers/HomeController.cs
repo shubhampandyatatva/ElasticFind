@@ -30,8 +30,9 @@ public class HomeController : Controller
     private readonly IPreviewFileService _previewFileService;
     private readonly IExportService _exportService;
     private readonly IConfiguration _config;
+    private readonly ICategoryRepository _categoryRepository;
 
-    public HomeController(ILogger<HomeController> logger, IUserService userService, IElasticSearchService elasticSearchService, IElasticClient elasticClient, IPreviewFileService previewFileService, IExportService exportService, IConfiguration config)
+    public HomeController(ILogger<HomeController> logger, IUserService userService, IElasticSearchService elasticSearchService, IElasticClient elasticClient, IPreviewFileService previewFileService, IExportService exportService, IConfiguration config, ICategoryRepository categoryRepository)
     {
         _logger = logger;
         _userService = userService;
@@ -40,12 +41,14 @@ public class HomeController : Controller
         _previewFileService = previewFileService;
         _exportService = exportService;
         _config = config;
+        _categoryRepository = categoryRepository;
     }
 
     [Authorize(Roles = Roles.Admin)]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-    public async Task<IActionResult> Index(int page = 1, int pageSize = 5, string? searchString = null, string? sortOrder = null)
+    public async Task<IActionResult> Index(string selectedCategory, int page = 1, int pageSize = 5, string? searchString = null, string? sortOrder = null)
     {
+        var index = selectedCategory ?? await _categoryRepository.GetFirstCategory() ?? "documents";
         PaginationViewModel pagination = new()
         {
             Page = page,
@@ -54,9 +57,9 @@ public class HomeController : Controller
             SortOrder = sortOrder
         };
 
-        DisplayFilesViewModel displayFilesViewModel = await _elasticSearchService.GetFilesAsync(pagination);
+        DisplayFilesViewModel displayFilesViewModel = await _elasticSearchService.GetFilesAsync(pagination, index.ToLowerInvariant());
 
-        var allFileIds = await _elasticSearchService.GetAllFileIdsAsync();
+        var allFileIds = await _elasticSearchService.GetAllFileIdsByIndexAsync(index.ToLowerInvariant());
         ViewBag.AllFileIds = allFileIds;
 
         if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
@@ -167,10 +170,13 @@ public class HomeController : Controller
     [RequestSizeLimit(100_000_000)] // 100 MB
     [RequestFormLimits(MultipartBodyLengthLimit = 100_000_000)]
     [Authorize(Roles = Roles.Admin)]
-    public async Task<IActionResult> UploadDocuments(List<IFormFile> files)
+    public async Task<IActionResult> UploadDocuments(List<IFormFile> files, string uploadCategory)
     {
         if (files == null || !files.Any())
-            return BadRequest("No files selected.");
+            return BadRequest("No files were received!");
+
+        if (string.IsNullOrEmpty(uploadCategory))
+            return BadRequest("No category was received!");
 
         string? jwtToken = Request.Cookies["jwtToken"];
         if (jwtToken == null)
@@ -212,7 +218,6 @@ public class HomeController : Controller
                     UploadedBy = user.Id.ToString(),
                     UploadedDate = DateTime.Now,
                     UploadedDateText = DateTime.Now.ToString("dd-MM-yyyy"),
-                    
                     Data = base64Data
                 };
 
@@ -220,7 +225,7 @@ public class HomeController : Controller
 
                 var response = await _elasticClient.IndexAsync(document, i => i
                     .Id(document.Id)
-                    .Index(_config["Elasticsearch:IndexName"] ?? "documents")
+                    .Index(uploadCategory.ToLowerInvariant())
                     .Pipeline("attachment")
                     .Refresh(Elasticsearch.Net.Refresh.WaitFor));
 
@@ -261,17 +266,17 @@ public class HomeController : Controller
 
     [HttpPost]
     [Authorize]
-    public async Task<IActionResult> SearchDocumentContent(string? sortBy = null, int currentPage = 1, int currentPageSize = 5, string? esBoolQuery = null)
+    public async Task<IActionResult> SearchDocumentContent(string selectedCategory, string? sortBy = null, int currentPage = 1, int currentPageSize = 5, string? esBoolQuery = null)
     {
-        SearchResultsViewModel results = await _elasticSearchService.SearchDocumentsAsync(sortBy, currentPage, currentPageSize, esBoolQuery);
+        SearchResultsViewModel results = await _elasticSearchService.SearchDocumentsAsync(selectedCategory, sortBy, currentPage, currentPageSize, esBoolQuery);
         return Json(results);
     }
 
     [HttpGet]
     [Authorize]
-    public async Task<IActionResult> Download(string id)
+    public async Task<IActionResult> Download(string fileId, string category)
     {
-        var response = await _elasticClient.GetAsync<DocumentViewModel>(id, x => x.Index(_config["Elasticsearch:IndexName"] ?? "documents"));
+        var response = await _elasticClient.GetAsync<DocumentViewModel>(fileId, x => x.Index(category.ToLowerInvariant()));
 
         if (!response.Found)
             return NotFound("Document not found.");
@@ -304,7 +309,7 @@ public class HomeController : Controller
             _ => "application/octet-stream"
         };
 
-        return File(fileBytes, contentType, response.Source.FileName+ext);
+        return File(fileBytes, contentType, response.Source.FileName + ext);
     }
 
     [HttpGet]
@@ -555,9 +560,9 @@ public class HomeController : Controller
     }
 
     [Authorize]
-    public async Task<IActionResult> ExportResultsToExcel(string? sortBy = null, int currentPage = 1, int pageSize = 5, string? esBoolQuery = null)
+    public async Task<IActionResult> ExportResultsToExcel(string selectedCategory, string? sortBy = null, int currentPage = 1, int pageSize = 5, string? esBoolQuery = null)
     {
-        SearchResultsViewModel results = await _elasticSearchService.SearchDocumentsAsync(sortBy, currentPage, pageSize, esBoolQuery);
+        SearchResultsViewModel results = await _elasticSearchService.SearchDocumentsAsync(selectedCategory, sortBy, currentPage, pageSize, esBoolQuery);
         if (results == null)
         {
             return NotFound("No results found for the given criteria.");
@@ -601,13 +606,11 @@ public class HomeController : Controller
         return Json(new { success = true, message = "Selected files were deleted successfully!" });
     }
 
-    // [HttpPost]
-    // public async Task<IActionResult> Search([FromBody] QueryBuilderRule rules)
-    // {
-    //     // var query = ConvertRulesToElasticsearchQuery(rules);
-    //     SearchResultsViewModel results = await _elasticSearchService.QueryBuilderSearch(rules);
-    //     return Json(results);
-    // } 
+    public async Task<IActionResult> GetAllCategories()
+    {
+        List<CategoryViewModel> categories = await _categoryRepository.GetAllCategories();
+        return Json(categories);
+    }
 
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()

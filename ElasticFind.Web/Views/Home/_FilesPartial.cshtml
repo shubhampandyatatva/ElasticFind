@@ -95,19 +95,22 @@
 
     function loadFirstPage() {
         const searchString = $("#searchInput").val();
-        loadPage(1, currentPageSize, searchString, null);
+        var selectedCategory = $(".select-category select").val();
+        loadPage(selectedCategory, 1, currentPageSize, searchString, null);
     }
 
     function loadPrevPage() {
         const searchString = $("#searchInput").val();
+        var selectedCategory = $(".select-category select").val();
         if (currentPage > 1) {
-            loadPage(currentPage - 1, currentPageSize, searchString, null);
+            loadPage(selectedCategory, currentPage - 1, currentPageSize, searchString, null);
         }
     }
 
-    function loadNextPage() {
+    function loadNextPage() { 
         const searchString = $("#searchInput").val();
-        loadPage(currentPage + 1, currentPageSize, searchString, null);
+        var selectedCategory = $(".select-category select").val();
+        loadPage(selectedCategory, currentPage + 1, currentPageSize, searchString, null);
     }
 
     function loadLastPage() {
@@ -115,7 +118,8 @@
         const totalRecords = @Model.Pagination.TotalRecords;
         const currentPageSize = parseInt($("#itemsPerPage").val());
         currentPage = Math.ceil(totalRecords / currentPageSize);
-        loadPage(currentPage, currentPageSize, searchString, null);
+        var selectedCategory = $(".select-category select").val();
+        loadPage(selectedCategory, currentPage, currentPageSize, searchString, null);
     }
 
     $(function () {

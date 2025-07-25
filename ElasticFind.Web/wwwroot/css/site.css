@@ -127,7 +127,7 @@ html {
 .upload-dropzone {
   border: 2px dashed #6c757d;
   border-radius: 10px;
-  padding: 35px 20px;
+  padding: 20px 20px;
   text-align: center;
   transition: all 0.3s ease-in-out;
   background-color: #f8f9fa;
@@ -423,6 +423,17 @@ html {
 .uploaded-date {
   font-size: 15px;
   color: rgb(90, 90, 90);
+}
+
+.select-category-text {
+  font-size: 18px;
+}
+
+.btn-check:active+.btn-primary, .btn-check:checked+.btn-primary, .btn-primary.active, .btn-primary:active, .show>.btn-primary.dropdown-toggle {
+  color: #fff;
+  background-color: #0c58ca; /*#0d6efd*/
+  border: 2px solid #0b3b7e;
+  border-radius: 5px; 
 }
 
 /* Responsive sidebar behavior */

@@ -210,5 +210,4 @@ public class CategoryService : ICategoryService
             return new JsonResponse { Success = false, Message = "There was an error creating the category! Please try again." };
         }
     }
-
 }

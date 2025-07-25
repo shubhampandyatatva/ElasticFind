@@ -191,7 +191,7 @@ app.UseRouting();
 
 app.UseAuthorization();
 
-// app.UseStatusCodePagesWithRedirects("/StatusCode/{0}");
+app.UseStatusCodePagesWithRedirects("/StatusCode/{0}");
 
 app.MapControllerRoute(
     name: "default",

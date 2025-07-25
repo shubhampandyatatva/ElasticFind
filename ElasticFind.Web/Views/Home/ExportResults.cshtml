@@ -121,7 +121,8 @@
     @* <h2>Search Results for "@Model.Keyword"</h2> *@
     <h2>ElasticFind - Search Results</h2>
 
-    @* <div class="searchType" style="margin-bottom: 16px; font-size: 16px; font-weight: bold;">Search Method: <span style="color: #333; font-weight: 500;">@Model.SearchType</span></div> *@
+    <div class="selectedCategory" style="margin-bottom: 16px; font-size: 16px; font-weight: bold;">Selected Category:
+        <span style="color: #333; font-weight: 500;">@Model.SelectedCategory</span></div>
 
     <div class="filters-section">
         @* <span class="filter-text">Filters: </span>
@@ -150,8 +151,18 @@
     {
         <div class="card">
             <div class="card-header">
-                <div>odf demo.odt - Found 1 match</div>
-                <div>Uploaded at - 2025-07-22</div>
+                <table style="width: 100%;">
+                    <tr style="height: 30px;">
+                        <td style="width: 50%; text-align: left;">
+                        @Html.Raw(doc.FileName)@Html.Raw(doc.FileType) <span
+                                class="@(doc.MatchCount == 0 ? "d-none" : "")">- Found @(doc.MatchCount)
+                                match@(doc.MatchCount != 1 ? "es" : "")</span>
+                    </td>
+                        <td style="width: 50%; text-align: right;">
+                        Uploaded at - @Html.Raw(doc.HighlightedUploadedDate)
+                    </td>
+                    </tr>
+                </table>
             </div>
             @* <div class="card-header">
                 <div>@Html.Raw(doc.FileName) <span style="@(doc.MatchCount == 0 ? "display: none" : "")">- Found @doc.MatchCount match@(doc.MatchCount == 1 ? "" : "es")</span></div>

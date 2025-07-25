@@ -10,4 +10,5 @@ public class DisplayFilesViewModel
         TotalRecords = 0
     };
     public required List<FileViewModel> Files { get; set; }
+    public List<CategoryViewModel> Categories { get; set; } = new List<CategoryViewModel>();
 }

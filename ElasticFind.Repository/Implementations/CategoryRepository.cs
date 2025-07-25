@@ -90,4 +90,23 @@ public class CategoryRepository : ICategoryRepository
         }
     }
 
+    public async Task<List<CategoryViewModel>> GetAllCategories()
+    {
+        return await _dbcontext.Categories
+            .Select(c => new CategoryViewModel
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Description = c.Description,
+                CreatedBy = c.CreatedBy
+            })
+            .ToListAsync();
+    }
+
+    public async Task<string?> GetFirstCategory()
+    {
+        Category? category = await _dbcontext.Categories.FirstOrDefaultAsync();
+        return category?.Name;
+    }
+
 }
