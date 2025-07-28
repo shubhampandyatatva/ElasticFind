@@ -49,7 +49,7 @@ public class CategoryService : ICategoryService
 
             string indexName = name.ToLowerInvariant();
             var existsResponse = await _elasticClient.Indices.ExistsAsync(indexName);
-            if (existsResponse.ApiCall.HttpStatusCode == 404) 
+            if (!existsResponse.Exists) 
             {
                 var createIndexResponse = await _elasticClient.Indices.CreateAsync(indexName, c => c
                     .Map<DocumentViewModel>(m => m
