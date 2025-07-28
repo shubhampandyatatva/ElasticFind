@@ -67,10 +67,6 @@
                 title="Search Documents">
                 <i class="fas fa-search me-2"></i> <span>Search Documents</span>
             </a>
-            @* <a asp-controller="Home" asp-action="Search" class="tab-link @(action == "Analytics" ? "active" : "")"
-                title="Analytics">
-                <i class="fas fa-chart-line me-2"></i> <span>Analytics</span>
-            </a> *@
             <a asp-controller="Home" asp-action="Users" class="tab-link @(controller == "Home" && action == "Users" ? "active" : "")"
                 style="display: @(roleName == Roles.Admin ? "" : "none");" title="Users">
                 <i class="fas fa-users me-2"></i> <span>Users</span>

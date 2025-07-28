@@ -93,6 +93,7 @@
 <script>
     if ($("#allFileIdsJson")) {
         $("#allFileIdsJson").val('@Html.Raw(Json.Serialize(ViewBag.AllFileIds))');
+        console.log("All File Ids count: ", @ViewBag.AllFileIds.Count);
     }
 
     function loadFirstPage() {

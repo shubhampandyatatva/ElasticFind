@@ -30,7 +30,6 @@ public class AuthenticationController : Controller
         if (!string.IsNullOrEmpty(StartupDiagnostics.ElasticsearchError))
         {
             TempData["ErrorMessage"] = StartupDiagnostics.ElasticsearchError;
-            // Log.Error("Elasticsearch Error: " + StartupDiagnostics.ElasticsearchError);
             return View();
         }
 
@@ -81,7 +80,6 @@ public class AuthenticationController : Controller
     {
         if (!string.IsNullOrEmpty(StartupDiagnostics.ElasticsearchError))
         {
-            Console.WriteLine("Elasticsearch Error: " + StartupDiagnostics.ElasticsearchError);
             TempData["ErrorMessage"] = StartupDiagnostics.ElasticsearchError;
             Log.Error("Elasticsearch Error: " + StartupDiagnostics.ElasticsearchError);
             return View();
@@ -97,7 +95,6 @@ public class AuthenticationController : Controller
                 User? user = await _authService.GetUserByEmail(loginViewModel.Email);
                 if (user == null)
                 {
-                    Console.WriteLine("Error: User not found by this ID!");
                     TempData["ErrorMessage"] = "Some error occured!";
                     Log.Error("User by email in JWT token not found!");
                     return View(loginViewModel);
@@ -176,7 +173,6 @@ public class AuthenticationController : Controller
                 User? user = await _authService.GetUserByEmail(registerViewModel.Email);
                 if (user == null)
                 {
-                    Console.WriteLine("Error: User not found by this ID!");
                     TempData["ErrorMessage"] = "Some error occured!";
                     return View(registerViewModel);
                 }
@@ -225,7 +221,6 @@ public class AuthenticationController : Controller
             }
             string resetPasswordToken = _userService.GenerateResetPasswordToken(forgotPasswordViewModel.Email);
             string? resetPasswordLink = Url.Action("ResetPassword", "Authentication", new { token = resetPasswordToken }, Request.Scheme); //watch
-            Console.WriteLine("Reset Password Link: " + resetPasswordLink);
             bool isEmailSent = await _emailService.SendResetPasswordEmail(forgotPasswordViewModel.Email, resetPasswordLink);
             if (isEmailSent)
             {

@@ -21,10 +21,6 @@ public class EmailService : IEmailService
     }
     public async Task<bool> SendResetPasswordEmail(string email, string? resetPasswordLink)
     {
-        Console.WriteLine("Smtp SenderEmail: " + _smtpSettings.SenderEmail);
-        Console.WriteLine("Smtp Server: " + _smtpSettings.Server);
-        Console.WriteLine("Smtp Port: " + _smtpSettings.Port);
-        Console.WriteLine("Smtp Password: " + _smtpSettings.Password);
         SmtpClient client = new(_smtpSettings.Server, _smtpSettings.Port)
         {
             EnableSsl = true,
@@ -34,15 +30,12 @@ public class EmailService : IEmailService
 
         string subject = "Reset Your Password";
         string templatePath = ".\\Views\\Authentication\\ResetPasswordTemplate.cshtml";
-        Console.WriteLine($"Template path: {templatePath}");
         string message = await File.ReadAllTextAsync(templatePath);
 
         message = message.Replace("{{resetPasswordLink}}", resetPasswordLink);
-        Console.WriteLine("Message after link replace: " + message);
         
         try
         {
-            Console.WriteLine("Sender Email: " + _smtpSettings.SenderEmail);
             MailMessage mailMessage = new()
             {
                 From = new MailAddress(_smtpSettings.SenderEmail),
@@ -51,16 +44,12 @@ public class EmailService : IEmailService
                 Body = message,
                 IsBodyHtml = true
             };
-            Console.WriteLine("From: " + mailMessage.From);
-            Console.WriteLine("To: " + mailMessage.To);
 
             await client.SendMailAsync(mailMessage);
             return true;
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Console.WriteLine("Exception in sending email: " + e.Message);
-            Console.WriteLine("Exception: " + e);
             return false;
         }
     }

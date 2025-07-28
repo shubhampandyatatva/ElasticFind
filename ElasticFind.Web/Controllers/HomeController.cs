@@ -43,7 +43,7 @@ public class HomeController : Controller
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public async Task<IActionResult> Index(string selectedCategory, int page = 1, int pageSize = 5, string? searchString = null, string? sortOrder = null)
     {
-        var index = selectedCategory ?? await _categoryRepository.GetFirstCategory() ?? "documents";
+        var index = selectedCategory ?? await _categoryRepository.GetOrCreateDefaultCategory();
         PaginationViewModel pagination = new()
         {
             Page = page,
@@ -63,10 +63,6 @@ public class HomeController : Controller
         {
             return PartialView("_FilesPartial", displayFilesViewModel);
         }
-
-        // bool result = await _elasticSearchService.CreateDocumentIndexAsync("documents");
-        // Console.WriteLine("Index creation result: " + result);
-
         return View(displayFilesViewModel);
     }
 
@@ -218,12 +214,10 @@ public class HomeController : Controller
                     Data = base64Data
                 };
 
-                Console.WriteLine($"Base64 length: {base64Data.Length} characters, file: {file.FileName}");
 
                 var indexExistsResponse = await _elasticClient.Indices.ExistsAsync(uploadCategory.ToLowerInvariant());
                 if (!indexExistsResponse.Exists)
                 {
-                    Console.WriteLine($"Index '{uploadCategory.ToLowerInvariant()}' does not exist. Creating index.");
                     var createIndexResponse = await _elasticClient.Indices.CreateAsync(uploadCategory.ToLowerInvariant(), c => c
                         .Map<DocumentViewModel>(m => m.AutoMap())
                     );
@@ -242,11 +236,8 @@ public class HomeController : Controller
 
                 if (!response.IsValid)
                 {
-                    Console.WriteLine("Debug Info: " + response.DebugInformation);
-                    Console.WriteLine("Server Error: " + response.ServerError?.ToString());
                     return BadRequest("Some error occurred in uploading the files.");
                 }
-                Console.WriteLine("Server Error outside: " + response.ServerError?.ToString());
             }
             catch
             {
@@ -265,12 +256,10 @@ public class HomeController : Controller
 
         if (created)
         {
-            Console.WriteLine($"{indexName} created successfully.");
             return Ok("Index created");
         }
         else
         {
-            Console.WriteLine($"Failed to create index {indexName}.");
             return StatusCode(500, "Failed to create index");
         }
     }
@@ -336,7 +325,6 @@ public class HomeController : Controller
         var html = _previewFileService.GetPreviewHtml(fileName, fileBytes);
         if (!string.IsNullOrEmpty(html))
         {
-            Console.WriteLine("HTML is not null!");
             return Content(html, "text/html");
         }
 
@@ -378,10 +366,8 @@ public class HomeController : Controller
             return NotFound();
 
         var file = response.Source;
-        // var fileUrl = $"http://192.168.4.90:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}";
         var fileUrl = $"http://127.0.0.1:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}";
         var ext = Path.GetExtension(file.FileName).Trim('.').ToLower();
-        Console.WriteLine("File Extension: " + ext);
 
         string? secret = _config["OnlyOffice:JwtSecret"];
 
@@ -390,11 +376,9 @@ public class HomeController : Controller
             document = new
             {
                 title = file.FileName,
-                // url = $"http://127.0.0.1:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
                 url = $"http://localhost:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
                 fileType = ext,
                 key = file.Id,
-                // directUrl = $"http://127.0.0.1:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
                 directUrl = $"http://localhost:5052/Home/DownloadFileForViewer?id={Uri.EscapeDataString(file.Id)}",
                 permissions = new
                 {
@@ -407,21 +391,18 @@ public class HomeController : Controller
             {
                 mode = "view",
                 lang = "en",
-                // parentOrigin = "http://192.168.4.90:5052"
                 parentOrigin = "http://127.0.0.1:5052"
             },
             documentType = ext,
             width = "100%",
             height = "100%",
             type = "desktop",
-            // documentServerUrl = "http://192.168.4.90/"
             documentServerUrl = "http://127.0.0.1:5052"
         };
 
         // Sign with JWT if configured
         if (!string.IsNullOrEmpty(secret))
         {
-            // var payload = JsonSerializer.Serialize(documentConfig);
             var payload = JsonConvert.SerializeObject(documentConfig);
             var token = JWT.Encode(payload, Encoding.UTF8.GetBytes(secret), JwsAlgorithm.HS256);
 
@@ -482,17 +463,12 @@ public class HomeController : Controller
     [AllowAnonymous]
     public IActionResult OnlyOfficeViewerPage(string id)
     {
-        // ViewBag.FileId = id;
-        // ViewData["FileId"] = id;
-        // return View();
-
         var docConfig = new
         {
             document = new
             {
                 fileType = "docx",
                 title = "Test Document",
-                // url = $"http://localhost:5052/docs/{id}.docx",
                 url = $"http://localhost:5052/docs/test.docx",
                 directUrl = $"http://localhost:5052/docs/test.docx",
                 key = id
@@ -564,9 +540,6 @@ public class HomeController : Controller
         };
 
         Response.Headers["Accept-Ranges"] = "bytes"; // important for partial PDF loads
-        // Response.Headers["Content-Disposition"] = $"attachment; filename=\"{file.FileName}\"";
-        // Response.Headers["Access-Control-Allow-Origin"] = "*";
-        Console.WriteLine("Request Method: " + Request.Method);
         return File(fileBytes, mimeType, file.FileName);
     }
 
@@ -578,12 +551,6 @@ public class HomeController : Controller
         {
             return NotFound("No results found for the given criteria.");
         }
-
-        List<GroupedSearchResults> searchResults = results.SearchResults;
-
-        // byte[] fileBytes = _exportService.ExportSearchResultsToExcel(searchResults, keyword, fileType, startDate, endDate, sortBy, searchString, searchResults.Count);
-
-        // return File(fileBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ElasticFind_Results.xlsx");
         return Ok("Export to Excel is not implemented yet.");
     }
 
@@ -606,11 +573,9 @@ public class HomeController : Controller
 
         // Refresh the index once after all deletions
         var refreshResponse = await _elasticClient.Indices.RefreshAsync(category.ToLowerInvariant());
-        Console.WriteLine($"Refresh response: {refreshResponse.DebugInformation}");
 
         if (!refreshResponse.IsValid)
         {
-            Console.WriteLine("Error refreshing index: " + refreshResponse.ServerError?.ToString());
             return Json(new { success = false, warning = true, message = "Deletion completed successfully but there was some error refreshing the index!" });
         }
 

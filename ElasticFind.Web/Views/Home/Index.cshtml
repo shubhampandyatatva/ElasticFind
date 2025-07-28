@@ -55,8 +55,9 @@
             <button type="button" class="btn btn-primary" id="selectCategoryBtn">Search</button>
         </div>
         <div class="d-flex align-items-center">
-            <i class="fa-solid fa-trash-can rounded pointer me-3 text-danger" style="padding: 10px; border: 2px solid rgb(49, 49, 49);"
-                title="Delete selected files" id="deleteMultipleFilesBtn"></i>
+            <i class="fa-solid fa-trash-can rounded pointer me-3 text-danger"
+                style="padding: 10px; border: 2px solid rgb(49, 49, 49);" title="Delete selected files"
+                id="deleteMultipleFilesBtn"></i>
             <div class="search position-relative" style="max-width: 400px;">
                 <input type="text" id="searchInput" placeholder="Search Files" class="form-control pe-4"
                     title="Search files by name" />
@@ -219,41 +220,24 @@
     let currentPageSize = @Model.Pagination.PageSize;
     var selectedCategoryGlobal = $("#selectCategory").val() || "";
 
-    @* async function loadPage(page, pageSize, searchString, sortOrder) {
-        console.log(page, pageSize, searchString, SortOrder);
-        $.ajax({
-            url: "/Home/Index",
-            type: "GET",
-            data: { page: page, pageSize: pageSize, searchString: searchString, sortOrder: SortOrder },
-            success: function (data) {
-                console.log("Success reached!");
-                console.log("Partial view HTML:", data);
-                $("#filesPartialView").html(data);
-            },
-            error: function (err) {
-                console.error("Error loading page: ", err);
-            }
+    // Master checkbox change
+    $(document).on("change", "#masterCheckbox", function () {
+        const isChecked = $(this).is(":checked");
+
+        if (isChecked) {
+            allFileIds.forEach(id => selectedFileIds.add(id));
+            console.log("allFileIds: ", allFileIds);
+        } else {
+            selectedFileIds.clear();
+            console.log("allFileIds: ", allFileIds);
+        }
+
+        $(".slaveCheckbox").each(function () {
+            const fileId = $(this).data("id");
+            console.log("Master checkbox changed for fileId: ", fileId);
+            $(this).prop("checked", isChecked);
         });
-    } *@
-
-        // Master checkbox change
-        $(document).on("change", "#masterCheckbox", function () {
-            const isChecked = $(this).is(":checked");
-
-            if (isChecked) {
-                allFileIds.forEach(id => selectedFileIds.add(id));
-                console.log("allFileIds: ", allFileIds);
-            } else {
-                selectedFileIds.clear();
-                console.log("allFileIds: ", allFileIds);
-            }
-
-            $(".slaveCheckbox").each(function () {
-                const fileId = $(this).data("id");
-                console.log("Master checkbox changed for fileId: ", fileId);
-                $(this).prop("checked", isChecked);
-            });
-        });
+    });
 
     // Individual slave checkbox change
     $(document).on("change", ".slaveCheckbox", function () {
@@ -280,14 +264,11 @@
 
             $("#filesPartialView").html(data);
 
-            @* allFileIds = JSON.parse($("#allFileIdsJson").val() || "[]"); *@
-                @* allFileIds = JSON.parse('@Html.Raw(Json.Serialize(ViewBag.AllFileIds))' || "[]"); *@
-                allFileIds = JSON.parse($("#allFileIdsJson").val() || "[]");
+            allFileIds = JSON.parse($("#allFileIdsJson").val() || "[]");
 
             console.log("Updated allFileIds: ", allFileIds);
-            @* $("#allFileIdsJson").val(allFileIds); *@
-                // Update state variables
-                currentPage = page;
+            // Update state variables
+            currentPage = page;
             currentPageSize = pageSize;
 
             // Restore checkbox states after new content
@@ -299,25 +280,12 @@
     }
 
     function restoreCheckedCheckboxes() {
-        @* $(".slaveCheckbox").each(function () {
+        $(".slaveCheckbox").each(function () {
             const fileId = $(this).data("id");
-            console.log("FileId: ", fileId);
             if (selectedFileIds.has(fileId)) {
                 $(this).prop("checked", true);
             }
         });
-
-        // Also update master checkbox state
-        const all = $(".slaveCheckbox").length;
-        const checked = $(".slaveCheckbox:checked").length;
-        $("#masterCheckbox").prop("checked", all > 0 && all === checked); *@
-
-            $(".slaveCheckbox").each(function () {
-                const fileId = $(this).data("id");
-                if (selectedFileIds.has(fileId)) {
-                    $(this).prop("checked", true);
-                }
-            });
 
         updateMasterCheckboxState();
     }

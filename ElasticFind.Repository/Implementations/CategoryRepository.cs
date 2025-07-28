@@ -21,8 +21,6 @@ public class CategoryRepository : ICategoryRepository
             query = query.Where(u => u.Name.ToLower().Contains(pagination.SearchString.ToLower())).OrderBy(u => u.Id);
         }
 
-        // query = pagination.SortOrder == "Asc" ? query.OrderBy(u => u.Name) : query.OrderByDescending(u => u.Name);
-
         List<CategoryViewModel> categories = query.Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize).Select(u => new CategoryViewModel
         {
             Id = u.Id,
@@ -103,10 +101,23 @@ public class CategoryRepository : ICategoryRepository
             .ToListAsync();
     }
 
-    public async Task<string?> GetFirstCategory()
+    public async Task<string?> GetOrCreateDefaultCategory()
     {
         Category? category = await _dbcontext.Categories.FirstOrDefaultAsync();
-        return category?.Name;
+        if (category == null)
+        {
+            Category newCategory = new()
+            {
+                Name = "Default",
+                Description = "This is a default category.",
+                CreatedBy = "System",
+                CreatedAt = DateTime.UtcNow
+            };
+            await _dbcontext.Categories.AddAsync(newCategory);
+            await _dbcontext.SaveChangesAsync();
+            return newCategory.Name;
+        }
+        return category.Name;
     }
 
     public async Task<Category?> GetCategoryById(int id)

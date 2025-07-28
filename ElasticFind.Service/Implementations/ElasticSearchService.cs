@@ -35,11 +35,11 @@ public class ElasticSearchService : IElasticSearchService
     {
         try
         {
-            indexName = indexName.ToLowerInvariant(); // Outputs lowercase index names irrespective of any culture (to maintain similarity of lowercase index names everywhere in our elasticsearch)
+            indexName = indexName.ToLowerInvariant();
 
             var existsResponse = await _elasticClient.Indices.ExistsAsync(indexName);
             if (existsResponse.Exists)
-                return true; // Already exists
+                return true;
 
             var createIndexResponse = await _elasticClient.Indices.CreateAsync(indexName, c => c
                 .Map<DocumentViewModel>(m => m
@@ -122,7 +122,6 @@ public class ElasticSearchService : IElasticSearchService
         try
         {
             var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index(category.ToLowerInvariant()).Refresh(Refresh.WaitFor));
-            Console.WriteLine($"Delete response: {response.DebugInformation}");
             return response.IsValid;
         }
         catch (Exception ex)
@@ -136,7 +135,6 @@ public class ElasticSearchService : IElasticSearchService
         try
         {
             var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index(category.ToLowerInvariant()));
-            Console.WriteLine($"Delete response: {response.DebugInformation}");
             return response.IsValid;
         }
         catch (Exception ex)
@@ -153,11 +151,9 @@ public class ElasticSearchService : IElasticSearchService
             {
                 var rawQuery = new RawQuery(esBoolQuery);
 
-                // Detect fields used in query
                 var usedFields = new HashSet<string>();
                 using var doc = JsonDocument.Parse(esBoolQuery);
                 CollectFields(doc.RootElement, usedFields);
-                Console.WriteLine("Used Fields: " + string.Join(", ", usedFields));
 
                 // Prepare highlighting dynamically
                 IHighlight highlightBuilder(HighlightDescriptor<DocumentViewModel> h)
@@ -176,7 +172,6 @@ public class ElasticSearchService : IElasticSearchService
 
                     if (usedFields.Contains("fileName"))
                     {
-                        Console.WriteLine("Highlighting fileName field");
                         highlightFields.Add(f => f
                             .Field("fileName")
                             .FragmentSize(200)
@@ -189,7 +184,6 @@ public class ElasticSearchService : IElasticSearchService
 
                     if (usedFields.Contains("fileType"))
                     {
-                        Console.WriteLine("Highlighting fileType field");
                         highlightFields.Add(f => f
                             .Field("fileType")
                             .FragmentSize(50)
@@ -202,7 +196,6 @@ public class ElasticSearchService : IElasticSearchService
 
                     if (usedFields.Contains("uploadedDateText"))
                     {
-                        Console.WriteLine("Highlighting uploadedDate field");
                         highlightFields.Add(f => f
                             .Field("uploadedDateText")
                             .FragmentSize(50)
@@ -216,7 +209,6 @@ public class ElasticSearchService : IElasticSearchService
                     return h.Fields(highlightFields.ToArray());
                 }
 
-                // Sorting
                 Func<SortDescriptor<DocumentViewModel>, IPromise<IList<ISort>>>? sort = null;
                 if (!string.IsNullOrWhiteSpace(sortBy))
                 {
@@ -232,33 +224,32 @@ public class ElasticSearchService : IElasticSearchService
                     };
                 }
 
-                // Count
-                var countResponse = await _elasticClient.CountAsync<DocumentViewModel>(c => c
-                    .Index(selectedCategory.ToLowerInvariant())
-                    .Query(q => rawQuery)
-                );
+                selectedCategory = selectedCategory.ToLowerInvariant();
 
-                ISearchResponse<DocumentViewModel> response;
-
-                // Check existence of index. If not, create one
-                var indexExistsResponse = await _elasticClient.Indices.ExistsAsync(selectedCategory.ToLowerInvariant());
+                var indexExistsResponse = await _elasticClient.Indices.ExistsAsync(selectedCategory);
                 if (!indexExistsResponse.Exists)
                 {
-                    Console.WriteLine($"Index '{selectedCategory.ToLowerInvariant()}' does not exist. Creating index.");
-                    var createIndexResponse = await _elasticClient.Indices.CreateAsync(selectedCategory.ToLowerInvariant(), c => c
+                    var createIndexResponse = await _elasticClient.Indices.CreateAsync(selectedCategory, c => c
                         .Map<DocumentViewModel>(m => m.AutoMap())
                     );
 
                     if (!createIndexResponse.IsValid)
                     {
-                        throw new ElasticSearchException($"Failed to create index '{selectedCategory.ToLowerInvariant()}'.");
+                        throw new ElasticSearchException($"Failed to create index '{selectedCategory}'.");
                     }
                 }
+
+                var countResponse = await _elasticClient.CountAsync<DocumentViewModel>(c => c
+                    .Index(selectedCategory)
+                    .Query(q => rawQuery)
+                );
+
+                ISearchResponse<DocumentViewModel> response;
 
                 if (currentPage == 0 && currentPageSize == 0)
                 {
                     response = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
-                        .Index(selectedCategory.ToLowerInvariant())
+                        .Index(selectedCategory)
                         .Query(q => rawQuery)
                         .Highlight(highlightBuilder)
                         .Sort(sort)
@@ -268,7 +259,7 @@ public class ElasticSearchService : IElasticSearchService
                 else
                 {
                     response = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
-                        .Index(selectedCategory.ToLowerInvariant())
+                        .Index(selectedCategory)
                         .Query(q => rawQuery)
                         .Highlight(highlightBuilder)
                         .Sort(sort)
@@ -278,10 +269,8 @@ public class ElasticSearchService : IElasticSearchService
                 }
 
                 var decodedRequest = Encoding.UTF8.GetString(response.ApiCall.RequestBodyInBytes);
-                Console.WriteLine("ElasticClient Request Decoded: " + decodedRequest);
 
 
-                // Process results
                 var results = new List<GroupedSearchResults>();
                 foreach (var hit in response.Hits)
                 {
@@ -292,25 +281,21 @@ public class ElasticSearchService : IElasticSearchService
 
                     if (hit.Highlight.TryGetValue("attachment.content", out var contentHighlights))
                     {
-                        Console.WriteLine("Content Highlights Found");
                         snippets.AddRange(contentHighlights);
                     }
 
                     if (hit.Highlight.TryGetValue("fileName", out var fileNameHighlights))
                     {
-                        Console.WriteLine("File Name Highlights Found");
                         highlightedFileNames.AddRange(fileNameHighlights);
                     }
 
                     if (hit.Highlight.TryGetValue("fileType", out var fileTypeHighlights))
                     {
-                        Console.WriteLine("File Type Highlights Found");
                         highlightedFileTypes.AddRange(fileTypeHighlights);
                     }
 
                     if (hit.Highlight.TryGetValue("uploadedDateText", out var uploadedDateHighlights))
                     {
-                        Console.WriteLine("Uploaded Date Highlights Found");
                         highlightedUploadedDate = uploadedDateHighlights.FirstOrDefault()?.Split('T')[0];
                     }
 
@@ -349,11 +334,9 @@ public class ElasticSearchService : IElasticSearchService
             {
                 if (prop.Value.ValueKind == JsonValueKind.Object)
                 {
-                    // Add the first (and usually only) property as a field
                     foreach (var inner in prop.Value.EnumerateObject())
                         fields.Add(inner.Name);
 
-                    // Recurse deeper
                     CollectFields(prop.Value, fields);
                 }
                 else if (prop.Value.ValueKind == JsonValueKind.Array)
@@ -381,7 +364,6 @@ public class ElasticSearchService : IElasticSearchService
                         .Value($"*{paginationViewModel.SearchString.ToLowerInvariant()}*")
                     ))
                 .Sort(st => st.Field(f => f.UploadedDate, SortOrder.Descending))
-            // .Sort(st => string.IsNullOrEmpty(paginationViewModel.SortOrder) ? null : st.Field(f => f.FileName, paginationViewModel.SortOrder == "Asc" ? SortOrder.Ascending : SortOrder.Descending))
             );
 
             List<FileViewModel> files = new();
@@ -436,7 +418,6 @@ public class ElasticSearchService : IElasticSearchService
             var response = await httpClient.GetAsync(url);
             if (!response.IsSuccessStatusCode)
             {
-                Console.WriteLine($"Error fetching synonyms for '{word}': {response.StatusCode}");
                 return new List<string>();
             }
 

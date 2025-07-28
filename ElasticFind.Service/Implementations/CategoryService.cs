@@ -1,14 +1,10 @@
-// using DocumentFormat.OpenXml.Drawing.Diagrams;
 using ElasticFind.Repository.Interfaces;
 using ElasticFind.Repository.ViewModels;
 using ElasticFind.Repository.Data;
 using ElasticFind.Service.Interfaces;
 using Nest;
-using Serilog;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
-using Elasticsearch.Net;
-using ElasticFind.Service.Exceptions;
 
 namespace ElasticFind.Service.Implementations;
 
@@ -137,7 +133,6 @@ public class CategoryService : ICategoryService
                     return new JsonResponse { Success = false, Message = "Category already exists!" };
                 }
 
-                // Reindex the old category
                 var reindexResponse = await _elasticClient.ReindexOnServerAsync(r => r
                     .Source(s => s.Index(oldName))
                     .Destination(d => d.Index(lowerCaseName))
@@ -145,7 +140,6 @@ public class CategoryService : ICategoryService
 
                 if (!reindexResponse.IsValid)
                 {
-                    Console.WriteLine("Reindexing failed: {DebugInformation}" + reindexResponse.DebugInformation);
                     return new JsonResponse { Success = false, Message = "There was an error reindexing the category! Please try again." };
                 }
 

@@ -21,10 +21,8 @@ public class UserRepository : IUserRepository
             await _dbcontext.SaveChangesAsync();
             return true;
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Console.WriteLine("Exception while adding user: " + e.Message);
-            Console.WriteLine("Exception: " + e);
             return false;
         }
     }
@@ -37,10 +35,8 @@ public class UserRepository : IUserRepository
             await _dbcontext.SaveChangesAsync();
             return true;
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Console.WriteLine("Exception while updating user: " + e.Message);
-            Console.WriteLine("Exception: " + e);
             return false;
         }
     }

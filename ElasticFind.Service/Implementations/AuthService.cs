@@ -33,11 +33,9 @@ public class AuthService : IAuthService
             return new JsonResponse { Success = false, Message = "Your status is currently inactive. Please contact admin to activate your status." };
         }
 
-        // bool isPasswordValid = await _authRepository.CheckUserPassword(email, password);
         User? user = await _authRepository.GetUserByEmail(email);
         if (user == null)
         {
-            Console.WriteLine("Error: User with this email was not found in database!");
             return new JsonResponse { Success = false, Message = "Some error occured" };
         }
         var hasher = new PasswordHasher<User>();
@@ -73,7 +71,6 @@ public class AuthService : IAuthService
         };
 
         string hashedPassword = hasher.HashPassword(user, registerViewModel.Password);
-        Console.WriteLine("Hashed Password: " + hashedPassword);
         user.Password = hashedPassword;
 
         bool isUserRegistered = await _authRepository.RegisterUser(user);
@@ -95,17 +92,14 @@ public class AuthService : IAuthService
         string decryptedToken = _userService.DecryptResetPasswordToken(resetPasswordViewModel.Token);
         if (string.IsNullOrEmpty(decryptedToken))
         {
-            Console.WriteLine("Error: Decrypted Token is null!");
             return false;
         }
         string[] tokenParts = decryptedToken.Split('|');
         string email = tokenParts[0].Trim();
-        // string email = "tatva.pcs90@outlook.com";
 
         User? user = await _authRepository.GetUserByEmail(email);
         if (user == null)
         {
-            Console.WriteLine("Error: User with this email was not found in database!");
             return false;
         }
 

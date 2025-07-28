@@ -32,8 +32,6 @@
             background-color: #f8f9fa;
             font-weight: bold;
             display: flex !important;
-            @* justify-content: space-between !important; *@
-            @* align-items: center !important; *@
         }
 
         .card-body {
@@ -52,7 +50,6 @@
             padding: 0.75rem 1.25rem;
             background-color: #fff;
             border: 1px solid #bebebe;
-            @* border-radius: 0.25rem; *@
         }
 
         .text-muted {
@@ -118,30 +115,16 @@
 </head>
 
 <body>
-    @* <h2>Search Results for "@Model.Keyword"</h2> *@
     <h2>ElasticFind - Search Results</h2>
 
     <div class="selectedCategory" style="margin-bottom: 16px; font-size: 16px; font-weight: bold;">Selected Category:
         <span style="color: #333; font-weight: 500;">@Model.SelectedCategory</span></div>
 
     <div class="filters-section">
-        @* <span class="filter-text">Filters: </span>
-        <span class="filters" style="display: flex; align-items: center;">
-            <span class="filter-type">File Type: </span>
-            <span class="filter-name">@(Model.FileType == null || Model.FileType == "File Type" ? "All Types" : Model.FileType)</span>
-        </span>
-        <span class="filters">
-            <span class="filter-type">Date Range: </span>
-            <span class="filter-name">@(Model.StartDate != null ? $"{Model.StartDate?.ToString("dd-MM-yyyy")} to {Model.EndDate?.ToString("dd-MM-yyyy")}" : "All Time")</span>
-        </span> *@
         <span class="filters">
             <span class="filter-type">Sorted By: </span>
             <span class="filter-name">@(Model.SortBy)</span>
         </span>
-        @* <span class="filters">
-            <span class="filter-type">File Name: </span>
-            <span class="filter-name">@(Model.SearchString ?? "All")</span>
-        </span> *@
     </div>
 
     <h3 style="color: #305796; font-size: 18px; @(Model.TotalDocumentsCount == 0 ? "display: none" : "")">Found
@@ -164,10 +147,6 @@
                     </tr>
                 </table>
             </div>
-            @* <div class="card-header">
-                <div>@Html.Raw(doc.FileName) <span style="@(doc.MatchCount == 0 ? "display: none" : "")">- Found @doc.MatchCount match@(doc.MatchCount == 1 ? "" : "es")</span></div>
-                <div>@Html.Raw(doc.UploadedDateText)</div>
-            </div> *@
             <div class="card-body">
                 <ul class="list-group">
                     @foreach (var snippet in doc.Snippets)

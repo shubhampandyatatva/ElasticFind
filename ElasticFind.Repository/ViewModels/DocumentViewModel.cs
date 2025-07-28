@@ -10,5 +10,4 @@ public class DocumentViewModel
     public string? UploadedDateText { get; set; }
     public AttachmentData? Attachment { get; set; }
     public string? Data { get; set; }
-    // public string? ExtractedData { get; set; }
 }

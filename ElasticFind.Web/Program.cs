@@ -139,7 +139,6 @@ var pool = new SingleNodeConnectionPool(new Uri(builder.Configuration["Elasticse
 var settings = new ConnectionSettings(pool)
     .ServerCertificateValidationCallback((sender, cert, chain, errors) => true) // Ignore cert errors
     .BasicAuthentication(builder.Configuration["Elasticsearch:Username"] ?? "elastic", builder.Configuration["Elasticsearch:Password"] ?? "elastic123") // if password not generated, reset the password in elasticsearch instance
-    // .BasicAuthentication("elastic", "xU0dIO7RHrWFwVl-cgb*")
     .DisableDirectStreaming()
     .EnableDebugMode()
     .DefaultIndex(name);
@@ -153,7 +152,6 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy("OnlyOfficePolicy", policyBuilder =>
     {
-        // builder.WithOrigins("http://192.168.4.90")
         policyBuilder.WithOrigins(builder.Configuration["OnlyOffice:ServerUrl"] ?? "http://localhost", builder.Configuration["OnlyOffice:ProjectUrl"] ?? "http://localhost:5052")
         .AllowAnyMethod()
         .AllowAnyHeader();
@@ -228,12 +226,6 @@ async Task ValidateAndInitializeElasticsearchAsync(IElasticClient client)
 
         if (!createIndexResponse.IsValid)
             throw new Exception("There was some issue initializing Elasticsearch properly! Try restarting the elasticsearch service or the application.");
-        else
-            Console.WriteLine(name + " index created.");
-    }
-    else
-    {
-        Console.WriteLine(name + " index already exists.");
     }
 
     var info = await client.RootNodeInfoAsync();
@@ -264,11 +256,5 @@ async Task ValidateAndInitializeElasticsearchAsync(IElasticClient client)
 
         if (!putPipelineResponse.IsValid)
             throw new Exception("There was some issue initializing Elasticsearch properly! Try restarting the application.");
-        else
-            Console.WriteLine("Attachment pipeline created.");
-    }
-    else
-    {
-        Console.WriteLine("Attachment pipeline already exists."); 
     }
 }

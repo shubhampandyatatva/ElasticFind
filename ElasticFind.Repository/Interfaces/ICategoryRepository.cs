@@ -14,7 +14,7 @@ public interface ICategoryRepository
 
     Task<Category?> GetCategoryByName(string name);
     List<CategoryViewModel> GetCategoryList(PaginationViewModel pagination);
-    Task<string?> GetFirstCategory();
+    Task<string?> GetOrCreateDefaultCategory();
 
     Task<int> GetTotalCategories();
     Task<int> GetTotalSearchedCategories(string searchString);

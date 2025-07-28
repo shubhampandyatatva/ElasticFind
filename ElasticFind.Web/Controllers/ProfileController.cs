@@ -86,7 +86,6 @@ public class ProfileController : Controller
         }
         ViewBag.Id = myProfile.Id;
         ViewBag.Email = myProfile.Email;
-        Console.WriteLine("Id in viewbag in profile service: " + @ViewBag.Id);
         ViewBag.FirstName = myProfile.FirstName;
         ViewBag.LastName = myProfile.LastName;
         return View(myProfile);
@@ -100,7 +99,6 @@ public class ProfileController : Controller
             JsonResponse response = await _userService.UpdateProfile(myProfileViewModel);
             if (response.Success)
             {
-                Console.WriteLine("Profile Image Path: " + response.Anonymous);
                 //upload profile image path in cookies
                 if (!string.IsNullOrEmpty(response.Anonymous))
                 {
@@ -126,14 +124,6 @@ public class ProfileController : Controller
         }
         else
         {
-            Console.WriteLine("Errorrrrrrr");
-            foreach (var state in ModelState)
-            {
-                foreach (var error in state.Value.Errors)
-                {
-                    Console.WriteLine($"Model Error for {state.Key}: {error.ErrorMessage}");
-                }
-            }
             ViewBag.Id = myProfileViewModel.Id;
             TempData["ErrorMessage"] = "Model State is not valid!";
             return RedirectToAction("MyProfile", "Profile");

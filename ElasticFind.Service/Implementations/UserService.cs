@@ -55,7 +55,6 @@ public class UserService : IUserService
         User? user = await _userRepository.GetUserById(id);
         if (user == null)
         {
-            Console.WriteLine("Error: User not found with ID: " + id);
             return false;
         }
 
@@ -63,7 +62,6 @@ public class UserService : IUserService
         bool result = await _userRepository.UpdateUser(user);
         if (!result)
         {
-            Console.WriteLine("Error: Failed to delete user with ID: " + id);
             return false;
         }
         return true;
@@ -74,7 +72,6 @@ public class UserService : IUserService
         User? user = await _userRepository.GetUserById(id);
         if (user == null)
         {
-            Console.WriteLine("Error: User not found with ID: " + id);
             return false;
         }
 
@@ -82,7 +79,6 @@ public class UserService : IUserService
         bool result = await _userRepository.UpdateUser(user);
         if (!result)
         {
-            Console.WriteLine("Error: Failed to delete user with ID: " + id);
             return false;
         }
         return true;
@@ -112,13 +108,11 @@ public class UserService : IUserService
     {
         if (!int.TryParse(uploadedBy, out int uploadedByInt))
         {
-            Console.WriteLine("Error: Invalid user ID format: " + uploadedBy);
             return string.Empty;
         }
         User? user = await _userRepository.GetUserById(uploadedByInt);
         if (user == null)
         {
-            Console.WriteLine("Error: User not found with ID: " + uploadedBy);
             return string.Empty;
         }
         return $"{user.FirstName} {user.LastName}";
@@ -129,7 +123,6 @@ public class UserService : IUserService
         string? imagePath;
         if (image == null)
         {
-            Console.WriteLine("Error in Upload Service: Provided image is null.");
             return null;
         }
         string uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot/uploads");
@@ -151,7 +144,6 @@ public class UserService : IUserService
     {
         DateTime tokenExpiryDate = DateTime.UtcNow.AddHours(24); // Token expires after 24 hours
         string tokenData = $"{email}|{tokenExpiryDate.Ticks}";
-        Console.WriteLine("Token Data: " + tokenData);
         return _dataProtector.Protect(tokenData);
     }
 
@@ -162,10 +154,8 @@ public class UserService : IUserService
         {
             decryptedToken = _dataProtector.Unprotect(token);  //decrypt the token
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Console.WriteLine("Exception Message: " + e.Message);
-            Console.WriteLine("Exception while decrypting token: " + e);
             return new JsonResponse { Success = false, Message = "You do not have a valid reset password token!" };
         }
 
@@ -196,10 +186,8 @@ public class UserService : IUserService
         {
             return _dataProtector.Unprotect(token);  //return the decrypted the token
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Console.WriteLine("Exception Message: " + e.Message);
-            Console.WriteLine("Exception while decrypting token: " + e);
             return string.Empty;
         }
     }
@@ -238,7 +226,6 @@ public class UserService : IUserService
         User? user = await _userRepository.GetUserByEmail(email);
         if (user == null)
         {
-            Console.WriteLine("Error: User with this ID was not found!");
             return null;
         }
 
@@ -268,7 +255,6 @@ public class UserService : IUserService
         User? user = await _userRepository.GetUserByEmail(myProfileViewModel.Email);
         if (user == null)
         {
-            Console.WriteLine("Error: User with this email was not found!");
             return new JsonResponse { Success = false, Message = "Some error occured in updating profile!" };
         }
         if (myProfileViewModel.ProfileImage != null)
@@ -282,7 +268,6 @@ public class UserService : IUserService
             }
         }
         string? imagePath = await UploadImage(myProfileViewModel.ProfileImage);
-        Console.WriteLine("Image Path: " + imagePath);
 
         //Change user information
         user.FirstName = myProfileViewModel.FirstName;
@@ -314,7 +299,6 @@ public class UserService : IUserService
             new Claim(ClaimTypes.Role, user.Role.RoleName),
             new Claim(ClaimTypes.Name, user.Username),
         };
-        // Console.WriteLine(user.RememberMe);
 
         var token = new JwtSecurityToken(
             issuer: _configuration["Jwt:Issuer"],
@@ -348,7 +332,6 @@ public class UserService : IUserService
         ClaimsPrincipal? claimsPrincipal = ValidateToken(jwtToken);  // Verify if the token is valid
         if (claimsPrincipal == null)
         {
-            Console.WriteLine("Error: JWT Token is null!");
             return null;
         }
 

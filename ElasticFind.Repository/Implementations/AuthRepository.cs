@@ -56,10 +56,8 @@ public class AuthRepository : IAuthRepository
             await _dbcontext.SaveChangesAsync();
             return true;
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Console.WriteLine("Exception while registering user: " + e.Message);
-            Console.WriteLine("Exception: " + e);
             return false;
         }
     }

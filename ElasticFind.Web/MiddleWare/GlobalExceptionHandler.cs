@@ -54,7 +54,6 @@ public class GlobalExceptionMiddleware
             {
                 var stackTrace = new System.Diagnostics.StackTrace(ex, true);
                 var lineNumber = stackTrace.GetFrame(0)?.GetFileLineNumber() ?? 0;
-                Console.WriteLine("Line number: " + lineNumber);
                 using (LogContext.PushProperty("line_number", lineNumber))
                 {
                     Log.Error(ex, ex.Message); 
@@ -66,7 +65,6 @@ public class GlobalExceptionMiddleware
             {
                 var stackTrace = new System.Diagnostics.StackTrace(ex, true);
                 var lineNumber = stackTrace.GetFrame(0)?.GetFileLineNumber() ?? 0;
-                Console.WriteLine("Line number: " + lineNumber);
                 using (LogContext.PushProperty("line_number", lineNumber))
                 {
                     Log.Error(ex, "Unhandled exception for user {user_name} from IP {ip_address} on path {file_path}. User-Agent: {user_agent}", userName, ipAddress, filePath, userAgent);
@@ -77,17 +75,4 @@ public class GlobalExceptionMiddleware
             }
         }
     }
-
-    // private static Task HandleExceptionAsync(HttpContext context, Exception ex)
-    // {
-    //     context.Response.ContentType = "application/json";
-    //     context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
-
-    //     Error error = new()
-    //     {
-    //         ErrorCode = (int)HttpStatusCode.InternalServerError,
-    //         ErrorMessage = ex.Message,
-    //     };
-    //     return context.Response.WriteAsync(JsonSerializer.Serialize(error));
-    // }
 }
