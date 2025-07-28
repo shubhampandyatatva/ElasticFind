@@ -27,8 +27,6 @@ public partial class ElasticFindContext : DbContext
 
         builder.Entity<Category>(entity =>
         {
-            entity.Property(e => e.IsDeleted)
-                .HasDefaultValue(false);
             entity.Property(e => e.CreatedAt)
                 .HasDefaultValueSql("NOW()");
             entity.HasIndex(e => e.Name)

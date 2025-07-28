@@ -233,7 +233,7 @@
 
                 $("#filtersSortersContainer").removeClass("d-none");
                 $(".matching-docs-count").removeClass("d-none");
-                $("#matchingDocsCountSpan").text(`${data.totalDocuments} matching document${data.totalDocuments === 1 ? '' : 's'}`);
+                $("#matchingDocsCountSpan").text(`${data.totalDocuments} matching document${data.totalDocuments === 1 ? '' : 's'} for "${selectedCategoryGlobal}"`);
                 $(".results-text").addClass("d-none");
                 $("#startPage").text((currentPage - 1) * currentPageSize + 1);
                 $("#endPage").text(Math.min(currentPage * currentPageSize, data.totalDocuments));
@@ -382,15 +382,6 @@
         $("#loader").show();
 
         var sortBy = $("#sortBySelect").val();
-        if (sortBy == "1") {
-            sortBy = "Date (Descending)";
-        } else if (sortBy == "2") {
-            sortBy = "File Type";
-        } else if (sortBy == "3") {
-            sortBy = "Date (Ascending)";
-        } else {
-            sortBy = "No sorting";
-        }
 
         $.ajax({
             url: "/Home/SearchDocumentContent",
@@ -460,15 +451,6 @@
         $("#loader").show();
 
         var sortBy = $("#sortBySelect").val();
-        if (sortBy == "1") {
-            sortBy = "Date (Ascending)";
-        } else if (sortBy == "2") {
-            sortBy = "File Type";
-        } else if (sortBy == "3") {
-            sortBy = "Date (Ascending)";
-        } else {
-            sortBy = "No sorting";
-        }
         const results = [];
 
         $(this).closest(".card").each(function () {

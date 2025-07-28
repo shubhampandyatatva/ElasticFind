@@ -117,11 +117,11 @@ public class ElasticSearchService : IElasticSearchService
         }
     }
 
-    public async Task<bool> DeleteAsync(string id)
+    public async Task<bool> DeleteAsync(string id, string category)
     {
         try
         {
-            var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index(_configuration["ElasticSearch:IndexName"]).Refresh(Refresh.WaitFor));
+            var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index(category.ToLowerInvariant()).Refresh(Refresh.WaitFor));
             Console.WriteLine($"Delete response: {response.DebugInformation}");
             return response.IsValid;
         }
@@ -131,11 +131,11 @@ public class ElasticSearchService : IElasticSearchService
         }
     }
 
-    public async Task<bool> DeleteMultipleFilesAsync(string id)
+    public async Task<bool> DeleteMultipleFilesAsync(string id, string category)
     {
         try
         {
-            var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index(_configuration["ElasticSearch:IndexName"]));
+            var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index(category.ToLowerInvariant()));
             Console.WriteLine($"Delete response: {response.DebugInformation}");
             return response.IsValid;
         }
@@ -149,8 +149,6 @@ public class ElasticSearchService : IElasticSearchService
     {
         try
         {
-            Console.WriteLine("ES Bool Query: " + esBoolQuery);
-
             if (!string.IsNullOrEmpty(esBoolQuery) && esBoolQuery != "{}")
             {
                 var rawQuery = new RawQuery(esBoolQuery);
@@ -242,6 +240,21 @@ public class ElasticSearchService : IElasticSearchService
 
                 ISearchResponse<DocumentViewModel> response;
 
+                // Check existence of index. If not, create one
+                var indexExistsResponse = await _elasticClient.Indices.ExistsAsync(selectedCategory.ToLowerInvariant());
+                if (!indexExistsResponse.Exists)
+                {
+                    Console.WriteLine($"Index '{selectedCategory.ToLowerInvariant()}' does not exist. Creating index.");
+                    var createIndexResponse = await _elasticClient.Indices.CreateAsync(selectedCategory.ToLowerInvariant(), c => c
+                        .Map<DocumentViewModel>(m => m.AutoMap())
+                    );
+
+                    if (!createIndexResponse.IsValid)
+                    {
+                        throw new ElasticSearchException($"Failed to create index '{selectedCategory.ToLowerInvariant()}'.");
+                    }
+                }
+
                 if (currentPage == 0 && currentPageSize == 0)
                 {
                     response = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
@@ -249,6 +262,7 @@ public class ElasticSearchService : IElasticSearchService
                         .Query(q => rawQuery)
                         .Highlight(highlightBuilder)
                         .Sort(sort)
+                        .Take((int)countResponse.Count)
                     );
                 }
                 else

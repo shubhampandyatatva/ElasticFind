@@ -7,7 +7,7 @@ public interface ICategoryService
 {
     Task<JsonResponse> AddCategory(string name, string? description);
     Task<JsonResponse> DeleteCategory(string name);
-    Task<JsonResponse> EditCategory(string name, string oldCategoryName, string? description);
+    Task<JsonResponse> EditCategory(int id, string name, string oldCategoryName, string? description);
     Task<DisplayCategoriesViewModel> GetCategories(PaginationViewModel pagination);
     Task<Category?> GetCategoryByName(string name);
 

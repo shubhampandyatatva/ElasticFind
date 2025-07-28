@@ -3,6 +3,7 @@ using System;
 using ElasticFind.Repository.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace ElasticFind.Repository.Migrations
 {
     [DbContext(typeof(ElasticFindContext))]
-    partial class ElasticFindContextModelSnapshot : ModelSnapshot
+    [Migration("20250728070108_AddModifiedByColumn")]
+    partial class AddModifiedByColumn
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

@@ -53,20 +53,18 @@ public class CategoryService : ICategoryService
 
             string indexName = name.ToLowerInvariant();
             var existsResponse = await _elasticClient.Indices.ExistsAsync(indexName);
-            if (existsResponse.ApiCall.HttpStatusCode != 404)
+            if (existsResponse.ApiCall.HttpStatusCode == 404) 
             {
-                return new JsonResponse { Success = false, Message = "This category already exists!" };
-            }
+                var createIndexResponse = await _elasticClient.Indices.CreateAsync(indexName, c => c
+                    .Map<DocumentViewModel>(m => m
+                        .AutoMap()
+                    )
+                );
 
-            var createIndexResponse = await _elasticClient.Indices.CreateAsync(indexName, c => c
-                .Map<DocumentViewModel>(m => m
-                    .AutoMap()
-                )
-            );
-
-            if (!createIndexResponse.IsValid)
-            {
-                return new JsonResponse { Success = false, Message = "There was an error creating the category! Please try again." };
+                if (!createIndexResponse.IsValid)
+                {
+                    return new JsonResponse { Success = false, Message = "There was an error creating the category! Please try again." };
+                }
             }
 
             string? jwtToken = _httpContextAccessor.HttpContext?.Request.Cookies["JwtToken"];
@@ -79,7 +77,7 @@ public class CategoryService : ICategoryService
                 CreatedBy = _userService.GetClaimValue(jwtToken, ClaimTypes.Name),
             };
 
-            await _categoryRepository.AddCategoryToDb(category);
+            await _categoryRepository.AddCategory(category);
 
             return new JsonResponse { Success = true, Message = "Category created successfully!" };
         }
@@ -94,7 +92,6 @@ public class CategoryService : ICategoryService
         try
         {
             var response = await _elasticClient.Indices.DeleteAsync(name);
-            Console.WriteLine(response.DebugInformation);
             if (response.IsValid)
             {
                 await _categoryRepository.DeleteCategoryByName(name);
@@ -117,93 +114,55 @@ public class CategoryService : ICategoryService
         return await _categoryRepository.GetCategoryByName(name);
     }
 
-    public async Task<JsonResponse> EditCategory(string name, string oldCategoryName, string? description)
+    public async Task<JsonResponse> EditCategory(int id, string newName, string oldName, string? description)
     {
         try
         {
-            if (name.ToLowerInvariant() == oldCategoryName.ToLowerInvariant())
+            Category? existingCategory = await _categoryRepository.GetCategoryById(id);
+            if (existingCategory == null)
             {
-                var deleteIndexResponse = await _elasticClient.Indices.DeleteAsync(name.ToLowerInvariant());
+                return new JsonResponse { Success = false, Message = "Category not found!" };
+            }
+
+            oldName = oldName.ToLowerInvariant();
+            string lowerCaseName = newName.ToLowerInvariant();
+            string? jwtToken = _httpContextAccessor.HttpContext?.Request.Cookies["JwtToken"];
+            string? currentUser = _userService.GetClaimValue(jwtToken, ClaimTypes.Name);
+
+            if (lowerCaseName != oldName)
+            {
+                Category? category = await _categoryRepository.GetCategoryByName(lowerCaseName);
+                if (category != null)
+                {
+                    return new JsonResponse { Success = false, Message = "Category already exists!" };
+                }
+
+                // Reindex the old category
+                var reindexResponse = await _elasticClient.ReindexOnServerAsync(r => r
+                    .Source(s => s.Index(oldName))
+                    .Destination(d => d.Index(lowerCaseName))
+                );
+
+                if (!reindexResponse.IsValid)
+                {
+                    Console.WriteLine("Reindexing failed: {DebugInformation}" + reindexResponse.DebugInformation);
+                    return new JsonResponse { Success = false, Message = "There was an error reindexing the category! Please try again." };
+                }
+
+                var deleteIndexResponse = await _elasticClient.Indices.DeleteAsync(oldName);
                 if (!deleteIndexResponse.IsValid)
                 {
                     return new JsonResponse { Success = false, Message = "There was an error deleting the existing category index! Please try again." };
                 }
-
-                await _categoryRepository.DeleteCategoryByName(name);
-
-                var createIndexResponse = await _elasticClient.Indices.CreateAsync(name.ToLowerInvariant(), c => c
-                    .Map<DocumentViewModel>(m => m
-                        .AutoMap()
-                    )
-                );
-
-                if (!createIndexResponse.IsValid)
-                {
-                    return new JsonResponse { Success = false, Message = "There was an error creating the category! Please try again." };
-                }
-
-                string? jwtToken = _httpContextAccessor.HttpContext?.Request.Cookies["JwtToken"];
-
-                Category category = new()
-                {
-                    Name = name,
-                    Description = description,
-                    ModifiedAt = DateTime.UtcNow,
-                    CreatedBy = _userService.GetClaimValue(jwtToken, ClaimTypes.Name),
-                };
-
-                await _categoryRepository.AddCategoryToDb(category);
-
-                return new JsonResponse { Success = true, Message = "Category created successfully!" };
             }
-            else
-            {
-                Category? existingCategory = await _categoryRepository.GetCategoryByName(name);
-                if (existingCategory != null)
-                {
-                    return new JsonResponse { Success = false, Message = "Category by this name already exists!" };
-                }
 
-                string newIndexName = name.ToLowerInvariant();
-                var existsResponse = await _elasticClient.Indices.ExistsAsync(newIndexName);
-                if (existsResponse.ApiCall.HttpStatusCode != 404)   // Index exists
-                {
-                    return new JsonResponse { Success = false, Message = "Category by this name already exists!" };
-                }
+            existingCategory.Name = newName;
+            existingCategory.Description = description;
+            existingCategory.ModifiedAt = DateTime.UtcNow;
+            existingCategory.ModifiedBy = currentUser;
 
-                var deleteIndexResponse = await _elasticClient.Indices.DeleteAsync(oldCategoryName.ToLowerInvariant());
-                if (!deleteIndexResponse.IsValid)
-                {
-                    return new JsonResponse { Success = false, Message = "There was an error deleting the existing category index! Please try again." };
-                }
-
-                await _categoryRepository.DeleteCategoryByName(oldCategoryName);
-
-                var createIndexResponse = await _elasticClient.Indices.CreateAsync(newIndexName, c => c
-                    .Map<DocumentViewModel>(m => m
-                        .AutoMap()
-                    )
-                );
-
-                if (!createIndexResponse.IsValid)
-                {
-                    return new JsonResponse { Success = false, Message = "There was an error creating the category! Please try again." };
-                }
-
-                string? jwtToken = _httpContextAccessor.HttpContext?.Request.Cookies["JwtToken"];
-
-                Category category = new()
-                {
-                    Name = name,
-                    Description = description,
-                    ModifiedAt = DateTime.UtcNow,
-                    CreatedBy = _userService.GetClaimValue(jwtToken, ClaimTypes.Name),
-                };
-
-                await _categoryRepository.AddCategoryToDb(category);
-
-                return new JsonResponse { Success = true, Message = "Category created successfully!" };
-            }
+            await _categoryRepository.UpdateCategory(existingCategory);
+            return new JsonResponse { Success = true, Message = "Category updated successfully!" };
         }
         catch (Exception)
         {

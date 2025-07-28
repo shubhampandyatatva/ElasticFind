@@ -6,18 +6,13 @@ using Nest;
 using ElasticFind.Repository.ViewModels;
 using ElasticFind.Repository.Interfaces;
 using ElasticFind.Service.Interfaces;
-using System.Threading.Tasks;
-using ElasticFind.Service.Implementations;
-using Elastic.Clients.Elasticsearch;
 using Rotativa.AspNetCore;
 using System.Security.Claims;
-using ElasticFind.Repository.Data;
-using System.Text.Json;
-using System.Net.Http.Json;
 using System.Text;
 using Jose;
 using Newtonsoft.Json;
 using ElasticFind.Service.Constants;
+using ElasticFind.Service.Exceptions;
 
 namespace ElasticFind.Web.Controllers;
 
@@ -223,6 +218,20 @@ public class HomeController : Controller
 
                 Console.WriteLine($"Base64 length: {base64Data.Length} characters, file: {file.FileName}");
 
+                var indexExistsResponse = await _elasticClient.Indices.ExistsAsync(uploadCategory.ToLowerInvariant());
+                if (!indexExistsResponse.Exists)
+                {
+                    Console.WriteLine($"Index '{uploadCategory.ToLowerInvariant()}' does not exist. Creating index.");
+                    var createIndexResponse = await _elasticClient.Indices.CreateAsync(uploadCategory.ToLowerInvariant(), c => c
+                        .Map<DocumentViewModel>(m => m.AutoMap())
+                    );
+
+                    if (!createIndexResponse.IsValid)
+                    {
+                        throw new ElasticSearchException($"Failed to create index '{uploadCategory.ToLowerInvariant()}'.");
+                    }
+                }
+
                 var response = await _elasticClient.IndexAsync(document, i => i
                     .Id(document.Id)
                     .Index(uploadCategory.ToLowerInvariant())
@@ -344,9 +353,9 @@ public class HomeController : Controller
     }
 
     [Authorize(Roles = Roles.Admin)]
-    public async Task<IActionResult> DeleteFile(string id)
+    public async Task<IActionResult> DeleteFile(string id, string category)
     {
-        bool result = await _elasticSearchService.DeleteAsync(id);
+        bool result = await _elasticSearchService.DeleteAsync(id, category);
 
         if (result)
         {
@@ -577,7 +586,7 @@ public class HomeController : Controller
     }
 
     [Authorize(Roles = Roles.Admin)]
-    public async Task<JsonResult> DeleteMultipleFiles(List<string> ids)
+    public async Task<JsonResult> DeleteMultipleFiles(List<string> ids, string category)
     {
         if (ids == null || !ids.Any())
         {
@@ -586,7 +595,7 @@ public class HomeController : Controller
 
         foreach (var id in ids)
         {
-            bool result = await _elasticSearchService.DeleteMultipleFilesAsync(id);
+            bool result = await _elasticSearchService.DeleteMultipleFilesAsync(id, category);
             if (!result)
             {
                 return Json(new { success = false, message = "Some error occured in deleting the files!" });

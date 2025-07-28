@@ -5,9 +5,13 @@ namespace ElasticFind.Repository.Interfaces;
 
 public interface ICategoryRepository
 {
-    Task AddCategoryToDb(Category category);
+    Task AddCategory(Category category);
+    Task DeleteCategoryById(int id);
+
     Task DeleteCategoryByName(string name);
     Task<List<CategoryViewModel>> GetAllCategories();
+    Task<Category?> GetCategoryById(int id);
+
     Task<Category?> GetCategoryByName(string name);
     List<CategoryViewModel> GetCategoryList(PaginationViewModel pagination);
     Task<string?> GetFirstCategory();

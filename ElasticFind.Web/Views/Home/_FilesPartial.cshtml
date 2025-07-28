@@ -95,22 +95,19 @@
 
     function loadFirstPage() {
         const searchString = $("#searchInput").val();
-        var selectedCategory = $(".select-category select").val();
-        loadPage(selectedCategory, 1, currentPageSize, searchString, null);
+        loadPage(selectedCategoryGlobal, 1, currentPageSize, searchString, null);
     }
 
     function loadPrevPage() {
         const searchString = $("#searchInput").val();
-        var selectedCategory = $(".select-category select").val();
         if (currentPage > 1) {
-            loadPage(selectedCategory, currentPage - 1, currentPageSize, searchString, null);
+            loadPage(selectedCategoryGlobal, currentPage - 1, currentPageSize, searchString, null);
         }
     }
 
     function loadNextPage() { 
         const searchString = $("#searchInput").val();
-        var selectedCategory = $(".select-category select").val();
-        loadPage(selectedCategory, currentPage + 1, currentPageSize, searchString, null);
+        loadPage(selectedCategoryGlobal, currentPage + 1, currentPageSize, searchString, null);
     }
 
     function loadLastPage() {
@@ -118,11 +115,10 @@
         const totalRecords = @Model.Pagination.TotalRecords;
         const currentPageSize = parseInt($("#itemsPerPage").val());
         currentPage = Math.ceil(totalRecords / currentPageSize);
-        var selectedCategory = $(".select-category select").val();
-        loadPage(selectedCategory, currentPage, currentPageSize, searchString, null);
+        loadPage(selectedCategoryGlobal, currentPage, currentPageSize, searchString, null);
     }
 
     $(function () {
-        $('[data-toggle="tooltip"]').tooltip()
+        $('[data-toggle="tooltip"]').tooltip() 
     }); 
 </script>

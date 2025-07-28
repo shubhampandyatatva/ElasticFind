@@ -15,7 +15,7 @@ public class CategoryRepository : ICategoryRepository
 
     public List<CategoryViewModel> GetCategoryList(PaginationViewModel pagination)
     {
-        var query = _dbcontext.Categories.Where(u => u.IsDeleted != true).OrderBy(u => u.Id);
+        var query = _dbcontext.Categories.OrderBy(u => u.Id);
         if (!string.IsNullOrEmpty(pagination.SearchString))
         {
             query = query.Where(u => u.Name.ToLower().Contains(pagination.SearchString.ToLower())).OrderBy(u => u.Id);
@@ -36,15 +36,15 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<int> GetTotalCategories()
     {
-        return await _dbcontext.Categories.Where(u => u.IsDeleted != true).CountAsync();
+        return await _dbcontext.Categories.CountAsync();
     }
 
     public async Task<int> GetTotalSearchedCategories(string searchString)
     {
-        return await _dbcontext.Categories.Where(u => u.IsDeleted != true && (u.Name.ToLower().Contains(searchString.ToLower()) || u.Description.ToLower().Contains(searchString.ToLower()))).CountAsync();
+        return await _dbcontext.Categories.Where(u => u.Name.ToLower().Contains(searchString.ToLower()) || u.Description.ToLower().Contains(searchString.ToLower())).CountAsync();
     }
 
-    public async Task AddCategoryToDb(Category category)
+    public async Task AddCategory(Category category)
     {
         try
         {
@@ -59,7 +59,7 @@ public class CategoryRepository : ICategoryRepository
 
     public async Task<Category?> GetCategoryByName(string name)
     {
-        return await _dbcontext.Categories.FirstOrDefaultAsync(c => c.Name.ToLower() == name.ToLower() && c.IsDeleted != true);
+        return await _dbcontext.Categories.FirstOrDefaultAsync(c => c.Name.ToLower() == name.ToLower());
     }
 
     public async Task UpdateCategory(Category category)
@@ -79,7 +79,7 @@ public class CategoryRepository : ICategoryRepository
     {
         try
         {
-            Category? category = await _dbcontext.Categories.FirstOrDefaultAsync(c => c.Name.ToLower() == name.ToLower() && c.IsDeleted != true) ?? throw new Exception("Category not found.");
+            Category? category = await _dbcontext.Categories.FirstOrDefaultAsync(c => c.Name.ToLower() == name.ToLower()) ?? throw new Exception("Category not found.");
 
             _dbcontext.Categories.Remove(category);
             await _dbcontext.SaveChangesAsync();
@@ -107,6 +107,26 @@ public class CategoryRepository : ICategoryRepository
     {
         Category? category = await _dbcontext.Categories.FirstOrDefaultAsync();
         return category?.Name;
+    }
+
+    public async Task<Category?> GetCategoryById(int id)
+    {
+        return await _dbcontext.Categories.FirstOrDefaultAsync(c => c.Id == id);
+    }
+
+    public async Task DeleteCategoryById(int id)
+    {
+        try
+        {
+            Category? category = await _dbcontext.Categories.FindAsync(id) ?? throw new Exception("Category not found.");
+
+            _dbcontext.Categories.Remove(category);
+            await _dbcontext.SaveChangesAsync();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception("An error occurred while deleting the category by ID.", ex);
+        }
     }
 
 }

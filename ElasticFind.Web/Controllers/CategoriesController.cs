@@ -42,7 +42,7 @@ public class CategoriesController : Controller
     {
         if (id != null)
         {
-            return await _categoryService.EditCategory(name, oldCategoryName, description);
+            return await _categoryService.EditCategory((int)id, name, oldCategoryName, description);
         }
         else
         {
