@@ -57,6 +57,8 @@ public class HomeController : Controller
         var allFileIds = await _elasticSearchService.GetAllFileIdsByIndexAsync(index.ToLowerInvariant());
         ViewBag.AllFileIds = allFileIds;
 
+        ViewBag.SelectedCategory = index;
+
         if (Request.Headers["X-Requested-With"] == "XMLHttpRequest")
         {
             return PartialView("_FilesPartial", displayFilesViewModel);
@@ -603,7 +605,7 @@ public class HomeController : Controller
         }
 
         // Refresh the index once after all deletions
-        var refreshResponse = await _elasticClient.Indices.RefreshAsync(_config["Elasticsearch:IndexName"] ?? "documents");
+        var refreshResponse = await _elasticClient.Indices.RefreshAsync(category.ToLowerInvariant());
         Console.WriteLine($"Refresh response: {refreshResponse.DebugInformation}");
 
         if (!refreshResponse.IsValid)

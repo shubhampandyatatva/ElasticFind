@@ -41,8 +41,21 @@
 
     <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
         <h2 class="mb-0" style="color: #305796;">Your Files</h2>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+        <div class="select-category d-flex align-items-center mb-2">
+            <div class="select-category-text me-3">View files from: </div>
+            <select class="form-select me-3" style="width: 200px;" id="selectCategory">
+                @foreach (var category in Model.Categories)
+                {
+                    <option value="@category.Name">@category.Name</option>
+                }
+            </select>
+            <button type="button" class="btn btn-primary" id="selectCategoryBtn">Search</button>
+        </div>
         <div class="d-flex align-items-center">
-            <i class="fa-solid fa-trash-can border rounded pointer me-3" style="padding: 10px;"
+            <i class="fa-solid fa-trash-can rounded pointer me-3 text-danger" style="padding: 10px; border: 2px solid rgb(49, 49, 49);"
                 title="Delete selected files" id="deleteMultipleFilesBtn"></i>
             <div class="search position-relative" style="max-width: 400px;">
                 <input type="text" id="searchInput" placeholder="Search Files" class="form-control pe-4"
@@ -52,19 +65,6 @@
             </div>
         </div>
     </div>
-
-    <div class="select-category d-flex align-items-center mb-3">
-        <div class="select-category-text me-3">View files from: </div>
-        <select class="form-select me-3" style="width: 200px;" id="selectCategory">
-            @foreach (var category in Model.Categories)
-            {
-                <option value="@category.Name">@category.Name</option>
-            }
-        </select>
-        <button type="button" class="btn btn-primary" id="selectCategoryBtn">Search</button>
-    </div>
-
-
 
     <input type="hidden" id="allFileIdsJson" value='@Html.Raw(Json.Serialize(ViewBag.AllFileIds))' />
 
@@ -218,6 +218,7 @@
     let currentPage = @Model.Pagination.Page;
     let currentPageSize = @Model.Pagination.PageSize;
     var selectedCategoryGlobal = $("#selectCategory").val() || "";
+
     @* async function loadPage(page, pageSize, searchString, sortOrder) {
         console.log(page, pageSize, searchString, SortOrder);
         $.ajax({
@@ -381,7 +382,8 @@
             success: function (response) {
                 $("#selectCategory").val(uploadCategory);
                 selectedCategoryGlobal = uploadCategory;
-                loadPage(selectedCategoryGlobal, 1, pageSize, searchString, SortOrder);
+                $("#searchInput").val("");
+                loadPage(selectedCategoryGlobal, 1, pageSize, null, SortOrder);
                 toastr.success(response, "Success");
                 allFiles = []; // reset after successful upload
                 updateFileNameDisplay([]);
@@ -449,11 +451,11 @@
         }
     });
 
-    function downloadFile(fileId, fileName, category) {
+    function downloadFile(fileId, fileName) {
         $("#downloadLoader").show();
 
         $.ajax({
-            url: `/Home/Download?fileId=${fileId}&category=${category}`,
+            url: `/Home/Download?fileId=${fileId}&category=${selectedCategoryGlobal}`,
             method: "GET",
             xhrFields: {
                 responseType: 'blob' // Get the raw binary data
@@ -511,7 +513,7 @@
 
             if (response.success) {
                 toastr.success(response.message, "Success");
-                loadPage(selectedCategoryGlobal, 1, $("#itemsPerPage").val(), $("#searchInput").val(), SortOrder);
+                loadPage(selectedCategoryGlobal, 1, $("#itemsPerPage").val(), null, SortOrder);
                 selectedFileIds.clear();
                 console.log("All File Ids after delete files: ", allFileIds);
                 // Restore modal content
@@ -538,7 +540,9 @@
 
     $("#selectCategoryBtn").on("click", function () {
         selectedCategoryGlobal = $(".select-category select").val();
-        console.log("Selected Category: ", selectedCategory);
+        console.log("Selected Category: ", selectedCategoryGlobal);
+        $(".selectedCategory").text(selectedCategoryGlobal);
+        $("#searchInput").val("");
         loadPage(selectedCategoryGlobal, 1, $("#itemsPerPage").val(), $("#searchInput").val(), SortOrder);
     });
 </script>
