@@ -70,9 +70,14 @@
     </div>
 
     <div id="exportSection" class="mt-3 d-none">
-        <button class="btn btn-primary" type="button" id="exportToPdfBtn" aria-expanded="false">
+        <button class="btn btn-primary me-3" type="button" id="exportToPdfBtn" aria-expanded="false">
             Export Results
             <img src="~/images/export-white.png" alt="Export Icon" class="ms-1 mb-1" style="width: 20px; height: 20px;">
+        </button>
+        <button class="btn btn-primary" type="button" id="downloadAllDocumentsBtn" aria-expanded="false">
+            Download Documents
+            <i class="fa fa-download text-primary pointer ms-2" style="color: white !important;"
+                onmouseover="this.style.transform='scale(1.0)'"></i>
         </button>
     </div>
 
@@ -796,5 +801,40 @@
         }
         selectedCategoryGlobal = selectedCategory;
         searchDocumentContent();
+    });
+
+    $("#downloadAllDocumentsBtn").on("click", function () {
+        $("#loader").find(".spinner-border").removeClass("text-success").addClass("text-primary");
+        $("#loader").show();
+
+        var sortBy = $("#sortBySelect").val().trim();
+
+        $.ajax({
+            url: '/Home/DownloadAllDocuments',
+            method: 'POST',
+            data: { selectedCategory: selectedCategoryGlobal, sortBy: sortBy, esBoolQuery: JSON.stringify(esBoolQuery) },
+            xhrFields: {
+                responseType: 'blob'  // so we can download the ZIP
+            },
+            success: function (data, textStatus, jqXHR) {
+                let filename = "SearchResults.zip";
+                const blob = new Blob([data], { type: "application/zip" });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                window.URL.revokeObjectURL(url);
+            },
+            error: function (xhr) {
+                toastr.error("Failed to download results. Try again.", "Error");
+                console.error("Download error:", xhr.responseText);
+            },
+            complete: function () {
+                $("#loader").hide();
+            }
+        });
     });
 </script>

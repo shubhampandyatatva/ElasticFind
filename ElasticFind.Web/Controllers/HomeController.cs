@@ -517,6 +517,12 @@ public class HomeController : Controller
         return Json(categories);
     }
 
+    public async Task<IActionResult> DownloadAllDocuments(string selectedCategory, string? sortBy = null, string? esBoolQuery = null)
+    {
+        ZipDownloadResult zipModel = await _exportService.ExportAllDocumentsToZip(selectedCategory, sortBy, esBoolQuery);
+        return File(zipModel.FileBytes, zipModel.ContentType, zipModel.FileName);
+    }
+
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {

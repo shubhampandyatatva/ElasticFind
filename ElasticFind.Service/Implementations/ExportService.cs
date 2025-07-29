@@ -1,8 +1,13 @@
 using System.Drawing;
+using System.IO.Compression;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using ElasticFind.Repository.ViewModels;
+using ElasticFind.Service.Exceptions;
 using ElasticFind.Service.Interfaces;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Mvc;
+using Nest;
 using OfficeOpenXml;
 using OfficeOpenXml.Style;
 
@@ -11,10 +16,11 @@ namespace ElasticFind.Service.Implementations;
 public class ExportService : IExportService
 {
     private readonly IWebHostEnvironment _webHostEnvironment;
-
-    public ExportService(IWebHostEnvironment webHostEnvironment)
+    private readonly IElasticClient _elasticClient;
+    public ExportService(IWebHostEnvironment webHostEnvironment, IElasticClient elasticClient)
     {
         _webHostEnvironment = webHostEnvironment;
+        _elasticClient = elasticClient;
     }
 
     public byte[] ExportSearchResultsToExcel(List<GroupedSearchResults> results, string keyword, string fileType, DateTime? startDate, DateTime? endDate, string sortedBy, string searchString, int totalRecords)
@@ -147,5 +153,107 @@ public class ExportService : IExportService
         worksheet.Cells.AutoFitColumns();
 
         return package.GetAsByteArray();
+    }
+
+    public async Task<ZipDownloadResult> ExportAllDocumentsToZip(string selectedCategory, string? sortBy, string? esBoolQuery)
+    {
+        var rawQuery = new RawQuery(esBoolQuery);
+
+        var usedFields = new HashSet<string>();
+        using var doc = JsonDocument.Parse(esBoolQuery);
+        CollectFields(doc.RootElement, usedFields);
+
+        Func<SortDescriptor<DocumentViewModel>, IPromise<IList<ISort>>>? sort = null;
+        if (!string.IsNullOrWhiteSpace(sortBy))
+        {
+            sort = s =>
+            {
+                switch (sortBy)
+                {
+                    case "1": s.Descending(f => f.UploadedDate); break;
+                    case "2": s.Ascending(f => f.FileType.Suffix("keyword")); break;
+                    case "3": s.Ascending(f => f.UploadedDate); break;
+                }
+                return s;
+            };
+        }
+
+        selectedCategory = selectedCategory.ToLowerInvariant();
+
+        var indexExistsResponse = await _elasticClient.Indices.ExistsAsync(selectedCategory);
+        if (!indexExistsResponse.Exists)
+        {
+            var createIndexResponse = await _elasticClient.Indices.CreateAsync(selectedCategory, c => c
+                .Map<DocumentViewModel>(m => m.AutoMap())
+            );
+
+            if (!createIndexResponse.IsValid)
+            {
+                throw new ElasticSearchException($"Failed to create index '{selectedCategory}'.");
+            }
+        }
+
+        var countResponse = await _elasticClient.CountAsync<DocumentViewModel>(c => c
+            .Index(selectedCategory)
+            .Query(q => rawQuery)
+        );
+
+        var response = await _elasticClient.SearchAsync<DocumentViewModel>(s => s
+        .Index(selectedCategory)
+        .Query(q => rawQuery)
+        .Sort(sort)
+        .Take((int)countResponse.Count)
+        );
+
+        if (!response.IsValid)
+        {
+            throw new ElasticSearchException($"Failed to retrieve documents from index '{selectedCategory}': {response.ServerError?.Error?.Reason}");
+        }
+
+        using var zipStream = new MemoryStream();
+        using (var archive = new ZipArchive(zipStream, ZipArchiveMode.Create, leaveOpen: true))
+        {
+            foreach (var document in response.Documents)
+            {
+                if (string.IsNullOrEmpty(document.Data)) continue;
+
+                var fileBytes = Convert.FromBase64String(document.Data);
+                var entry = archive.CreateEntry(document.FileName + document.FileType);
+
+                using var entryStream = entry.Open();
+                await entryStream.WriteAsync(fileBytes, 0, fileBytes.Length);
+            }
+        }
+
+        zipStream.Position = 0;
+
+        return new ZipDownloadResult
+        {
+            FileBytes = zipStream.ToArray(),
+            FileName = "SearchResults.zip",
+            ContentType = "application/zip"
+        };
+    }
+
+    static void CollectFields(JsonElement element, HashSet<string> fields)
+    {
+        if (element.ValueKind == JsonValueKind.Object)
+        {
+            foreach (var prop in element.EnumerateObject())
+            {
+                if (prop.Value.ValueKind == JsonValueKind.Object)
+                {
+                    foreach (var inner in prop.Value.EnumerateObject())
+                        fields.Add(inner.Name);
+
+                    CollectFields(prop.Value, fields);
+                }
+                else if (prop.Value.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var item in prop.Value.EnumerateArray())
+                        CollectFields(item, fields);
+                }
+            }
+        }
     }
 }
