@@ -17,5 +17,5 @@ public interface IUserRepository
     Task<List<FileViewModel>> GetFiles(PaginationViewModel pagination);
     Task<int> GetTotalFilesBySearchString(string searchString);
     Task<int> GetTotalFiles();
-
+    Task CreateDefaultAdminUser();
 }

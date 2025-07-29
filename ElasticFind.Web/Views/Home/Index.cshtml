@@ -149,9 +149,7 @@
 <div id="downloadLoader"
     class="position-fixed top-0 start-0 w-100 h-100 justify-content-center align-items-center bg-white bg-opacity-75"
     style="z-index: 9999; display: none;">
-    <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Downloading...</span>
-    </div>
+    <div class="spinner-border text-primary" role="status"></div>
 </div>
 
 <script>
@@ -330,16 +328,20 @@
             formData.append("files", file);
         });
 
+        // If any of the files is empty,#305796 display a warning message.
+        if (allFiles.some(file => file.size === 0)) {
+            toastr.warning("One or more selected files are empty. Only non-empty files will be uploaded.", "Warning");
+        }
+
         formData.append("uploadCategory", uploadCategory);
 
         var pageSize = $("#itemsPerPage").val();
         var searchString = $("#searchInput").val();
 
-        $("#uploadProgressContainer").removeClass("d-none");
+        $("#downloadLoader").find(".spinner-border").removeClass("text-success").addClass("text-primary");
+        $("#downloadLoader").css("display", "flex");
 
         var selectedCategory = $(".select-category select").val();
-
-        console.log("Upload Category: ", uploadCategory);
 
         $.ajax({
             url: "/Home/UploadDocuments",
@@ -348,18 +350,31 @@
             processData: false,
             contentType: false,
             success: function (response) {
-                $("#selectCategory").val(uploadCategory);
-                selectedCategoryGlobal = uploadCategory;
-                $("#searchInput").val("");
-                loadPage(selectedCategoryGlobal, 1, pageSize, null, SortOrder);
-                toastr.success(response, "Success");
-                allFiles = []; // reset after successful upload
-                updateFileNameDisplay([]);
-                $("#uploadProgressContainer").addClass("d-none");
+                if (response.success) {
+                    console.log("Upload response: ", response);
+                    $("#selectCategory").val(uploadCategory);
+                    selectedCategoryGlobal = uploadCategory;
+                    $("#searchInput").val("");
+                    loadPage(selectedCategoryGlobal, 1, pageSize, null, SortOrder);
+                    toastr.success(response.message, "Success");
+                    allFiles = []; // reset after successful upload
+                    updateFileNameDisplay([]);
+                    $("#downloadLoader").hide();
+                }
+                else {
+                    console.log("Upload error else response: ", response);
+                    if (typeof response === "string") { //html error page is returned in response
+                        toastr.error("Your JWT Token is expired! Please login again!", "Error");
+                        $("#downloadLoader").hide();
+                    }
+                    toastr.error(response.message.length > 100 ? "Some unknown error occured! Please try again" : response.message, "Error");
+                    $("#downloadLoader").hide();
+                }
             },
             error: function (xhr) {
-                toastr.error(xhr.responseText.length > 50 ? "Try again after some time" : xhr.responseText, "Error");
-                $("#uploadProgressContainer").addClass("d-none");
+                toastr.error(xhr.responseText.length > 10 ? "Try again after some time" : xhr.responseText, "Error");
+                console.error("Upload error: ", xhr.responseText);
+                $("#downloadLoader").hide();
             }
         });
     });

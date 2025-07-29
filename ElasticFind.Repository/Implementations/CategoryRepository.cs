@@ -101,22 +101,9 @@ public class CategoryRepository : ICategoryRepository
             .ToListAsync();
     }
 
-    public async Task<string?> GetOrCreateDefaultCategory()
+    public async Task<string> GetFirstCategory()
     {
-        Category? category = await _dbcontext.Categories.FirstOrDefaultAsync();
-        if (category == null)
-        {
-            Category newCategory = new()
-            {
-                Name = "Default",
-                Description = "This is a default category.",
-                CreatedBy = "System",
-                CreatedAt = DateTime.UtcNow
-            };
-            await _dbcontext.Categories.AddAsync(newCategory);
-            await _dbcontext.SaveChangesAsync();
-            return newCategory.Name;
-        }
+        Category category = await _dbcontext.Categories.FirstAsync();
         return category.Name;
     }
 
@@ -140,4 +127,21 @@ public class CategoryRepository : ICategoryRepository
         }
     }
 
+    public async Task CreateDefaultCategory()
+    {
+        bool doesCategoryExist = await _dbcontext.Categories.AnyAsync(c => c.Name.ToLower() == "default");
+        if (!doesCategoryExist)
+        {
+            Category newCategory = new()
+            {
+                Name = "Default",
+                Description = "This is a default category.",
+                CreatedBy = "System",
+                CreatedAt = DateTime.UtcNow,
+                ModifiedAt = DateTime.UtcNow
+            };
+            await _dbcontext.Categories.AddAsync(newCategory);
+            await _dbcontext.SaveChangesAsync();
+        }
+    }
 }

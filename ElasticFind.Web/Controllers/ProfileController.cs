@@ -16,7 +16,7 @@ public class ProfileController : Controller
 
     [HttpGet]
     [Authorize]
-    public IActionResult ChangePassword()
+    public IActionResult ChangePassword() 
     {
         string? jwtToken = Request.Cookies["JwtToken"];
         if (string.IsNullOrEmpty(jwtToken))

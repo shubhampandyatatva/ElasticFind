@@ -5,12 +5,13 @@ using ElasticFind.Service.Interfaces;
 using Elasticsearch.Net;
 using Microsoft.Extensions.Caching.Memory;
 using Nest;
-using Newtonsoft.Json.Linq;
-using System;
 using Microsoft.Extensions.Configuration;
 using ElasticFind.Service.Exceptions;
 using Serilog.Context;
 using ElasticFind.Repository.Interfaces;
+using Microsoft.AspNetCore.Http;
+using ElasticFind.Repository.Data;
+using Microsoft.AspNetCore.Mvc;
 
 namespace ElasticFind.Service.Implementations;
 
@@ -55,68 +56,6 @@ public class ElasticSearchService : IElasticSearchService
         }
     }
 
-    public async Task<bool> IndexAsync(Humanresources hr)
-    {
-        try
-        {
-            var response = await _elasticClient.IndexDocumentAsync(hr);
-            return response.IsValid;
-        }
-        catch (Exception ex)
-        {
-            throw new ElasticSearchException("An unexpected error occurred while indexing the document.", ex);
-        }
-    }
-
-    public async Task<List<Humanresources>> SearchByJobTitleAsync(string keyword)
-    {
-        try
-        {
-            var response = await _elasticClient.SearchAsync<Humanresources>(s => s
-                .Query(q => q
-                    .Match(m => m
-                        .Field(f => f.Jobtitle)
-                        .Query(keyword)
-                    )
-                )
-            );
-
-            return response.Documents.ToList();
-        }
-        catch (Exception ex)
-        {
-            throw new ElasticSearchException("An unexpected error occurred while searching the job title.", ex);
-        }
-    }
-
-    public async Task<bool> UpdateAsync(Humanresources hr)
-    {
-        try
-        {
-            var response = await _elasticClient.IndexAsync(hr, i => i.Id(hr.Nationalidnumber));
-            return response.IsValid;
-        }
-        catch (Exception ex)
-        {
-            throw new ElasticSearchException("An unexpected error occurred while updating the index.", ex);
-        }
-    }
-
-    public async Task<bool> UpdateFieldAsync(int id, string newJobTitle)
-    {
-        try
-        {
-            var response = await _elasticClient.UpdateAsync<Humanresources>(id, u => u
-                .Doc(new Humanresources { Jobtitle = newJobTitle })
-            );
-            return response.IsValid;
-        }
-        catch (Exception ex)
-        {
-            throw new ElasticSearchException("An unexpected error occurred while updating the field in the index.", ex);
-        }
-    }
-
     public async Task<bool> DeleteAsync(string id, string category)
     {
         try
@@ -130,17 +69,30 @@ public class ElasticSearchService : IElasticSearchService
         }
     }
 
-    public async Task<bool> DeleteMultipleFilesAsync(string id, string category)
+    public async Task<JsonResult> DeleteMultipleFilesAsync(List<string> ids, string category)
     {
-        try
+        var deleteMultipleFilesResponse = await _elasticClient.BulkAsync(b => b
+            .Index(category.ToLowerInvariant())
+            .DeleteMany<DocumentViewModel>(ids, (d, id) => d.Id(id))
+        );
+
+        if (deleteMultipleFilesResponse.Errors)
         {
-            var response = await _elasticClient.DeleteAsync<DocumentViewModel>(id, d => d.Index(category.ToLowerInvariant()));
-            return response.IsValid;
+            var errorMessages = deleteMultipleFilesResponse.ItemsWithErrors
+                .Select(item => $"{item.Id}: {item.Error.Reason}")
+                .ToList();
+
+            throw new ElasticSearchException($"Failed to delete some documents: {string.Join(", ", errorMessages)}");
         }
-        catch (Exception ex)
+
+        var refreshResponse = await _elasticClient.Indices.RefreshAsync(category.ToLowerInvariant());
+
+        if (!refreshResponse.IsValid)
         {
-            throw new ElasticSearchException("An unexpected error occurred in deleting the files.", ex);
+            return new JsonResult(new { Success = true, warning = true, message = "Deletion completed successfully but there was some error refreshing the index!" });
         }
+
+        return new JsonResult(new { Success = true, message = "Files deleted successfully!" });
     }
 
     public async Task<SearchResultsViewModel> SearchDocumentsAsync(string selectedCategory, string? sortBy = null, int currentPage = 1, int currentPageSize = 5, string? esBoolQuery = null)
@@ -490,6 +442,64 @@ public class ElasticSearchService : IElasticSearchService
             {
                 throw new ElasticSearchException("An unexpected error occurred while fetching all file IDs from the server.", ex);
             }
+        }
+    }
+
+    public async Task UploadDocumentsAsync(List<IFormFile> files, string uploadCategory, User user)
+    {
+        List<DocumentViewModel> documents = new();
+
+        try
+        {
+            string fileNameWithoutExt;
+            long timestamp = 0;
+            string customId;
+            string base64Data;
+            foreach (var file in files)
+            {
+                if (file.Length == 0)
+                    continue;
+
+                fileNameWithoutExt = Path.GetFileNameWithoutExtension(file.FileName);
+                timestamp = DateTime.UtcNow.Ticks;
+                customId = $"{fileNameWithoutExt}_{timestamp}";
+
+                using var ms = new MemoryStream();
+                await file.CopyToAsync(ms);
+                base64Data = Convert.ToBase64String(ms.ToArray());
+
+                var document = new DocumentViewModel
+                {
+                    Id = customId,
+                    FileName = fileNameWithoutExt.ToLowerInvariant(),
+                    FileType = Path.GetExtension(file.FileName).ToLowerInvariant(),
+                    UploadedBy = user.Id.ToString(),
+                    UploadedDate = DateTime.Now,
+                    UploadedDateText = DateTime.Now.ToString("dd-MM-yyyy"),
+                    Data = base64Data
+                };
+
+                documents.Add(document);
+            }
+
+            var bulkIndexResponse = await _elasticClient.BulkAsync(b => b
+                    .Index(uploadCategory.ToLowerInvariant())
+                    .Pipeline("attachment")
+                    .IndexMany(documents)
+            );
+
+            if (bulkIndexResponse.Errors)
+            {
+                var errorMessages = bulkIndexResponse.ItemsWithErrors
+                    .Select(item => $"{item.Id}: {item.Error.Reason}")
+                    .ToList();
+
+                throw new ElasticSearchException($"Failed to upload some documents!");
+            }
+        }
+        catch (Exception e)
+        {
+            throw new ElasticSearchException("An unexpected error occurred while preparing the documents for upload.", e);
         }
     }
 }

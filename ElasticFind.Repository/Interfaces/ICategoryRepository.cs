@@ -6,6 +6,8 @@ namespace ElasticFind.Repository.Interfaces;
 public interface ICategoryRepository
 {
     Task AddCategory(Category category);
+    Task CreateDefaultCategory();
+
     Task DeleteCategoryById(int id);
 
     Task DeleteCategoryByName(string name);
@@ -14,7 +16,7 @@ public interface ICategoryRepository
 
     Task<Category?> GetCategoryByName(string name);
     List<CategoryViewModel> GetCategoryList(PaginationViewModel pagination);
-    Task<string?> GetOrCreateDefaultCategory();
+    Task<string> GetFirstCategory();
 
     Task<int> GetTotalCategories();
     Task<int> GetTotalSearchedCategories(string searchString);

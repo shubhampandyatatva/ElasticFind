@@ -227,7 +227,7 @@
 
                 $("#filtersSortersContainer").removeClass("d-none");
                 $(".matching-docs-count").removeClass("d-none");
-                $("#matchingDocsCountSpan").text(`${data.totalDocuments} matching document${data.totalDocuments === 1 ? '' : 's'} for "${selectedCategoryGlobal}"`);
+                $("#matchingDocsCountSpan").text(`${data.totalDocuments} matching document${data.totalDocuments === 1 ? '' : 's'} for "${selectedCategoryGlobal}" category`);
                 $(".results-text").addClass("d-none");
                 $("#startPage").text((currentPage - 1) * currentPageSize + 1);
                 $("#endPage").text(Math.min(currentPage * currentPageSize, data.totalDocuments));

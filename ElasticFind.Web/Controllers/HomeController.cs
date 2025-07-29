@@ -13,9 +13,11 @@ using Jose;
 using Newtonsoft.Json;
 using ElasticFind.Service.Constants;
 using ElasticFind.Service.Exceptions;
+using Serilog;
 
 namespace ElasticFind.Web.Controllers;
 
+[Authorize(Roles = Roles.Admin)]
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
@@ -39,11 +41,10 @@ public class HomeController : Controller
         _categoryRepository = categoryRepository;
     }
 
-    [Authorize(Roles = Roles.Admin)]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     public async Task<IActionResult> Index(string selectedCategory, int page = 1, int pageSize = 5, string? searchString = null, string? sortOrder = null)
     {
-        var index = selectedCategory ?? await _categoryRepository.GetOrCreateDefaultCategory();
+        string index = selectedCategory ?? await _categoryRepository.GetFirstCategory();
         PaginationViewModel pagination = new()
         {
             Page = page,
@@ -67,7 +68,6 @@ public class HomeController : Controller
     }
 
     [HttpPost]
-    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> UploadFiles(List<IFormFile> files)
     {
         if (files == null || files.Count == 0)
@@ -105,7 +105,6 @@ public class HomeController : Controller
         return RedirectToAction("Index");
     }
 
-    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> Users(int page = 1, int pageSize = 5, string? searchString = null, string sortOrder = "Asc")
     {
         DisplayUsersViewModel listOfUsers = await _userService.GetUserList(page, pageSize, searchString, sortOrder);
@@ -118,7 +117,6 @@ public class HomeController : Controller
         return View(listOfUsers);
     }
 
-    [Authorize(Roles = Roles.Admin)]
     public async Task<JsonResult> DeleteUser(int id)
     {
         bool result = await _userService.DeleteUser(id);
@@ -132,7 +130,6 @@ public class HomeController : Controller
         }
     }
 
-    [Authorize(Roles = Roles.Admin)]
     public async Task<JsonResult> ToggleUserStatus(int id)
     {
         bool result = await _userService.ToggleUserStatus(id);
@@ -146,110 +143,54 @@ public class HomeController : Controller
         }
     }
 
-    [HttpGet]
-    [Authorize]
-    public ActionResult Search()
-    {
-        return View();
-    }
-
-    public async Task<List<Humanresources>> DataSearch(string keyword, string nationalIDNumber)
-    {
-        var response = await _elasticSearchService.SearchByJobTitleAsync(keyword);
-        return response;
-    }
-
     [HttpPost]
     [RequestSizeLimit(100_000_000)] // 100 MB
     [RequestFormLimits(MultipartBodyLengthLimit = 100_000_000)]
-    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> UploadDocuments(List<IFormFile> files, string uploadCategory)
     {
-        if (files == null || !files.Any())
-            return BadRequest("No files were received!");
+        try
+        {
+            if (files == null || !files.Any())
+                return new JsonResult(new { Success = false, message = "No files were received!" });
 
-        if (string.IsNullOrEmpty(uploadCategory))
-            return BadRequest("No category was received!");
+            if (string.IsNullOrEmpty(uploadCategory))
+                return new JsonResult(new { Success = false, message = "No category was received!" });
 
-        string? jwtToken = Request.Cookies["jwtToken"];
-        if (jwtToken == null)
-        {
-            return BadRequest("Unauthorized: JWT token is missing.");
-        }
-        string? email = _userService.GetClaimValue(jwtToken, ClaimTypes.Email);
-        if (email == null)
-        {
-            return BadRequest("Unauthorized: Email cannot be retrieved from JWT token.");
-        }
-        var user = await _userService.GetUserByEmail(email);
-        if (user == null)
-        {
-            return BadRequest("Error: User not found by this email.");
-        }
-
-        foreach (var file in files)
-        {
-            try
+            string? jwtToken = Request.Cookies["jwtToken"];
+            if (jwtToken == null)
             {
-                if (file.Length == 0)
-                    return BadRequest("One or more files are empty.");
-
-                var fileNameWithoutExt = Path.GetFileNameWithoutExtension(file.FileName);
-                var timestamp = DateTime.UtcNow.Ticks;
-                var customId = $"{fileNameWithoutExt}_{timestamp}";
-
-                using var ms = new MemoryStream();
-                await file.CopyToAsync(ms);
-                var fileBytes = ms.ToArray();
-                var base64Data = Convert.ToBase64String(fileBytes);
-
-                var document = new DocumentViewModel
-                {
-                    Id = customId,
-                    FileName = fileNameWithoutExt.ToLowerInvariant(),
-                    FileType = Path.GetExtension(file.FileName).ToLowerInvariant(),
-                    UploadedBy = user.Id.ToString(),
-                    UploadedDate = DateTime.Now,
-                    UploadedDateText = DateTime.Now.ToString("dd-MM-yyyy"),
-                    Data = base64Data
-                };
-
-
-                var indexExistsResponse = await _elasticClient.Indices.ExistsAsync(uploadCategory.ToLowerInvariant());
-                if (!indexExistsResponse.Exists)
-                {
-                    var createIndexResponse = await _elasticClient.Indices.CreateAsync(uploadCategory.ToLowerInvariant(), c => c
-                        .Map<DocumentViewModel>(m => m.AutoMap())
-                    );
-
-                    if (!createIndexResponse.IsValid)
-                    {
-                        throw new ElasticSearchException($"Failed to create index '{uploadCategory.ToLowerInvariant()}'.");
-                    }
-                }
-
-                var response = await _elasticClient.IndexAsync(document, i => i
-                    .Id(document.Id)
-                    .Index(uploadCategory.ToLowerInvariant())
-                    .Pipeline("attachment")
-                    .Refresh(Elasticsearch.Net.Refresh.WaitFor));
-
-                if (!response.IsValid)
-                {
-                    return BadRequest("Some error occurred in uploading the files.");
-                }
+                return new JsonResult(new { Success = false, message = "Unauthorized: JWT token is missing." });
             }
-            catch
+            string? email = _userService.GetClaimValue(jwtToken, ClaimTypes.Email);
+            if (email == null)
             {
-                return BadRequest("Some error occurred in uploading the files.");
+                return new JsonResult(new { Success = false, message = "Unauthorized: Email cannot be retrieved from JWT token." });
             }
-        }
+            var user = await _userService.GetUserByEmail(email);
+            if (user == null)
+            {
+                return new JsonResult(new { Success = false, message = "Error: User not found by this email." });
+            }
 
-        return Ok("Files uploaded successfully.");
+            await _elasticSearchService.UploadDocumentsAsync(files, uploadCategory.ToLowerInvariant(), user);
+
+            var refreshResponse = await _elasticClient.Indices.RefreshAsync(uploadCategory.ToLowerInvariant());
+
+            if (!refreshResponse.IsValid)
+            {
+                return new JsonResult(new { Success = true, warning = true, message = "Deletion completed successfully but there was some error refreshing the index!" });
+            }
+
+            return new JsonResult(new { Success = true, message = "Files uploaded successfully." });
+        }
+        catch (Exception e)
+        {
+            Log.Error(e, "Error uploading documents");
+            return StatusCode(500, "An error occurred while uploading the documents. Please try again later.");
+        }
     }
 
     [HttpPost]
-    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> CreateDocumentIndex(string indexName = "documents")
     {
         var created = await _elasticSearchService.CreateDocumentIndexAsync(indexName);
@@ -342,7 +283,6 @@ public class HomeController : Controller
         return File(fileBytes, contentType);
     }
 
-    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> DeleteFile(string id, string category)
     {
         bool result = await _elasticSearchService.DeleteAsync(id, category);
@@ -554,7 +494,6 @@ public class HomeController : Controller
         return Ok("Export to Excel is not implemented yet.");
     }
 
-    [Authorize(Roles = Roles.Admin)]
     public async Task<JsonResult> DeleteMultipleFiles(List<string> ids, string category)
     {
         if (ids == null || !ids.Any())
@@ -562,24 +501,14 @@ public class HomeController : Controller
             return Json(new { success = false, message = "No files selected for deletion." });
         }
 
-        foreach (var id in ids)
-        {
-            bool result = await _elasticSearchService.DeleteMultipleFilesAsync(id, category);
-            if (!result)
-            {
-                return Json(new { success = false, message = "Some error occured in deleting the files!" });
-            }
-        }
+        return await _elasticSearchService.DeleteMultipleFilesAsync(ids, category);
+    }
 
-        // Refresh the index once after all deletions
-        var refreshResponse = await _elasticClient.Indices.RefreshAsync(category.ToLowerInvariant());
-
-        if (!refreshResponse.IsValid)
-        {
-            return Json(new { success = false, warning = true, message = "Deletion completed successfully but there was some error refreshing the index!" });
-        }
-
-        return Json(new { success = true, message = "Selected files were deleted successfully!" });
+    [HttpGet]
+    [Authorize]
+    public IActionResult Search()
+    {
+        return View();
     }
 
     public async Task<IActionResult> GetAllCategories()

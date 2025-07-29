@@ -1,6 +1,7 @@
 using ElasticFind.Repository.Data;
 using ElasticFind.Repository.Interfaces;
 using ElasticFind.Repository.ViewModels;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace ElasticFind.Repository.Implementations;
@@ -110,8 +111,8 @@ public class UserRepository : IUserRepository
 
     public Task<List<FileViewModel>> GetFiles(PaginationViewModel pagination)
     {
-    return _dbcontext.Files
-            .Where(f => f.IsDeleted != true).Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize).Select(f => new FileViewModel{Id = f.Id.ToString(),FileName = f.FileName}).ToListAsync();
+        return _dbcontext.Files
+                .Where(f => f.IsDeleted != true).Skip((pagination.Page - 1) * pagination.PageSize).Take(pagination.PageSize).Select(f => new FileViewModel { Id = f.Id.ToString(), FileName = f.FileName }).ToListAsync();
     }
 
     public async Task<int> GetTotalFilesBySearchString(string searchString)
@@ -122,5 +123,34 @@ public class UserRepository : IUserRepository
     public async Task<int> GetTotalFiles()
     {
         return await _dbcontext.Files.Where(f => f.IsDeleted != true).CountAsync();
+    }
+
+    public async Task CreateDefaultAdminUser()
+    {
+        bool doesAdminExist = await _dbcontext.Users.AnyAsync(u => u.RoleId == 1 && u.Isdeleted != true);
+        if (!doesAdminExist)
+        {
+            PasswordHasher<User> hasher = new();
+            User defaultUser = new()
+            {
+                FirstName = "Admin",
+                Username = "admin",
+                Email = "admin@email.com",
+                Phone = "1234567890",
+                RoleId = 1,
+                Password = hasher.HashPassword(null, "Admin@123"),
+                Isactive = true,
+                Isdeleted = false
+            };
+            try
+            {
+                await _dbcontext.Users.AddAsync(defaultUser);
+                await _dbcontext.SaveChangesAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception("Exception: " + ex.Message);
+            }
+        }
     }
 }

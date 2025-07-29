@@ -78,6 +78,7 @@ builder.Services.AddScoped<IPreviewFileService, PreviewFileService>();
 builder.Services.AddScoped<IExportService, ExportService>();
 builder.Services.AddScoped<ICategoryService, CategoryService>();
 builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();
+builder.Services.AddScoped<IConfigurationService, ConfigurationService>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -133,7 +134,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
        };
    });
 
-string name = builder.Configuration["Elasticsearch:IndexName"] ?? "documents";
+string name = builder.Configuration["Elasticsearch:IndexName"] ?? "default";
 
 var pool = new SingleNodeConnectionPool(new Uri(builder.Configuration["Elasticsearch:Url"] ?? "https://localhost:9200"));
 var settings = new ConnectionSettings(pool)
@@ -160,14 +161,29 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-app.Use(async (context, next) =>
+using (var scope = app.Services.CreateScope())
 {
-    context.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0";
-    context.Response.Headers["Pragma"] = "no-cache";
-    context.Response.Headers["Expires"] = "-1";
+    var configService = scope.ServiceProvider.GetRequiredService<IConfigurationService>();
+    try
+    {
+        // Initialize configuration settings
+        await configService.ConfigureElasticFind(client, name);
+    }
+    catch (Exception ex)
+    {
+        Log.Logger.Error(ex, "Error initializing configuration settings.");
+        throw new Exception("There was an error initializing the configuration settings!");
+    }
+}
 
-    await next();
-});
+    app.Use(async (context, next) =>
+    {
+        context.Response.Headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0";
+        context.Response.Headers["Pragma"] = "no-cache";
+        context.Response.Headers["Expires"] = "-1";
+
+        await next();
+    });
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
@@ -195,66 +211,4 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Authentication}/{action=Login}/{id?}");
 
-try
-{
-    await ValidateAndInitializeElasticsearchAsync(client);
-}
-catch (Exception ex)
-{
-    StartupDiagnostics.ElasticsearchError = ex.Message;
-    Log.Logger.Error(ex.Message);
-}
-
 app.Run();
-
-async Task ValidateAndInitializeElasticsearchAsync(IElasticClient client)
-{
-    var pingResponse = await client.PingAsync();
-    if (!pingResponse.IsValid)
-        throw new Exception("Elasticsearch service is not reachable! Please start the elasticsearch service.");
-
-    var health = await client.Cluster.HealthAsync();
-    if (health.Status.ToString().Equals("red", StringComparison.OrdinalIgnoreCase))
-        throw new Exception("Elasticsearch service is not ready. Try restarting the service.");
-
-    var indexExists = await client.Indices.ExistsAsync(name);
-    if (!indexExists.Exists)
-    {
-        var createIndexResponse = await client.Indices.CreateAsync(name, c => c
-            .Map<DocumentViewModel>(m => m.AutoMap())
-        );
-
-        if (!createIndexResponse.IsValid)
-            throw new Exception("There was some issue initializing Elasticsearch properly! Try restarting the elasticsearch service or the application.");
-    }
-
-    var info = await client.RootNodeInfoAsync();
-    var version = info.Version.Number;
-
-    if (string.Compare(version, "8.0.0") < 0)
-    {
-        // On versions older than 8, we can optionally check plugin
-        var pluginResponse = await client.Cat.PluginsAsync();
-        bool hasAttachmentPlugin = pluginResponse.Records.Any(r => r.Component.Contains("ingest-attachment"));
-
-        if (!hasAttachmentPlugin)
-            throw new Exception("Ingest-Attachment plugin is required for processing documents. Please install it to use ElasticFind.");
-    }
-
-    var pipelineResponse = await client.Ingest.GetPipelineAsync(p => p.Id("attachment"));
-    if (!pipelineResponse.IsValid || !pipelineResponse.Pipelines.ContainsKey("attachment"))
-    {
-        var putPipelineResponse = await client.Ingest.PutPipelineAsync("attachment", p => p
-            .Description("Extract attachment information")
-            .Processors(pr => pr
-                .Attachment<DocumentViewModel>(a => a
-                    .Field(f => f.Data)
-                    .TargetField(f => f.Attachment)
-                )
-            )
-        );
-
-        if (!putPipelineResponse.IsValid)
-            throw new Exception("There was some issue initializing Elasticsearch properly! Try restarting the application.");
-    }
-}
